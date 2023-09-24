@@ -22,24 +22,24 @@ static char* mb_filename(size_t *written, bool tmp){
 	mbfilename[NAME_MAX - 1] = '\0';
 
 	char *last_slash = strrchr(mbfilename, '/');
-        if (last_slash)
-        	*last_slash = '\0';
+	if (last_slash)
+		*last_slash = '\0';
 
 	if (mbfilename[0] == '/'){
 		wrt += snprintf(full_filename, PATH_MAX,
-		                "%s%s%s%s",
-		                last_slash ? mbfilename : "",
-                		last_slash ? "/" : "",
-		                tmp ? "." : "",
-                		last_slash ? last_slash + 1 : mbfilename);
+				"%s%s%s%s",
+				last_slash ? mbfilename : "",
+				last_slash ? "/" : "",
+				tmp ? "." : "",
+				last_slash ? last_slash + 1 : mbfilename);
 
 	}else{
 		wrt += snprintf(full_filename, PATH_MAX,
-                                "%s/%s%s%s%s", editor_cwd(),
-                                last_slash ? mbfilename : "",
-                                last_slash ? "/" : "",
-                                tmp ? "." : "",
-                                last_slash ? last_slash + 1 : mbfilename);
+	       		 "%s/%s%s%s%s", editor_cwd(),
+	       		 last_slash ? mbfilename : "",
+	       		 last_slash ? "/" : "",
+	       		 tmp ? "." : "",
+	       		 last_slash ? last_slash + 1 : mbfilename);
 	}
 
 	if (written)
@@ -137,8 +137,8 @@ int file_open(const wchar_t *filename){
 	fclose(f);
 
 	// Discard any key press made while loading the file
-        while (editor_read_key() != NO_KEY)
-                ;
+	while (editor_read_key() != NO_KEY)
+		;
 
 	return 1;
 }
@@ -158,7 +158,7 @@ int file_save(bool only_tmp, bool ask_filename){
 
 	if (!only_tmp){
 		editor_set_status_message(L"Saving...");
-	        editor_refresh_screen(true);
+		editor_refresh_screen(true);
 	}
 
 	char *tmp_filename = get_tmp_filename();
@@ -172,6 +172,7 @@ int file_save(bool only_tmp, bool ask_filename){
 	WString *buf = editor_lines_to_string();
 	size_t len = wstr_length(buf);
 	fwprintf(f, L"%ls", wstr_get_buffer(buf));
+	fflush(f);
 	fclose(f);
 
 	if (!only_tmp){
@@ -179,18 +180,18 @@ int file_save(bool only_tmp, bool ask_filename){
 		bool adjust_perms = access(filename, F_OK) == 0;
 		mode_t perms;
 		if (adjust_perms){
-                        struct stat file_stat;
-                        if (stat(filename, &file_stat) != 0)
-                                die("stat, on editor_save");
-                        perms = file_stat.st_mode;
-                }
+	       	 struct stat file_stat;
+	       	 if (stat(filename, &file_stat) != 0)
+	       		 die("stat, on editor_save");
+	       	 perms = file_stat.st_mode;
+		}
 		if (rename(tmp_filename, filename) != 0
 		    || (adjust_perms && chmod(filename, perms) != 0)
 		){
 			editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
-	        	wstr_free(buf);
+			wstr_free(buf);
 		       	free(tmp_filename);
-        	        return -3;
+			return -3;
 		}
 		char *magnitudes[] = {"bytes", "KiB", "MiB", "GiB"};
 		double value = len;
@@ -214,23 +215,23 @@ int file_save(bool only_tmp, bool ask_filename){
 
 void file_reload(void){
 	int cx = conf.cx;
-        int cy = conf.cy;
-        int row_offset = conf.row_offset;
-        int col_offset = conf.col_offset;
-        buffer_clear();
-        file_open(conf.filename);
-                        if (cy + row_offset <= conf.num_lines){
-                                conf.cy = cy;
-                                conf.row_offset = row_offset;
-                                WString *line;
-                                vector_get_at(conf.lines, cy, &line);
-                                size_t len = wstr_length(line);
-                                if ((size_t)(cx + col_offset) <= len){
-                                        conf.cx = cx;
-                                        conf.col_offset = col_offset;
-                                }
-                        }
-                        editor_refresh_screen(false);
+	int cy = conf.cy;
+	int row_offset = conf.row_offset;
+	int col_offset = conf.col_offset;
+	buffer_clear();
+	file_open(conf.filename);
+	       	 if (cy + row_offset <= conf.num_lines){
+	       		 conf.cy = cy;
+	       		 conf.row_offset = row_offset;
+	       		 WString *line;
+	       		 vector_get_at(conf.lines, cy, &line);
+	       		 size_t len = wstr_length(line);
+	       		 if ((size_t)(cx + col_offset) <= len){
+	       	       	  conf.cx = cx;
+	       	       	  conf.col_offset = col_offset;
+	       		 }
+	       	 }
+	       	 editor_refresh_screen(false);
 }
 
 void file_auto_save(void){
@@ -240,11 +241,11 @@ void file_auto_save(void){
 
 	if (conf.dirty && conf.filename && time(0) - conf.last_auto_save >= 60){
 		for (int i = 0; i < conf.n_buffers; i++){
-	                buffer_switch(i);
-                	file_save(true, false);
-        	}
-        	conf.last_auto_save = time(0);
-        }
+			buffer_switch(i);
+			file_save(true, false);
+		}
+		conf.last_auto_save = time(0);
+	}
 
 	buffer_switch(buf_i);
 }

@@ -47,12 +47,12 @@ static void free_buffer(void *e){
 }
 
 static void cleanup(void){
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &conf.original_term); // restore termios
-        vector_free(conf.buffers);
-        free(conf.filename);
-        vector_free(conf.lines_render);
-        if (conf.lines)
-                vector_free(conf.lines);
+	tcsetattr(STDIN_FILENO, TCSAFLUSH, &conf.original_term); // restore termios
+	vector_free(conf.buffers);
+	free(conf.filename);
+	vector_free(conf.lines_render);
+	if (conf.lines)
+		vector_free(conf.lines);
 	wprintf(L"\x1b[?1049l");
 }
 
@@ -85,13 +85,13 @@ static void init(void){
 
 	pipe(pipefd);
 	signal(SIGWINCH, signal_handler);
-        int flags = fcntl(pipefd[1], F_GETFL, 0);
-        flags |= O_NONBLOCK;
-        fcntl(pipefd[1], F_SETFL, flags);
+	int flags = fcntl(pipefd[1], F_GETFL, 0);
+	flags |= O_NONBLOCK;
+	fcntl(pipefd[1], F_SETFL, flags);
 
-        flags = fcntl(pipefd[0], F_GETFL, 0);
-        flags |= O_NONBLOCK;
-        fcntl(pipefd[0], F_SETFL, flags);
+	flags = fcntl(pipefd[0], F_GETFL, 0);
+	flags |= O_NONBLOCK;
+	fcntl(pipefd[0], F_SETFL, flags);
 
 	wprintf(L"\x1b[?1049h");
 }
@@ -132,10 +132,10 @@ int main(int argc, char *argv[]){
 	for (; i < argc; i++){
 		editor_set_status_message(L"Loading buffer %d of %d [%s] ...", i - first_buf, argc - 1 - first_buf, argv[i]);
 		buffer_insert();
-                editor_refresh_screen(true);
+		editor_refresh_screen(true);
 
 		mbstowcs(filename, argv[i], NAME_MAX);
-                filename[NAME_MAX-1] = '\0';
+		filename[NAME_MAX-1] = '\0';
 		if (file_open(filename) != 1)
 			editor_end();
 	}
@@ -159,30 +159,30 @@ int main(int argc, char *argv[]){
 	editor_refresh_screen(false);
 
 	int c = NO_KEY, last_c;
-        long last_status_update = 0;
+	long last_status_update = 0;
 
 	while (1){
 		last_c = c;
-        	c = editor_read_key();
-               	editor_process_key_press(c);
-                long curr = get_time_millis();
+		c = editor_read_key();
+	       	editor_process_key_press(c);
+		long curr = get_time_millis();
 
 		if (c == NO_KEY && last_c != NO_KEY){
 			editor_refresh_screen(false);
-                }else if (curr - last_status_update > 500){
+		}else if (curr - last_status_update > 500){
 			editor_refresh_screen(true);
-                        last_status_update = curr;
+	       	 last_status_update = curr;
 		}
 
 		if (c == NO_KEY){
 			static struct timeval tv = {50,0};
 			fd_set rfds;
-		        FD_ZERO(&rfds);
+			FD_ZERO(&rfds);
 			FD_SET(STDIN_FILENO, &rfds);
 			FD_SET(pipefd[0], &rfds);
 			int max = (STDIN_FILENO > pipefd[0]) ? STDIN_FILENO : pipefd[0];
 			max++;
-		        select(max, &rfds, NULL, NULL, &tv);
+			select(max, &rfds, NULL, NULL, &tv);
 			char discard;
 			while (read(pipefd[0], &discard, 1) == 1)
 				editor_refresh_screen(true);

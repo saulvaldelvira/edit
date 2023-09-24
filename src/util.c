@@ -35,7 +35,7 @@ static int get_cursor_position(int *row, int *col){
 	for (i = 0; i < sizeof(buf) - 1; i++){
 		if (read(STDIN_FILENO, &buf[i], 1) != 1)
 			break;
-	        if (buf[1] == 'R')
+		if (buf[1] == 'R')
 			break;
 	}
 	buf[i] = '\0';
@@ -65,7 +65,7 @@ int get_window_size(int *rows, int *cols){
 
 char* editor_cwd(void){
 	static char cwd[PATH_MAX];
-        if (getcwd(cwd, PATH_MAX) == NULL)
+	if (getcwd(cwd, PATH_MAX) == NULL)
 		die("Could not get CWD, on editor_cwd");
 	return cwd;
 }
@@ -73,52 +73,52 @@ char* editor_cwd(void){
 static void update_line(int cy){
 	int i = cy - conf.row_offset;
 	WString *render;
-        vector_get_at(conf.lines_render, i, &render);
-        wstr_clear(render);
-        WString *row;
+	vector_get_at(conf.lines_render, i, &render);
+	wstr_clear(render);
+	WString *row;
 	vector_get_at(conf.lines, cy, &row);
 	int rx = 0;
-        for (size_t j = 0; j < wstr_length(row); j++){
-             wchar_t c = wstr_get_at(row, j);
-             if (c == L'\t'){
-                for (int i = 0; i < get_character_width(L'\t', rx); i++)
-                        wstr_push_char(render, ' ');
-                }else{
-                        wstr_push_char(render, c);
-                }
-                rx += get_character_width(c, rx);
-        }
+	for (size_t j = 0; j < wstr_length(row); j++){
+	     wchar_t c = wstr_get_at(row, j);
+	     if (c == L'\t'){
+		for (int i = 0; i < get_character_width(L'\t', rx); i++)
+	       	 wstr_push_char(render, ' ');
+		}else{
+	       	 wstr_push_char(render, c);
+		}
+		rx += get_character_width(c, rx);
+	}
 }
 
 void editor_update_render(void){
-        int i;
+	int i;
 	for (i = 0; i < conf.screen_rows; i++){
-                int cy = conf.row_offset + i;
-                if (cy >= conf.num_lines)
+		int cy = conf.row_offset + i;
+		if (cy >= conf.num_lines)
 			break;
 		update_line(cy);
-        }
+	}
 	for (; i < conf.screen_rows; i++){
 		WString *render;
-                vector_get_at(conf.lines_render, i, &render);
-                wstr_clear(render);
+		vector_get_at(conf.lines_render, i, &render);
+		wstr_clear(render);
 	}
 }
 
 int get_character_width(wchar_t c, int accumulated_rx){
-        if (c == L'\t')
-                return conf.tab_size - (accumulated_rx % conf.tab_size);
-        else
-                return wcwidth(c);
+	if (c == L'\t')
+		return conf.tab_size - (accumulated_rx % conf.tab_size);
+	else
+		return wcwidth(c);
 
 }
 
 void free_wstr(void *e){
-        wstr_free(*(WString**)e);
+	wstr_free(*(WString**)e);
 }
 
 long get_time_millis(void){
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 }

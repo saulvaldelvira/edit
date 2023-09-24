@@ -6,17 +6,25 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-WString* current_line(void){
+WString* line_at(int at){
 	WString *line = NULL;
-	if (conf.cy < conf.num_lines){
-		vector_get_at(conf.lines, conf.cy, &line);
+	if (at < conf.num_lines){
+		vector_get_at(conf.lines, at, &line);
 	}
 	return line;
 }
 
-size_t current_line_length(void){
-	WString *line = current_line();
+size_t line_at_len(int at){
+	WString *line = line_at(at);
 	return line ? wstr_length(line) : 0UL;
+}
+
+WString* current_line(void){
+	return line_at(conf.cy);
+}
+
+size_t current_line_length(void){
+	return line_at_len(conf.cy);
 }
 
 void line_insert(int at, const wchar_t *str, size_t len){
@@ -95,7 +103,7 @@ void line_cut(void){
 		return;
 	vector_remove_at(conf.lines, conf.cy);
 	conf.num_lines--;
-	cursor_adjust_cursor();
+	cursor_adjust();
 	conf.dirty++;
 }
 
@@ -140,3 +148,29 @@ void line_strip_trailing_spaces(int cy){
 	}
 }
 
+void line_format(int cy){
+	line_strip_trailing_spaces(cy);
+	wchar_t tab_buffer[80];
+	swprintf(tab_buffer, 80, L"%*c", conf.tab_size, ' ');
+	WString *line = line_at(cy);
+
+	if (conf.substitute_tab_with_space){
+		if (cy == conf.cy){
+			int i = wstr_find_substring(line, L"\t", 0);
+			while (i >= 0 && i < conf.cx){
+				conf.cx += conf.tab_size - 1;
+				i = wstr_find_substring(line, L"\t", i + 1);
+			}
+		}
+		wstr_replace(line, L"\t", tab_buffer);
+	}else{
+		if (cy == conf.cy){
+			int i = wstr_find_substring(line, tab_buffer, 0);
+			while (i >= 0 && i < conf.cx){
+				conf.cx -= conf.tab_size - 1;
+				i = wstr_find_substring(line, tab_buffer, i + conf.tab_size);
+			}
+		}
+		wstr_replace(line, tab_buffer, L"\t");
+	}
+}

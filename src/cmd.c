@@ -12,31 +12,31 @@
 #include <unistd.h>
 #include <assert.h>
 
-static void cmd_goto(void){
+static void cmd_goto(wchar_t **args){
 	long y;
-        wchar_t *arg = wstr_tok(NULL, L" ");
-        if (!arg){
-                 WString *number = editor_prompt(L"Line number", NULL);
-                 if (!number || wstr_length(number) == 0){
-                 	wstr_free(number);
-		        return;
+	wchar_t *arg = args[1];
+	if (!arg){
+		 WString *number = editor_prompt(L"Line number", NULL);
+		 if (!number || wstr_length(number) == 0){
+		 	wstr_free(number);
+			return;
 		 }
-                 y = wcstol(wstr_get_buffer(number), NULL, 10);
-                 wstr_free(number);
-        }else{
-                 y = wcstol(arg, NULL, 10);
-        }
-        if (y <= 0 || y > conf.num_lines){
+		 y = wcstol(wstr_get_buffer(number), NULL, 10);
+		 wstr_free(number);
+	}else{
+		 y = wcstol(arg, NULL, 10);
+	}
+	if (y <= 0 || y > conf.num_lines){
 		editor_set_status_message(L"Invalid line number %ld", y);
 		return;
-        }
-        y--;
+	}
+	y--;
 	cursor_goto(conf.cx, y);
 }
 
-static void cmd_search(bool forward){
+static void cmd_search(bool forward, wchar_t **args){
 	// TODO: save last search
-	wchar_t *arg = wstr_tok(NULL, L" ");
+	wchar_t *arg = args[1];
 	WString *search_wstr = NULL;
 	const wchar_t *search;
 	if (!arg){
@@ -67,7 +67,7 @@ static void cmd_search(bool forward){
 	}else{
 		for (int i = conf.cy; i >= 0; i--){
 			WString *line;
-                        vector_get_at(conf.lines, i, &line);
+	       	 vector_get_at(conf.lines, i, &line);
 
 			unsigned int x = i == conf.cy ? (unsigned)conf.cx : wstr_length(line);
 			int substring_index = -1;
@@ -79,7 +79,7 @@ static void cmd_search(bool forward){
 
 			if (substring_index >= 0 && substring_index + wstrnlen(search, -1) < x){
 				cursor_goto(substring_index, i);
-                                found = true;
+	       		 found = true;
 				break;
 			}
 		}
@@ -104,7 +104,8 @@ void editor_cmd(const wchar_t *command){
 		cmdstr = wstr_from_cwstr(command, -1);
 	}
 
-	wchar_t *cmd = wstr_tok(cmdstr, L" ");
+	wchar_t **args = wstr_split(cmdstr, L" ");
+	wchar_t *cmd = args[0];
 	if (wcscmp(cmd, L"!quit") == 0){
 		if (editor_ask_confirmation())
 			editor_end();
@@ -117,33 +118,46 @@ void editor_cmd(const wchar_t *command){
 			buffer_drop();
 		}
 	}else if (wcscmp(cmd, L"strip") == 0){
-		wchar_t *arg = wstr_tok(NULL, L" ");
-		if (!arg || wcscmp(arg, L"line") == 0){
+		if (!args[1] || wcscmp(args[1], L"line") == 0){
 			line_strip_trailing_spaces(conf.cy);
 		}
-		else if (arg && wcscmp(arg, L"buffer") == 0){
+		else if (args[1] && wcscmp(args[1], L"buffer") == 0){
 			for (int i = 0; i < conf.num_lines; i++)
 				line_strip_trailing_spaces(i);
 		}else{
 			// TODO: help menu
-			editor_set_status_message(L"Invalid argument for command \"strip\": %ls", arg);
+			editor_set_status_message(L"Invalid argument for command \"strip\": %ls", args[1]);
 		}
 	}
 	else if (wcscmp(cmd, L"goto") == 0){
-		cmd_goto();
+		cmd_goto(args);
 	}
 	else if (wcscmp(cmd, L"search") == 0
 		 || wcscmp(cmd, L"search-forward") == 0
 	){
-		cmd_search(true);
+		cmd_search(true, args);
 	}
 	else if (wcscmp(cmd, L"search-backwards") == 0){
-		cmd_search(false);
+		cmd_search(false, args);
+	}
+	else if (wcscmp(cmd, L"format") == 0){
+		if (!args[1] || wcscmp(args[1], L"line") == 0){
+			line_format(conf.cy);
+		}
+		else if (args[1] && wcscmp(args[1], L"buffer") == 0){
+			for (int i = 0; i < conf.num_lines; i++)
+				line_format(i);
+		}else{
+			// TODO: help menu
+			editor_set_status_message(L"Invalid argument for command \"format\": %ls", args[1]);
+		}
 	}
 	// TODO: help command
 	else {
 		editor_set_status_message(L"Invalid command [%ls]", cmd);
 	}
+	while (*args)
+		free(*args++);
 	free(last_cmd);
 	last_cmd = wstr_to_cwstr(cmdstr);
 	wstr_free(cmdstr);

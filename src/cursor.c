@@ -4,7 +4,7 @@
 #include "line.h"
 #include "util.h"
 
-void cursor_adjust_cursor(void){
+void cursor_adjust(void){
 	size_t line_len = current_line_length();
 	if ((size_t)conf.cx > line_len)
 		conf.cx = line_len;
@@ -46,7 +46,7 @@ int cursor_move(int key){
 	int rx = 0;
 	if (conf.cy < conf.num_lines){
 		WString *current;
-        	vector_get_at(conf.lines, conf.cy, &current);
+		vector_get_at(conf.lines, conf.cy, &current);
 		rx = line_cx_to_rx(current, conf.cx);
 	}
 
@@ -109,20 +109,20 @@ int cursor_move(int key){
 		}
 		break;
 	}
-	cursor_adjust_cursor();
+	cursor_adjust();
 	return 1;
 }
 
 void cursor_goto(int x, int y){
 	conf.cy = y;
 	conf.cx = x;
-        if (y < conf.row_offset || y >= (conf.row_offset + conf.screen_rows)){
-                if (y <= conf.screen_rows)
-                        conf.row_offset = 0;
-                else
-                        conf.row_offset = y - conf.screen_rows / 2;
-        }
-        size_t len = current_line_length();
-        if ((size_t)conf.cx > len)
-                conf.cx = (int)len;
+	if (y < conf.row_offset || y >= (conf.row_offset + conf.screen_rows)){
+		if (y <= conf.screen_rows)
+	       	 conf.row_offset = 0;
+		else
+	       	 conf.row_offset = y - conf.screen_rows / 2;
+	}
+	size_t len = current_line_length();
+	if ((size_t)conf.cx > len)
+		conf.cx = (int)len;
 }

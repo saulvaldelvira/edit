@@ -18,9 +18,9 @@ int editor_read_key(void){
 		.tv_usec = 50000
 	};
 	fd_set rfds;
-        FD_ZERO(&rfds);
-        FD_SET(STDIN_FILENO, &rfds);
-        select(STDIN_FILENO + 1, &rfds, NULL, NULL, &tv);
+	FD_ZERO(&rfds);
+	FD_SET(STDIN_FILENO, &rfds);
+	select(STDIN_FILENO + 1, &rfds, NULL, NULL, &tv);
 	if (FD_ISSET(STDIN_FILENO, &rfds) == 0)
 		return NO_KEY;
 
@@ -35,25 +35,25 @@ int editor_read_key(void){
 		if (seq[0] == L'[') {
 			if (iswdigit(seq[1])){
 				if ((seq[2] = getwchar()) == WEOF)
-                                	return '\x1b';
+	       		 	return '\x1b';
 				if (seq[2] == '~'){
 				    switch (seq[1]){
-                                           case '1':
-                                           case '7':
-                                                   return HOME_KEY;
-                                                case '3':
-                                                        return DEL_KEY;
-                                                case '4':
-                                                case '8':
-                                                        return END_KEY;
-                                                case '5': return PAGE_UP;
-                                                case '6': return PAGE_DOWN;
+	       	       	     case '1':
+	       	       	     case '7':
+	       	       		     return HOME_KEY;
+	       	       		  case '3':
+	       	       	       	   return DEL_KEY;
+	       	       		  case '4':
+	       	       		  case '8':
+	       	       	       	   return END_KEY;
+	       	       		  case '5': return PAGE_UP;
+	       	       		  case '6': return PAGE_DOWN;
 
-                                    }
+	       		     }
 
 				}
 				if ((seq[3] = getwchar()) == WEOF)
-                                        return '\x1b';
+	       	       	  return '\x1b';
 
 				switch (seq[1]){
 				case L'1':
@@ -129,12 +129,12 @@ void editor_process_key_press(int c){
 	static int quit_times = QUIT_TIMES;
 	#define quit_times_msg(key) \
 		do{ \
-                	if (conf.dirty && quit_times > 0){ \
+			if (conf.dirty && quit_times > 0){ \
 				editor_set_status_message(L"WARNING! File has unsaved changes. " \
-                               		                 "Press %s %d more times to quit.", key, quit_times); \
-                       		quit_times--; \
-                       		return; \
-	                }else if (quit_times == 0) \
+	       					         "Press %s %d more times to quit.", key, quit_times); \
+	       			quit_times--; \
+	       			return; \
+			}else if (quit_times == 0) \
 				editor_set_status_message(L""); \
 		}while(0)
 
@@ -167,8 +167,8 @@ void editor_process_key_press(int c){
 		conf.cx = current_line_length();
 		break;
 
-	case CTRL_KEY('f'):
-		quit_times_msg("Ctrl + F");
+	case CTRL_KEY('o'):
+		quit_times_msg("Ctrl + O");
 		{
 			WString *filename_wstr = editor_prompt(L"Open file", conf.filename);
 			if (filename_wstr && wstr_length(filename_wstr) > 0){
@@ -184,6 +184,9 @@ void editor_process_key_press(int c){
 		}
 		break;
 
+	case CTRL_KEY('f'):
+		line_format(conf.cy);
+		break;
 	case CTRL_KEY('n'):
 		buffer_insert();
 		break;
@@ -249,8 +252,8 @@ WString* editor_prompt(const wchar_t *prompt, wchar_t *default_response){
 		// TODO: check screen size and reisze if needed
 		if (c != NO_KEY)
 			editor_refresh_screen(true);
-                wprintf(L"\x1b[%d;%zuH", conf.screen_rows + 2, base_x + x + 1);
-                fflush(stdout);
+		wprintf(L"\x1b[%d;%zuH", conf.screen_rows + 2, base_x + x + 1);
+		fflush(stdout);
 
 		c = editor_read_key();
 
@@ -310,10 +313,10 @@ WString* editor_prompt(const wchar_t *prompt, wchar_t *default_response){
 }
 
 bool editor_ask_confirmation(void){
-        WString *response = editor_prompt(L"Are you sure? Y/n", L"Y");
-        bool result = false;
-        if (response && wstr_length(response) == 1 && (wstr_get_at(response, 0) == L'Y' || wstr_get_at(response, 0) == L'y'))
-                result = true;
-        wstr_free(response);
-        return result;
+	WString *response = editor_prompt(L"Are you sure? Y/n", L"Y");
+	bool result = false;
+	if (response && wstr_length(response) == 1 && (wstr_get_at(response, 0) == L'Y' || wstr_get_at(response, 0) == L'y'))
+		result = true;
+	wstr_free(response);
+	return result;
 }

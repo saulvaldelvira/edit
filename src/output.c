@@ -21,8 +21,8 @@ static int check_window_size(void){
 			WString *wstr = wstr_empty();
 			vector_append(conf.lines_render, &wstr);
 		}
-                conf.screen_rows = rows;
-                conf.screen_cols = cols;
+		conf.screen_rows = rows;
+		conf.screen_cols = cols;
 		cursor_scroll();
 		return 1;
 	}
