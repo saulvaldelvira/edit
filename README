@@ -1,0 +1,53 @@
+Edit: A terminal-based text editor
+==================================
+This is a simple command-line text editor.
+You can read files, edit them and save them to disk. That's all.
+It's written in 100% standard C, without any 3rd party library.
+For now, it only works on linux ;-)
+
+Building and installing
+=======================
+1) clone the repo
+   $ git clone --recurse-submodules https://git.saulv.es/edit.git
+   $ cd edit
+2) Run make
+   $ make install
+3) Edit
+   $ edit my-file.txt file-number2.md
+
+Keybindings
+===========
+- Ctrl + Q : Kill buffer
+- Ctrl + K : Cut line
+- Ctrl + S : Save buffer
+- Ctrl + N : Add buffer
+- Ctrl + F : Load file into buffer
+- Ctrl + Left Arrow : Move to the buffer on the left
+- Ctrl + Right Arrow : Move to the buffer on the right
+- F5 : Reload file
+- Ctrl + E : Execute command
+
+Commands
+========
+- !quit : Exit the editor
+- pwd : prints the current working directory
+- strip [line|all]: Strips triling whitespaces
+    strip line: same as "strip". Strips current line.
+    strip buffer: strips all lines in the current buffer.
+- goto <line-number>: jumps to a certain line
+- search <string>: jumps to the next occurence of the given
+		   string of text
+- search-backwards: same as search, but backwards.
+
+Arguments
+=========
+--exec <command>:
+    Executes <command> for all the specified files.
+    Example: edit --exec "strip buffer" file.c file2.c
+             Will strip all trailing whitespaces from the files.
+--:
+    breaks the argument parsing. Treats the rest of the
+    arguments as filenames.
+    Example: edit -- -myfile.txt
+             Treats "-myfile.txt" as a file to edit, instead
+             of as an argument to parse.

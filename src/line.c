@@ -1,0 +1,142 @@
+#include "line.h"
+#include "input.h"
+#include "util.h"
+#include "cursor.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <wchar.h>
+
+WString* current_line(void){
+	WString *line = NULL;
+	if (conf.cy < conf.num_lines){
+		vector_get_at(conf.lines, conf.cy, &line);
+	}
+	return line;
+}
+
+size_t current_line_length(void){
+	WString *line = current_line();
+	return line ? wstr_length(line) : 0UL;
+}
+
+void line_insert(int at, const wchar_t *str, size_t len){
+	WString *line = wstr_init(len);
+	wstr_concat_cwstr(line, str, len);
+	vector_insert_at(conf.lines, at, &line);
+	conf.num_lines++;
+}
+
+int line_cx_to_rx(WString *line, int cx){
+	int rx = 0;
+	for (int i = 0; i < cx; i++){
+		wchar_t c = wstr_get_at(line, i);
+		rx += get_character_width(c, rx);
+	}
+	return rx;
+}
+
+void line_put_char(int c){
+	if (conf.cy == conf.num_lines)
+		line_insert(conf.num_lines, L"", 0);
+	WString *line;
+	vector_get_at(conf.lines, conf.cy, &line);
+	int n = 1;
+	if (c == L'\t' && conf.substitute_tab_with_space){
+		n = get_character_width(L'\t', conf.cx);
+		for (int i = 0; i < n; i++)
+			wstr_insert(line, ' ', conf.cx);
+	}else {
+		wstr_insert(line, c, conf.cx);
+	}
+	conf.cx += n;
+	conf.dirty += n;
+}
+
+void line_delete_char(void){
+	WString *line;
+	vector_get_at(conf.lines, conf.cy, &line);
+	if (conf.cx == 0){
+		if (conf.cy == 0)
+			return;
+		WString *up;
+		vector_get_at(conf.lines, conf.cy - 1, &up);
+		size_t new_x = wstr_length(up);
+		wstr_concat_wstr(up, line);
+		vector_remove_at(conf.lines, conf.cy);
+		conf.num_lines--;
+		cursor_move(ARROW_LEFT);
+		conf.cx = new_x;
+	}
+	else if (conf.cx > 0 && (size_t)(conf.cx - 1) < wstr_length(line)){
+		wstr_remove_at(line, conf.cx - 1);
+		cursor_move(ARROW_LEFT);
+	}
+}
+
+void line_insert_newline(void){
+	if (conf.cx == 0){
+		line_insert(conf.cy, L"", 0);
+	}else{
+		WString *current;
+		vector_get_at(conf.lines, conf.cy, &current);
+		wchar_t *split = wstr_substring(current, conf.cx, wstr_length(current));
+		size_t split_len = wstr_length(current) - conf.cx;
+		wstr_remove_range(current, conf.cx, wstr_length(current));
+		line_insert(conf.cy + 1, split, split_len);
+		free(split);
+	}
+	conf.cy++;
+	conf.cx = 0;
+	conf.dirty++;
+}
+
+void line_cut(void){
+	if (conf.cy >= conf.num_lines)
+		return;
+	vector_remove_at(conf.lines, conf.cy);
+	conf.num_lines--;
+	cursor_adjust_cursor();
+	conf.dirty++;
+}
+
+void line_toogle_comment(void){
+	assert(0 && "Not implemented!");
+}
+
+void line_strip_trailing_spaces(int cy){
+	if (cy >= conf.num_lines)
+		return;
+	assert(cy >= 0);
+	WString *line;
+	vector_get_at(conf.lines, cy, &line);
+	size_t len = wstr_length(line);
+	size_t last_char_index = 0;
+	for (size_t i = 0; i < len; i++){
+		wchar_t c = wstr_get_at(line, i);
+		if (c != L' ' && c != L'\t')
+			last_char_index = i;
+	}
+	if (last_char_index < len){
+		size_t removed;
+		wchar_t c = wstr_get_at(line, 0);
+		if (last_char_index == 0 && (c == L' ' || c == L'\t')){
+			wstr_remove_range(line, 0, len);
+                        removed = len;
+		}else{
+			wstr_remove_range(line, last_char_index + 1, len);
+                        removed = len - last_char_index - 1;
+		}
+		if (cy == conf.cy){
+			if ((size_t)conf.cx >= removed){
+				conf.cx -= removed;
+			}else{
+				conf.col_offset -= removed;
+				if (conf.col_offset < 0){
+					conf.cx += conf.col_offset;
+					conf.col_offset = 0;
+				}
+			}
+		}
+	}
+}
+
