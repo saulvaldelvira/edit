@@ -113,27 +113,27 @@ void editor_draw_rows(WString *buf){
 void editor_draw_status_bar(WString *buf){
 	wstr_concat_cwstr(buf, L"\x1b[7m", 4);
 
-	wchar_t status[80], rstatus[80];
+	wchar_t status[256], rstatus[256], sep[256];
 	int len = swprintf(status, ARRAY_SIZE(status),
 			   L" %ls - %d lines %ls",
 			   conf.filename ? conf.filename : L"[Unnamed]",
 			   conf.num_lines,
 		       	   conf.dirty ? L"(modified)" : L"");
 	int rlen = swprintf(rstatus, ARRAY_SIZE(rstatus),
-			    L"Buffer:%d/%d | Row:%d | Col:%d ", conf.buffer_index + 1, conf.n_buffers, conf.cy + 1, conf.cx + 1);
+			    L"Buffer:%d/%d | Row:%d | Col:%d ",
+			    conf.buffer_index + 1, conf.n_buffers,
+			    conf.cy + 1, conf.cx + 1);
 	if (len > conf.screen_cols)
 		len = conf.screen_cols;
-	wstr_concat_cwstr(buf, status, len);
+	if (rlen > conf.screen_cols - len)
+		rlen = 0;
 
-	while (len < conf.screen_cols){
-		if (conf.screen_cols - len == rlen){
-			wstr_concat_cwstr(buf, rstatus, rlen);
-			break;
-		}else{
-			wstr_push_char(buf, L' ');
-			len++;
-		}
-	}
+	int sep_len = conf.screen_cols - len - rlen;
+	swprintf(sep, ARRAY_SIZE(sep), L"%*s", sep_len, " ");
+
+	wstr_concat_cwstr(buf, status, len);
+	wstr_concat_cwstr(buf, sep, sep_len);
+	wstr_concat_cwstr(buf, rstatus, rlen);;
 
 	wstr_concat_cwstr(buf, L"\x1b[m", 3);
 	wstr_concat_cwstr(buf, L"\r\n", 2);
