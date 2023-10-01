@@ -14,7 +14,7 @@ static void adjust_cx_to_rx(int rx){
 	int acc = 0;
 	WString *current = current_line();
 	WString *render;
-	vector_get_at(conf.lines_render, conf.cy - conf.row_offset, &render);
+	vector_at(conf.lines_render, conf.cy - conf.row_offset, &render);
 	for (conf.cx = 0; (size_t)conf.cx < wstr_length(render); conf.cx++){
 		wchar_t c = wstr_get_at(current, conf.cx);
 		acc += get_character_width(c, acc);
@@ -27,7 +27,7 @@ void cursor_scroll(void){
 	conf.rx = 0;
 	if (conf.cy < conf.num_lines){
 		WString *line;
-		vector_get_at(conf.lines, conf.cy, &line);
+		vector_at(conf.lines, conf.cy, &line);
 		conf.rx = line_cx_to_rx(line, conf.cx);
 	}
 	if (conf.cy < conf.row_offset)
@@ -46,7 +46,7 @@ int cursor_move(int key){
 	int rx = 0;
 	if (conf.cy < conf.num_lines){
 		WString *current;
-		vector_get_at(conf.lines, conf.cy, &current);
+		vector_at(conf.lines, conf.cy, &current);
 		rx = line_cx_to_rx(current, conf.cx);
 	}
 

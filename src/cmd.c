@@ -55,7 +55,7 @@ static void cmd_search(bool forward, wchar_t **args){
 	if (forward){
 		for (int i = conf.cy; i < conf.num_lines; i++){
 			WString *line;
-			vector_get_at(conf.lines, i, &line);
+			vector_at(conf.lines, i, &line);
 			int x = i == conf.cy ? conf.cx + 1 : 0;
 			int substring_index = wstr_find_substring(line, search, x);
 			if (substring_index >= 0){
@@ -67,7 +67,7 @@ static void cmd_search(bool forward, wchar_t **args){
 	}else{
 		for (int i = conf.cy; i >= 0; i--){
 			WString *line;
-	       	 vector_get_at(conf.lines, i, &line);
+	       	 vector_at(conf.lines, i, &line);
 
 			unsigned int x = i == conf.cy ? (unsigned)conf.cx : wstr_length(line);
 			int substring_index = -1;

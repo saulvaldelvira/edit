@@ -9,7 +9,7 @@
 
 static void save_buffer(void){
 	struct buffer buffer;
-	vector_get_at(conf.buffers, conf.buffer_index, &buffer);
+	vector_at(conf.buffers, conf.buffer_index, &buffer);
 	buffer.cx = conf.cx;
 	buffer.cy = conf.cy;
 	buffer.rx = conf.rx;
@@ -28,7 +28,7 @@ static void save_buffer(void){
 
 static void load_buffer(void){
 	struct buffer buffer;
-	vector_get_at(conf.buffers, conf.buffer_index, &buffer);
+	vector_at(conf.buffers, conf.buffer_index, &buffer);
 	if (conf.lines)
 		vector_free(conf.lines);
 	conf.lines = buffer.lines;

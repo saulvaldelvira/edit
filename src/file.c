@@ -52,7 +52,7 @@ static WString* editor_lines_to_string(void){
 	WString *str = wstr_empty();
 	for (size_t i = 0; i < n_lines; i++){
 		WString *line;
-		vector_get_at(conf.lines, i, &line);
+		vector_at(conf.lines, i, &line);
 		wstr_concat_wstr(str, line);
 		wstr_concat_cstr(str, conf.eol, -1);
 	}
@@ -224,7 +224,7 @@ void file_reload(void){
 	       		 conf.cy = cy;
 	       		 conf.row_offset = row_offset;
 	       		 WString *line;
-	       		 vector_get_at(conf.lines, cy, &line);
+	       		 vector_at(conf.lines, cy, &line);
 	       		 size_t len = wstr_length(line);
 	       		 if ((size_t)(cx + col_offset) <= len){
 	       	       	  conf.cx = cx;

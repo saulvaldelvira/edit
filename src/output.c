@@ -94,7 +94,7 @@ void editor_draw_rows(WString *buf){
 			}
 		}else{
 			WString *line;
-			vector_get_at(conf.lines_render, y, &line);
+			vector_at(conf.lines_render, y, &line);
 			size_t len = wstr_length(line);
 			if ((size_t)conf.col_offset < len){
 				if (len >= (size_t)conf.col_offset)

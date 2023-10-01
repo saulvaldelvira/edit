@@ -73,10 +73,10 @@ char* editor_cwd(void){
 static void update_line(int cy){
 	int i = cy - conf.row_offset;
 	WString *render;
-	vector_get_at(conf.lines_render, i, &render);
+	vector_at(conf.lines_render, i, &render);
 	wstr_clear(render);
 	WString *row;
-	vector_get_at(conf.lines, cy, &row);
+	vector_at(conf.lines, cy, &row);
 	int rx = 0;
 	for (size_t j = 0; j < wstr_length(row); j++){
 	     wchar_t c = wstr_get_at(row, j);
@@ -100,7 +100,7 @@ void editor_update_render(void){
 	}
 	for (; i < conf.screen_rows; i++){
 		WString *render;
-		vector_get_at(conf.lines_render, i, &render);
+		vector_at(conf.lines_render, i, &render);
 		wstr_clear(render);
 	}
 }

@@ -9,7 +9,7 @@
 WString* line_at(int at){
 	WString *line = NULL;
 	if (at < conf.num_lines){
-		vector_get_at(conf.lines, at, &line);
+		vector_at(conf.lines, at, &line);
 	}
 	return line;
 }
@@ -47,7 +47,7 @@ void line_put_char(int c){
 	if (conf.cy == conf.num_lines)
 		line_insert(conf.num_lines, L"", 0);
 	WString *line;
-	vector_get_at(conf.lines, conf.cy, &line);
+	vector_at(conf.lines, conf.cy, &line);
 	int n = 1;
 	if (c == L'\t' && conf.substitute_tab_with_space){
 		n = get_character_width(L'\t', conf.cx);
@@ -62,12 +62,12 @@ void line_put_char(int c){
 
 void line_delete_char(void){
 	WString *line;
-	vector_get_at(conf.lines, conf.cy, &line);
+	vector_at(conf.lines, conf.cy, &line);
 	if (conf.cx == 0){
 		if (conf.cy == 0)
 			return;
 		WString *up;
-		vector_get_at(conf.lines, conf.cy - 1, &up);
+		vector_at(conf.lines, conf.cy - 1, &up);
 		size_t new_x = wstr_length(up);
 		wstr_concat_wstr(up, line);
 		vector_remove_at(conf.lines, conf.cy);
@@ -86,7 +86,7 @@ void line_insert_newline(void){
 		line_insert(conf.cy, L"", 0);
 	}else{
 		WString *current;
-		vector_get_at(conf.lines, conf.cy, &current);
+		vector_at(conf.lines, conf.cy, &current);
 		wchar_t *split = wstr_substring(current, conf.cx, wstr_length(current));
 		size_t split_len = wstr_length(current) - conf.cx;
 		wstr_remove_range(current, conf.cx, wstr_length(current));
@@ -116,7 +116,7 @@ void line_strip_trailing_spaces(int cy){
 		return;
 	assert(cy >= 0);
 	WString *line;
-	vector_get_at(conf.lines, cy, &line);
+	vector_at(conf.lines, cy, &line);
 	size_t len = wstr_length(line);
 	size_t last_char_index = 0;
 	for (size_t i = 0; i < len; i++){
