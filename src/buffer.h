@@ -2,7 +2,6 @@
 #define BUFFER_H
 
 #include "./lib/GDS/src/Vector.h"
-#include <stdbool.h>
 #include <stddef.h>
 
 struct buffer {

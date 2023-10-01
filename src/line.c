@@ -2,9 +2,9 @@
 #include "input.h"
 #include "util.h"
 #include "cursor.h"
-#include <assert.h>
 #include <stdlib.h>
 #include <wchar.h>
+#include <assert.h>
 
 WString* line_at(int at){
 	WString *line = NULL;
@@ -108,6 +108,7 @@ void line_cut(void){
 }
 
 void line_toogle_comment(void){
+	// remove assert include after implementing this
 	assert(0 && "Not implemented!");
 }
 

@@ -4,7 +4,6 @@
 #include "input.h"
 #include "util.h"
 #include <stdlib.h>
-#include <assert.h>
 #include <stdio.h>
 
 static void save_buffer(void){

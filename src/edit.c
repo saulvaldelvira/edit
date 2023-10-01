@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <string.h>
+#include <sys/time.h>
 
 struct conf conf = {
 	.tab_size = 8,

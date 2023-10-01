@@ -2,7 +2,6 @@
 #define UTIL_H
 
 #include <stddef.h>
-#include <sys/time.h>
 
 void die(const char *s);
 void editor_end(void);
