@@ -79,12 +79,12 @@ static void update_line(int cy){
 	vector_at(conf.lines, cy, &row);
 	int rx = 0;
 	for (size_t j = 0; j < wstr_length(row); j++){
-	     wchar_t c = wstr_get_at(row, j);
-	     if (c == L'\t'){
-		for (int i = 0; i < get_character_width(L'\t', rx); i++)
-	       	 wstr_push_char(render, ' ');
+		wchar_t c = wstr_get_at(row, j);
+		if (c == L'\t'){
+			for (int i = 0; i < get_character_width(L'\t', rx); i++)
+				wstr_push_char(render, ' ');
 		}else{
-	       	 wstr_push_char(render, c);
+			wstr_push_char(render, c);
 		}
 		rx += get_character_width(c, rx);
 	}

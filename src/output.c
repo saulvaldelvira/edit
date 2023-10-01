@@ -48,10 +48,10 @@ void editor_refresh_screen(bool only_status_bar){
 	}else{
 		// Move to the last two lines (status and message)
 		swprintf(move_cursor_buf,
-			ARRAY_SIZE(move_cursor_buf),
-			L"\x1b[%d;%dH",
-			conf.screen_rows + 1,
-			0);
+			 ARRAY_SIZE(move_cursor_buf),
+			 L"\x1b[%d;%dH",
+			 conf.screen_rows + 1,
+			 0);
 		wstr_concat_cwstr(buf, move_cursor_buf, ARRAY_SIZE(move_cursor_buf));
 	}
 

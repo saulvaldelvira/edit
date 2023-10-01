@@ -86,7 +86,7 @@ static void cmd_search(bool forward, wchar_t **args){
 	}else{
 		for (int i = conf.cy; i >= 0; i--){
 			WString *line;
-	       	 vector_at(conf.lines, i, &line);
+			vector_at(conf.lines, i, &line);
 
 			unsigned int x = i == conf.cy ? (unsigned)conf.cx : wstr_length(line);
 			int substring_index = -1;
@@ -98,7 +98,7 @@ static void cmd_search(bool forward, wchar_t **args){
 
 			if (substring_index >= 0 && substring_index + wstrnlen(search, -1) < x){
 				cursor_goto(substring_index, i);
-	       		 found = true;
+				found = true;
 				break;
 			}
 		}
@@ -153,7 +153,7 @@ void editor_cmd(const wchar_t *command){
 	}
 	else if (wcscmp(cmd, L"search") == 0
 		 || wcscmp(cmd, L"search-forward") == 0
-	){
+		){
 		cmd_search(true, args);
 	}
 	else if (wcscmp(cmd, L"search-backwards") == 0){

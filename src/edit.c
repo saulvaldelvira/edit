@@ -173,7 +173,7 @@ int main(int argc, char *argv[]){
 			editor_refresh_screen(false);
 		}else if (curr - last_status_update > 500){
 			editor_refresh_screen(true);
-	       	 last_status_update = curr;
+			last_status_update = curr;
 		}
 
 		if (c == NO_KEY){

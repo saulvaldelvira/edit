@@ -118,9 +118,9 @@ void cursor_goto(int x, int y){
 	conf.cx = x;
 	if (y < conf.row_offset || y >= (conf.row_offset + conf.screen_rows)){
 		if (y <= conf.screen_rows)
-	       	 conf.row_offset = 0;
+			conf.row_offset = 0;
 		else
-	       	 conf.row_offset = y - conf.screen_rows / 2;
+			conf.row_offset = y - conf.screen_rows / 2;
 	}
 	size_t len = current_line_length();
 	if ((size_t)conf.cx > len)
