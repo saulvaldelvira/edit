@@ -1,9 +1,7 @@
-Edit: A terminal-based text editor
+Edit: Terminal-based text editor
 ==================================
 This is a simple command-line text editor.
-You can read files, edit them and save them to disk. That's all.
-It's written in 100% standard C, without any 3rd party library.
-For now, it only works on linux ;-)
+You can read files, edit them and save them to disk.
 
 Building and installing
 =======================
@@ -13,19 +11,20 @@ Building and installing
 2) Run make
    $ make install
 3) Edit
-   $ edit my-file.txt file-number2.md
+   $ edit my-file.txt another-file.c
 
 Keybindings
 ===========
-- Ctrl + Q : Kill buffer
+- Ctrl + E : Execute command
+- Ctrl + F : Format line
 - Ctrl + K : Cut line
-- Ctrl + S : Save buffer
 - Ctrl + N : Add buffer
-- Ctrl + F : Load file into buffer
+- Ctrl + O : Open file
+- Ctrl + Q : Kill buffer
+- Ctrl + S : Save buffer
 - Ctrl + Left Arrow : Move to the buffer on the left
 - Ctrl + Right Arrow : Move to the buffer on the right
 - F5 : Reload file
-- Ctrl + E : Execute command
 
 Commands
 ========
@@ -34,10 +33,16 @@ Commands
 - strip [line|all]: Strips triling whitespaces
     strip line: same as "strip". Strips current line.
     strip buffer: strips all lines in the current buffer.
-- goto <line-number>: jumps to a certain line
+- goto [line|buffer] <line-number>: jumps to a certain line
+    goto line: jump to the given line
+    goto buffer: jump to the given buffer
+    goto: same as "goto line"
 - search <string>: jumps to the next occurence of the given
 		   string of text
 - search-backwards: same as search, but backwards.
+- format [line|buffer]: The same as Ctrl + F.
+    format line: format the current line.
+    format buffer: format the current buffer.
 
 Arguments
 =========
