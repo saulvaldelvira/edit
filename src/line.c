@@ -129,10 +129,10 @@ void line_strip_trailing_spaces(int cy){
 		wchar_t c = wstr_get_at(line, 0);
 		if (last_char_index == 0 && (c == L' ' || c == L'\t')){
 			wstr_remove_range(line, 0, len);
-                        removed = len;
+	       	 removed = len;
 		}else{
 			wstr_remove_range(line, last_char_index + 1, len);
-                        removed = len - last_char_index - 1;
+	       	 removed = len - last_char_index - 1;
 		}
 		if (cy == conf.cy){
 			if ((size_t)conf.cx >= removed){

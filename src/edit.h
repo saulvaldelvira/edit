@@ -13,7 +13,6 @@
 #include "buffer.h"
 
 #define VERSION "0.1"
-#define QUIT_TIMES 3
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 #define TMP_EXT ".tmp"
@@ -36,6 +35,7 @@ extern struct conf{
 	int screen_cols;
 	struct termios original_term;
 	int tab_size;
+	int quit_times;
 	bool substitute_tab_with_space;
 	bool show_line_number;
 	Vector *lines_render;

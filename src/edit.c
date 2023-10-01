@@ -17,6 +17,7 @@
 
 struct conf conf = {
 	.tab_size = 8,
+	.quit_times = 3,
 	.status_msg[0] = '\0',
 	.substitute_tab_with_space = false,
 	.show_line_number = false

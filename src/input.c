@@ -35,26 +35,25 @@ int editor_read_key(void){
 		if (seq[0] == L'[') {
 			if (iswdigit(seq[1])){
 				if ((seq[2] = getwchar()) == WEOF)
-	       		 	return '\x1b';
+					return '\x1b';
 				if (seq[2] == '~'){
-				    switch (seq[1]){
-	       	       	     case '1':
-	       	       	     case '7':
-	       	       		     return HOME_KEY;
-	       	       		  case '3':
-	       	       	       	   return DEL_KEY;
-	       	       		  case '4':
-	       	       		  case '8':
-	       	       	       	   return END_KEY;
-	       	       		  case '5': return PAGE_UP;
-	       	       		  case '6': return PAGE_DOWN;
+					switch (seq[1]){
+					case '1':
+					case '7':
+						return HOME_KEY;
+					case '3':
+						return DEL_KEY;
+					case '4':
+					case '8':
+						return END_KEY;
+					case '5': return PAGE_UP;
+					case '6': return PAGE_DOWN;
 
-	       		     }
+					}
 
 				}
 				if ((seq[3] = getwchar()) == WEOF)
-	       	       	  return '\x1b';
-
+					return '\x1b';
 				switch (seq[1]){
 				case L'1':
 					if (seq[2] == ';'){
@@ -90,11 +89,11 @@ int editor_read_key(void){
 				case L'2':
 					if (seq[3] == '~'){
 						switch (seq[2]){
-							case '0': return F9;
-							case '1': return F10;
-							case '3': return F11;
-							case '4': return F12;
-							default: return '\x1b';
+						case '0': return F9;
+						case '1': return F10;
+						case '3': return F11;
+						case '4': return F12;
+						default: return '\x1b';
 						}
 					}else return '\x1b';
 				default:
@@ -126,19 +125,20 @@ int editor_read_key(void){
 }
 
 void editor_process_key_press(int c){
-	static int quit_times = QUIT_TIMES;
-	#define quit_times_msg(key) \
-		do{ \
-			if (conf.dirty && quit_times > 0){ \
-				editor_set_status_message(L"WARNING! File has unsaved changes. " \
-	       					         "Press %s %d more times to quit.", key, quit_times); \
-	       			quit_times--; \
-	       			return; \
-			}else if (quit_times == 0) \
-				editor_set_status_message(L""); \
-		}while(0)
+	static int quit_times;
+#define quit_times_msg(key)						                               \
+	do{								                               \
+		if (conf.dirty && quit_times > 0){			                               \
+			editor_set_status_message(L"WARNING! File has unsaved changes. "               \
+						  "Press %s %d more times to quit.", key, quit_times); \
+			quit_times--;					                               \
+			return;						                               \
+		}else if (quit_times == 0)				                               \
+			editor_set_status_message(L"");			                               \
+	}while(0)
 
 	switch (c){
+
 	case '\r':
 		line_insert_newline();
 		break;
@@ -231,7 +231,7 @@ void editor_process_key_press(int c){
 		break;
 	}
 
-	quit_times = QUIT_TIMES;
+	quit_times = conf.quit_times;
 	cursor_scroll();
 }
 
