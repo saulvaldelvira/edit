@@ -21,7 +21,8 @@ struct conf conf = {
 	.quit_times = 3,
 	.status_msg[0] = '\0',
 	.substitute_tab_with_space = false,
-	.show_line_number = false
+	.show_line_number = false,
+	.syntax_highlighting = true
 };
 
 static void enable_raw_mode(void){

@@ -3,6 +3,7 @@
 #include "line.h"
 #include "input.h"
 #include "buffer.h"
+#include "highlight.h"
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -59,10 +60,6 @@ int get_window_size(int *rows, int *cols){
 	}
 }
 
-
-
-
-
 char* editor_cwd(void){
 	static char cwd[PATH_MAX];
 	if (getcwd(cwd, PATH_MAX) == NULL)
@@ -103,6 +100,8 @@ void editor_update_render(void){
 		vector_at(conf.lines_render, i, &render);
 		wstr_clear(render);
 	}
+	if (conf.syntax_highlighting)
+		editor_highlight();
 }
 
 int get_character_width(wchar_t c, int accumulated_rx){

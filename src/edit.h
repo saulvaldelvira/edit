@@ -46,6 +46,7 @@ extern struct conf{
 	time_t status_msg_time;
 	bool auto_save;
 	time_t last_auto_save;
+	bool syntax_highlighting;
 } conf;
 
 #endif
