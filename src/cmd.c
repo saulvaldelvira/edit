@@ -128,15 +128,27 @@ void editor_cmd(const wchar_t *command){
 	if (wcscmp(cmd, L"!quit") == 0){
 		if (editor_ask_confirmation())
 			editor_end();
-	}else if (wcscmp(cmd, L"pwd") == 0){
+	}
+	else if (wcscmp(cmd, L"pwd") == 0){
 		editor_set_status_message(L"%s", editor_cwd());
-	}else if (wcscmp(cmd, L"wq") == 0){
+	}
+	else if (wcscmp(cmd, L"wq") == 0){
 		bool ask_filename = conf.filename == NULL;
 		int ret = file_save(false, ask_filename);
 		if (ret > 0){
 			buffer_drop();
 		}
-	}else if (wcscmp(cmd, L"strip") == 0){
+	}
+	else if (wcscmp(cmd, L"fwq") == 0){
+		bool ask_filename = conf.filename == NULL;
+		for (int i = 0; i < conf.num_lines; i++)
+			line_format(i);
+		int ret = file_save(false, ask_filename);
+		if (ret > 0){
+			buffer_drop();
+		}
+	}
+	else if (wcscmp(cmd, L"strip") == 0){
 		if (!args[1] || wcscmp(args[1], L"line") == 0){
 			line_strip_trailing_spaces(conf.cy);
 		}

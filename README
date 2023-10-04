@@ -30,6 +30,8 @@ Commands
 ========
 - !quit : Exit the editor
 - pwd : prints the current working directory
+- wq : Write the buffer and close it
+- fwq : Same as wq, but it formats the buffer first
 - strip [line|all]: Strips triling whitespaces
     strip line: same as "strip". Strips current line.
     strip buffer: strips all lines in the current buffer.
