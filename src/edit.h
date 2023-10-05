@@ -12,8 +12,6 @@
 
 #include "buffer.h"
 
-#define VERSION "0.1"
-#define CTRL_KEY(k) ((k) & 0x1f)
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 #define TMP_EXT ".tmp"
 #define MIN(a,b) ((a) < (b) ? (a) : (b))

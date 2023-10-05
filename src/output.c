@@ -71,27 +71,51 @@ void editor_refresh_screen(bool only_status_bar){
 	wstr_clear(buf);
 }
 
+static void print_welcome_msg(WString *buf){
+	static wchar_t* welcome_messages[] = {
+		L"Edit -- Terminal-based text editor",
+		L"Press Alt + H to display the help buffer",
+		NULL
+	};
+	int i;
+	for (i = 0; i < conf.screen_rows / 4; i++)
+		wstr_concat_cwstr(buf, L"~\x1b[K\r\n", 6);
+
+	for (wchar_t **line = welcome_messages; *line != NULL;){
+		wchar_t *msg = *line;
+		int welcome_len = wstrnlen(msg, -1);
+		if (welcome_len > conf.screen_cols - 2)
+			welcome_len = conf.screen_cols - 2;
+		int padding = (conf.screen_cols - welcome_len) / 2;
+		wstr_concat_cwstr(buf, L"~ ", 2);
+		padding-=2;
+		while (padding-- > 0)
+			wstr_push_char(buf, L' ');
+		wstr_concat_cwstr(buf, msg, welcome_len);
+		line++;
+		wstr_concat_cwstr(buf, L"\x1b[K\r\n", 5);
+		if (++i >= conf.screen_rows)
+			break;
+	}
+
+	for (; i <= conf.screen_rows; i++)
+		wstr_concat_cwstr(buf, L"~\x1b[K\r\n", 7);
+}
+
 void editor_draw_rows(WString *buf){
+	if (conf.num_lines == 0
+	 && conf.filename == NULL
+	 && conf.dirty == 0
+	 && conf.n_buffers == 1
+	 ){
+		print_welcome_msg(buf);
+		return;
+	 }
+
 	for (int y = 0; y < conf.screen_rows; y++){
 		int file_line = y + conf.row_offset;
 		if (file_line >= conf.num_lines){
-			if (conf.num_lines == 0 && conf.filename == NULL && conf.dirty == 0 /*&& conf.n_buffers == 1*/ && y == conf.screen_rows / 4){
-				wchar_t welcome[80];
-				int welcome_len = swprintf(welcome, ARRAY_SIZE(welcome),
-							   L"Edit -- version %s", VERSION);
-				if (welcome_len > conf.screen_cols)
-					welcome_len = conf.screen_cols;
-				int padding = (conf.screen_cols - welcome_len) / 2;
-				if (padding){
-					wstr_concat_cwstr(buf, L"~", 1);
-					padding--;
-				}
-				while (padding--)
-					wstr_concat_cwstr(buf, L" ", 1);
-				wstr_concat_cwstr(buf, welcome, welcome_len);
-			}else{
-				wstr_concat_cwstr(buf, L"~", 1);
-			}
+			wstr_concat_cwstr(buf, L"~", 1);
 		}else{
 			WString *line;
 			vector_at(conf.lines_render, y, &line);
@@ -149,12 +173,45 @@ void editor_draw_message_bar(WString *buf){
 
 }
 
-// TODO: set with a specific timeout
-// TODO: set in a Queue, and if one times out, check if another is ready
 void editor_set_status_message(const wchar_t *fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
 	vswprintf(conf.status_msg, ARRAY_SIZE(conf.status_msg), fmt, ap);
 	va_end(ap);
 	conf.status_msg_time = time(NULL);
+}
+
+void editor_help(void){
+	buffer_insert();
+	static wchar_t* lines[] = {
+		L"Keybindings",
+		L"===========",
+		L"Ctrl + E           \t Execute command",
+		L"Ctrl + F           \t Format line",
+		L"Ctrl + K           \t Cut line",
+		L"Ctrl + N           \t Add buffer",
+		L"Ctrl + O           \t Open file",
+		L"Ctrl + Q           \t Kill buffer",
+		L"Ctrl + S           \t Save buffer",
+		L"Ctrl + Left Arrow  \t Move to the buffer on the left",
+		L"Ctrl + Right Arrow \t Move to the buffer on the right",
+		L"F5                 \t Reload file",
+		L"Alt + H            \t Display help buffer",
+		L"",
+		L"Commands",
+		L"========",
+		L"!quit	Exit the editor",L"",
+		L"pwd	prints the current working directory",L"",
+		L"wq	Write the buffer and close it",L"",
+		L"fwq	Same as wq, but it formats the buffer first",L"",
+		L"strip [line|buffer] 	Strips trailing whitespaces",L"",
+		L"search <string> 	jumps to the next occurence of the given string of text",
+		L"  search-backwards	same as search, but backwards.",L"",
+		L"goto [line|buffer] <number>	Jumps to a certain line/buffer",L"",
+		L"format [line|buffer]	The same as Ctrl + F.",L"",
+		L"help	Display the help buffer",
+		NULL
+	};
+	for (wchar_t **line = lines; *line != NULL; line++)
+		line_append(*line, -1);
 }

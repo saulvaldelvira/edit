@@ -25,6 +25,7 @@ Keybindings
 - Ctrl + Left Arrow : Move to the buffer on the left
 - Ctrl + Right Arrow : Move to the buffer on the right
 - F5 : Reload file
+- Alt + H : Display the help buffer
 
 Commands
 ========
@@ -45,6 +46,7 @@ Commands
 - format [line|buffer]: The same as Ctrl + F.
     format line: format the current line.
     format buffer: format the current buffer.
+- help: Display the help buffer
 
 Arguments
 =========

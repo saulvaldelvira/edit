@@ -28,9 +28,14 @@ size_t current_line_length(void){
 }
 
 void line_insert(int at, const wchar_t *str, size_t len){
-	WString *line = wstr_init(len);
-	wstr_concat_cwstr(line, str, len);
+	WString *line = wstr_from_cwstr(str, len);
 	vector_insert_at(conf.lines, at, &line);
+	conf.num_lines++;
+}
+
+void line_append(const wchar_t *str, size_t len){
+	WString *line = wstr_from_cwstr(str, len);
+	vector_append(conf.lines, &line);
 	conf.num_lines++;
 }
 

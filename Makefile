@@ -1,6 +1,6 @@
 .PHONY: clean install uninstall
 CC=gcc
-CFLAGS= -Wall -Wextra -Werror -pedantic -O3 -g $(FLAGS)
+CFLAGS= -Wall -Wextra -pedantic -O3 -g $(FLAGS)
 CFILES= $(wildcard ./src/*.c) $(wildcard ./src/highlight/*.c) \
 		./src/lib/GDS/src/Vector.c ./src/lib/GDS/src/util/compare.c ./src/lib/str/wstr.c
 HFILES= $(wildcard ./src/*.h)

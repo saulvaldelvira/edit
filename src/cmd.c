@@ -183,7 +183,9 @@ void editor_cmd(const wchar_t *command){
 			editor_set_status_message(L"Invalid argument for command \"format\": %ls", args[1]);
 		}
 	}
-	// TODO: help command
+	else if (wcscmp(cmd, L"help") == 0){
+		editor_help();
+	}
 	else {
 		editor_set_status_message(L"Invalid command [%ls]", cmd);
 	}

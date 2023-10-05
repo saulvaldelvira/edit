@@ -3,6 +3,8 @@
 
 #include "edit.h"
 
+#define CTRL_KEY(k) ((k) & 0x1f)
+
 enum editor_key {
 	NO_KEY = 9999,
 	BACKSPACE = 127,
@@ -17,6 +19,7 @@ enum editor_key {
 	HOME_KEY,
 	END_KEY,
 	DEL_KEY,
+	ALT_KEY,
 	F1 = 0xFF1,
 	F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12
 };

@@ -11,7 +11,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-// TODO: buffer and do multiple chars at once to optimize
+static wchar_t alt_key;
+
+static void alt_key_process(){
+	switch (alt_key){
+	case L'h':
+		editor_help();
+		break;
+	default:
+		break;
+	}
+}
+
 int editor_read_key(void){
 	static struct timeval tv = {
 		.tv_sec = 0,
@@ -30,9 +41,9 @@ int editor_read_key(void){
 		wint_t seq[5];
 		if ((seq[0] = getwchar()) == WEOF)
 			return '\x1b';
-		if ((seq[1] = getwchar()) == WEOF)
-			return '\x1b';
 		if (seq[0] == L'[') {
+			if ((seq[1] = getwchar()) == WEOF)
+				return '\x1b';
 			if (iswdigit(seq[1])){
 				if ((seq[2] = getwchar()) == WEOF)
 					return '\x1b';
@@ -111,10 +122,15 @@ int editor_read_key(void){
 				}
 			}
 		}else if (seq[0] == 'O'){
+			if ((seq[1] = getwchar()) == WEOF)
+				return '\x1b';
 			switch (seq[1]){
 			case 'H': return HOME_KEY;
 			case 'F': return END_KEY;
 			}
+		}else{
+			alt_key = seq[0];
+			return ALT_KEY;
 		}
 		return '\x1b';
 	} else {
@@ -138,7 +154,6 @@ void editor_process_key_press(int c){
 	}while(0)
 
 	switch (c){
-
 	case '\r':
 		line_insert_newline();
 		break;
@@ -166,7 +181,6 @@ void editor_process_key_press(int c){
 	case END_KEY:
 		conf.cx = current_line_length();
 		break;
-
 	case CTRL_KEY('o'):
 		quit_times_msg("Ctrl + O");
 		{
@@ -190,14 +204,15 @@ void editor_process_key_press(int c){
 	case CTRL_KEY('n'):
 		buffer_insert();
 		break;
-
+	case ALT_KEY:
+		alt_key_process();
+		break;
 	case CTRL_ARROW_LEFT:
 		buffer_switch(conf.buffer_index - 1);
 		break;
 	case CTRL_ARROW_RIGHT:
 		buffer_switch(conf.buffer_index + 1);
 		break;
-
 	case CTRL_KEY('e'):
 		editor_cmd(NULL);
 		break;
@@ -205,7 +220,6 @@ void editor_process_key_press(int c){
 	case CTRL_KEY('y'):
 		line_toogle_comment();
 		break;
-
 	case BACKSPACE:
 	case CTRL_KEY('h'):
 	case DEL_KEY:
@@ -219,7 +233,6 @@ void editor_process_key_press(int c){
 			file_reload();
 		}
 		break;
-
 	case '\x1b':
 		break;
 	case NO_KEY:
