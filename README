@@ -26,6 +26,7 @@ Keybindings
 - Ctrl + Right Arrow : Move to the buffer on the right
 - F5 : Reload file
 - Alt + H : Display the help buffer
+- Alt + 7 : Toggle comment in the current line
 
 Commands
 ========

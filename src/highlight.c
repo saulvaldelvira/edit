@@ -1,24 +1,8 @@
 #include "highlight.h"
 #include "highlight/color.h"
 #include "edit.h"
+#include "mode.h"
 #include <stdlib.h>
-
-static wchar_t* get_filename_ext(void){
-	WString *tmp_filename_wstr = wstr_from_cwstr(conf.filename, -1);
-	int i = wstr_find_substring(tmp_filename_wstr, L".", 1);
-	int prev_i = -1;
-	while (i >= 0){
-		prev_i = i;
-		i = wstr_find_substring(tmp_filename_wstr, L".", i + 1);
-	}
-	if (prev_i < 0){
-		wstr_free(tmp_filename_wstr);
-		return NULL;
-	}
-	wchar_t *ext = wstr_substring(tmp_filename_wstr, prev_i + 1, -1);
-	wstr_free(tmp_filename_wstr);
-	return ext;
-}
 
 static void default_highlight(void){
 	WString *line;
@@ -33,21 +17,14 @@ static void default_highlight(void){
 }
 
 void editor_highlight(void){
-	if (!conf.filename)
-		return;
-	wchar_t *ext = get_filename_ext();
-	if (!ext){
-		default_highlight();
-		return;
+	int mode = mode_get_current();
+	if (mode == NO_MODE) return;
+	
+	switch (mode){
+	case C_MODE: 
+		highlight_c(); break;
+	case DEFAULT_MODE:
+	default:
+		default_highlight(); break;
 	}
-
-	if (wcscmp(ext, L"c") == 0
-	 || wcscmp(ext, L"h") == 0)
-	{
-		highlight_c();
-	}else{
-		default_highlight();
-	}
-
-	free(ext);
 }

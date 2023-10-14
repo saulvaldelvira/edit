@@ -2,6 +2,7 @@
 #include "input.h"
 #include "util.h"
 #include "cursor.h"
+#include "mode.h"
 #include <stdlib.h>
 #include <wchar.h>
 #include <assert.h>
@@ -112,9 +113,17 @@ void line_cut(void){
 	conf.dirty++;
 }
 
-void line_toogle_comment(void){
-	// remove assert include after implementing this
-	assert(0 && "Not implemented!");
+void line_toggle_comment(void){
+	int mode = mode_get_current();
+	if (mode == NO_MODE) return;
+	const wchar_t *comment = mode_comments[mode];
+	
+	WString *line = current_line();
+	int match = wstr_find_substring(line, comment, 0);
+	if (match == 0)
+		wstr_replace(line, comment, L"");
+	else
+		wstr_insert_cwstr(line, comment, -1, 0);
 }
 
 void line_strip_trailing_spaces(int cy){

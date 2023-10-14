@@ -202,9 +202,11 @@ int file_save(bool only_tmp, bool ask_filename){
 		}
 
 		if (magnitude > 0)
-			editor_set_status_message(L"%.1f %s written to disk [%s]", value, magnitudes[magnitude], filename);
+			editor_set_status_message(L"%.1f %s written to disk [%s]",
+						  value, magnitudes[magnitude], filename);
 		else
-			editor_set_status_message(L"%.0f %s written to disk [%s]", value, magnitudes[magnitude], filename);
+			editor_set_status_message(L"%.0f %s written to disk [%s]",
+						  value, magnitudes[magnitude], filename);
 		conf.dirty = 0;
 	}
 

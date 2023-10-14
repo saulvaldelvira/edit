@@ -16,8 +16,9 @@ static wchar_t alt_key;
 static void alt_key_process(){
 	switch (alt_key){
 	case L'h':
-		editor_help();
-		break;
+		editor_help(); break;
+	case L'7':
+		line_toggle_comment(); break;
 	default:
 		break;
 	}
@@ -216,10 +217,6 @@ void editor_process_key_press(int c){
 	case CTRL_KEY('e'):
 		editor_cmd(NULL);
 		break;
-
-	case CTRL_KEY('y'):
-		line_toogle_comment();
-		break;
 	case BACKSPACE:
 	case CTRL_KEY('h'):
 	case DEL_KEY:
@@ -327,9 +324,11 @@ WString* editor_prompt(const wchar_t *prompt, wchar_t *default_response){
 
 bool editor_ask_confirmation(void){
 	WString *response = editor_prompt(L"Are you sure? Y/n", L"Y");
-	bool result = false;
-	if (response && wstr_length(response) == 1 && (wstr_get_at(response, 0) == L'Y' || wstr_get_at(response, 0) == L'y'))
-		result = true;
+	bool result =
+		response != NULL
+		&& wstr_length(response) == 1
+		&& (wstr_get_at(response, 0) == L'Y'
+		    || wstr_get_at(response, 0) == L'y');			
 	wstr_free(response);
 	return result;
 }

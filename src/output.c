@@ -197,6 +197,7 @@ void editor_help(void){
 		L"Ctrl + Right Arrow \t Move to the buffer on the right",
 		L"F5                 \t Reload file",
 		L"Alt + H            \t Display help buffer",
+		L"Alt + 7            \t Toggle comment in the current line",
 		L"",
 		L"Commands",
 		L"========",

@@ -133,7 +133,8 @@ int main(int argc, char *argv[]){
 
 	int first_buf = i-1;
 	for (; i < argc; i++){
-		editor_set_status_message(L"Loading buffer %d of %d [%s] ...", i - first_buf, argc - 1 - first_buf, argv[i]);
+		editor_set_status_message(L"Loading buffer %d of %d [%s] ...",
+					  i - first_buf, argc - 1 - first_buf, argv[i]);
 		buffer_insert();
 		editor_refresh_screen(true);
 
