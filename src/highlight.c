@@ -19,9 +19,9 @@ static void default_highlight(void){
 void editor_highlight(void){
 	int mode = mode_get_current();
 	if (mode == NO_MODE) return;
-	
+
 	switch (mode){
-	case C_MODE: 
+	case C_MODE:
 		highlight_c(); break;
 	case DEFAULT_MODE:
 	default:

@@ -3,10 +3,11 @@
 
 #include <stddef.h>
 
-extern wchar_t * mode_comments[];
+
+extern wchar_t * mode_comments[][2];
 
 enum {
-	NO_MODE = 0, C_MODE, DEFAULT_MODE
+	NO_MODE = 0, C_MODE, DEFAULT_MODE, HTML_MODE
 };
 
 int mode_get_current(void);

@@ -116,14 +116,25 @@ void line_cut(void){
 void line_toggle_comment(void){
 	int mode = mode_get_current();
 	if (mode == NO_MODE) return;
-	const wchar_t *comment = mode_comments[mode];
-	
+	const wchar_t *comment_start = mode_comments[mode][0];
+	const wchar_t *comment_end = mode_comments[mode][1];
+
 	WString *line = current_line();
-	int match = wstr_find_substring(line, comment, 0);
+	int match = wstr_find_substring(line, comment_start, 0);
+	// TODO: Replace only the outermost comment
 	if (match == 0)
-		wstr_replace(line, comment, L"");
+		wstr_replace(line, comment_start, L"");
 	else
-		wstr_insert_cwstr(line, comment, -1, 0);
+		wstr_insert_cwstr(line, comment_start, -1, 0);
+
+	if (comment_end == NULL) return;
+	if (match != 0){
+		wstr_concat_cwstr(line, comment_end, -1);
+		return;
+	}
+	match = wstr_find_substring(line, comment_end, 0);
+	if (match >= 0)
+		wstr_replace(line, comment_end, L"");
 }
 
 void line_strip_trailing_spaces(int cy){

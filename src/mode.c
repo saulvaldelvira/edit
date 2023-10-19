@@ -2,8 +2,11 @@
 #include "edit.h"
 #include <stdlib.h>
 
-wchar_t * mode_comments[] = {
-	L"", L"//", L"#"
+wchar_t * mode_comments[][2] = {
+	{L"",   NULL},
+	{L"//", NULL},
+	{L"#",  NULL},
+	{L"<!--", L"-->"}
 };
 
 static wchar_t* get_filename_ext(void){
@@ -34,7 +37,11 @@ int mode_get_current(void){
 	    || wcscmp(ext, L"h") == 0)
 	{
 		mode = C_MODE;
-	}else{
+	}
+	else if (wcscmp(ext, L"html") == 0){
+		mode = HTML_MODE;
+	}
+	else{
 		mode = DEFAULT_MODE;
 	}
 	free(ext);
