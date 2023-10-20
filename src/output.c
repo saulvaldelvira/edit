@@ -198,6 +198,7 @@ void editor_help(void){
 		L"F5                 \t Reload file",
 		L"Alt + H            \t Display help buffer",
 		L"Alt + 7            \t Toggle comment in the current line",
+		L"Alt + S            \t Search in the buffer",
 		L"",
 		L"Commands",
 		L"========",

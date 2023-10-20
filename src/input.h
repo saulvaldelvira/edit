@@ -26,7 +26,7 @@ enum editor_key {
 
 int editor_read_key(void);
 void editor_process_key_press(int c);
-WString* editor_prompt(const wchar_t *prompt, wchar_t *default_response);
+WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response);
 bool editor_ask_confirmation(void);
 
 #endif

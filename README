@@ -27,6 +27,7 @@ Keybindings
 - F5 : Reload file
 - Alt + H : Display the help buffer
 - Alt + 7 : Toggle comment in the current line
+- Alt + S : Search in the buffer
 
 Commands
 ========

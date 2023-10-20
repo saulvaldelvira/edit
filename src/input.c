@@ -19,6 +19,8 @@ static void alt_key_process(){
 		editor_help(); break;
 	case L'7':
 		line_toggle_comment(); break;
+	case L's':
+		editor_cmd(L"search"); break;
 	default:
 		break;
 	}
@@ -245,7 +247,7 @@ void editor_process_key_press(int c){
 	cursor_scroll();
 }
 
-WString* editor_prompt(const wchar_t *prompt, wchar_t *default_response){
+WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response){
 	WString *response = wstr_empty();
 	if (default_response)
 		wstr_concat_cwstr(response, default_response, FILENAME_MAX);
@@ -328,7 +330,7 @@ bool editor_ask_confirmation(void){
 		response != NULL
 		&& wstr_length(response) == 1
 		&& (wstr_get_at(response, 0) == L'Y'
-		    || wstr_get_at(response, 0) == L'y');			
+		    || wstr_get_at(response, 0) == L'y');
 	wstr_free(response);
 	return result;
 }

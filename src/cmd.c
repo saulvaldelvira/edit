@@ -54,23 +54,22 @@ static void cmd_goto(wchar_t **args){
 }
 
 static void cmd_search(bool forward, wchar_t **args){
-	// TODO: save last search
-	wchar_t *arg = args[1];
-	WString *search_wstr = NULL;
-	const wchar_t *search;
-	if (!arg){
-		search_wstr = editor_prompt(L"Search text", NULL);
+	static wchar_t *search;
+
+	WString *search_wstr;
+	if (!args[1]){
+		search_wstr = editor_prompt(L"Search text", search);
 		if (!search_wstr || wstr_length(search_wstr) == 0){
 			wstr_free(search_wstr);
 			return;
 		}
-		search = wstr_get_buffer(search_wstr);
 	}else{
-		search = arg;
+		search_wstr = wstr_from_cwstr(args[1], -1);
 	}
+	free(search);
+	search = wstr_to_cwstr(search_wstr);
 
 	bool found = false;
-
 	if (forward){
 		for (int i = conf.cy; i < conf.num_lines; i++){
 			WString *line;
@@ -105,7 +104,6 @@ static void cmd_search(bool forward, wchar_t **args){
 	}
 	if (!found)
 		editor_set_status_message(L"String [%ls] not found", search);
-
 	wstr_free(search_wstr);
 }
 
@@ -189,8 +187,9 @@ void editor_cmd(const wchar_t *command){
 	else {
 		editor_set_status_message(L"Invalid command [%ls]", cmd);
 	}
-	while (*args)
-		free(*args++);
+	for (wchar_t **p = args; *p; p++)
+		free(*p);
+	free(args);
 	free(last_cmd);
 	last_cmd = wstr_to_cwstr(cmdstr);
 	wstr_free(cmdstr);
