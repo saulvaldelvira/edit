@@ -21,6 +21,8 @@ static void alt_key_process(){
 		line_toggle_comment(); break;
 	case L's':
 		editor_cmd(L"search"); break;
+	case L'r':
+		editor_cmd(L"replace"); break;
 	default:
 		break;
 	}

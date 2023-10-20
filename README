@@ -28,6 +28,7 @@ Keybindings
 - Alt + H : Display the help buffer
 - Alt + 7 : Toggle comment in the current line
 - Alt + S : Search in the buffer
+- Alt + R : Replace command
 
 Commands
 ========
@@ -45,6 +46,7 @@ Commands
 - search <string>: jumps to the next occurence of the given
 		   string of text
 - search-backwards: same as search, but backwards.
+- replace <text> <replacement> : Replaces all instances of <text> with <replacement>
 - format [line|buffer]: The same as Ctrl + F.
     format line: format the current line.
     format buffer: format the current buffer.

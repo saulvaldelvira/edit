@@ -209,7 +209,8 @@ void editor_help(void){
 		L"strip [line|buffer] 	Strips trailing whitespaces",L"",
 		L"search <string> 	jumps to the next occurence of the given string of text",
 		L"  search-backwards	same as search, but backwards.",L"",
-		L"goto [line|buffer] <number>	Jumps to a certain line/buffer",L"",
+		L"replace <text> <replacement>  Replaces all instances of <text> with <replacement>",L"",
+		L"goto [line|buffer] <number>   Jumps to a certain line/buffer",L"",
 		L"format [line|buffer]	The same as Ctrl + F.",L"",
 		L"help	Display the help buffer",
 		NULL

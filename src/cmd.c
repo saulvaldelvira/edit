@@ -68,6 +68,7 @@ static void cmd_search(bool forward, wchar_t **args){
 	}
 	free(search);
 	search = wstr_to_cwstr(search_wstr);
+	wstr_free(search_wstr);
 
 	bool found = false;
 	if (forward){
@@ -104,7 +105,44 @@ static void cmd_search(bool forward, wchar_t **args){
 	}
 	if (!found)
 		editor_set_status_message(L"String [%ls] not found", search);
-	wstr_free(search_wstr);
+}
+
+static void cmd_replace(wchar_t **args){
+	static wchar_t *text = NULL,*replacement = NULL;
+
+	WString *text_wstr;
+	if (!args[1]){
+		text_wstr = editor_prompt(L"Replace", text);
+		if (!text_wstr || wstr_length(text_wstr) == 0){
+			wstr_free(text_wstr);
+			return;
+		}
+	}else{
+		text_wstr = wstr_from_cwstr(args[1], -1);
+	}
+
+	free(text);
+	text = wstr_to_cwstr(text_wstr);
+	wstr_clear(text_wstr);
+
+	if (!args[1] || !args[2]){
+		text_wstr = editor_prompt(L"Replace with", replacement);
+		if (!text_wstr || wstr_length(text_wstr) == 0){
+			wstr_free(text_wstr);
+			return;
+		}
+	}else{
+		text_wstr = wstr_from_cwstr(args[2], -1);
+	}
+
+	free(replacement);
+	replacement = wstr_to_cwstr(text_wstr);
+	wstr_free(text_wstr);
+
+	for (int i = 0; i < conf.num_lines; i++){
+		WString *line = line_at(i);
+		wstr_replace(line,text,replacement);
+	}
 }
 
 void editor_cmd(const wchar_t *command){
@@ -165,6 +203,9 @@ void editor_cmd(const wchar_t *command){
 		 || wcscmp(cmd, L"search-forward") == 0
 		){
 		cmd_search(true, args);
+	}
+	else if (wcscmp(cmd, L"replace") == 0){
+		cmd_replace(args);
 	}
 	else if (wcscmp(cmd, L"search-backwards") == 0){
 		cmd_search(false, args);
