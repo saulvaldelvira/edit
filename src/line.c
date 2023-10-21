@@ -104,12 +104,17 @@ void line_insert_newline(void){
 	conf.dirty++;
 }
 
-void line_cut(void){
+void line_cut(bool whole){
 	if (conf.cy >= conf.num_lines)
 		return;
-	vector_remove_at(conf.lines, conf.cy);
-	conf.num_lines--;
-	cursor_adjust();
+	if (whole){
+		vector_remove_at(conf.lines, conf.cy);
+		conf.num_lines--;
+		cursor_adjust();
+	}else {
+		WString *line = current_line();
+		wstr_remove_range(line, conf.cx, -1);
+	}
 	conf.dirty++;
 }
 

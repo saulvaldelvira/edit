@@ -12,7 +12,7 @@ int line_cx_to_rx(WString *line, int cx);
 void line_put_char(int c);
 void line_delete_char(void);
 void line_insert_newline(void);
-void line_cut(void);
+void line_cut(bool whole);
 void line_toggle_comment(void);
 void line_strip_trailing_spaces(int cy);
 void line_format(int cy);

@@ -24,6 +24,8 @@ static void alt_key_process(){
 		editor_cmd(L"search"); break;
 	case L'r':
 		editor_cmd(L"replace"); break;
+	case L'k':
+		line_cut(false); break;
 	default:
 		break;
 	}
@@ -176,7 +178,7 @@ void editor_process_key_press(int c){
 		cursor_move(c);
 		break;
 	case CTRL_KEY('k'):
-		line_cut();
+		line_cut(true);
 		break;
 	case CTRL_KEY('s'):
 		file_save(false, true);

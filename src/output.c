@@ -199,6 +199,7 @@ void editor_help(void){
 		L"Alt + H            \t Display help buffer",
 		L"Alt + 7            \t Toggle comment in the current line",
 		L"Alt + S            \t Search in the buffer",
+		L"Alt + K            \t Cut the line from the cursor to the end",
 		L"",
 		L"Commands",
 		L"========",

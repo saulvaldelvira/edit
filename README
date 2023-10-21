@@ -29,6 +29,7 @@ Keybindings
 - Alt + 7 : Toggle comment in the current line
 - Alt + S : Search in the buffer
 - Alt + R : Replace command
+- Alt + K : Cut the line from the cursor to the end.
 
 Commands
 ========
