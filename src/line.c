@@ -85,6 +85,7 @@ void line_delete_char(void){
 		wstr_remove_at(line, conf.cx - 1);
 		cursor_move(ARROW_LEFT);
 	}
+	conf.dirty++;
 }
 
 void line_insert_newline(void){
