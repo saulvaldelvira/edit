@@ -10,6 +10,7 @@
 #include <sys/select.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <wctype.h>
 
 static wchar_t alt_key;
 

@@ -179,14 +179,26 @@ int file_save(bool only_tmp, bool ask_filename){
 		char *filename = mb_filename(NULL, false);
 		bool adjust_perms = access(filename, F_OK) == 0;
 		mode_t perms;
+		struct stat file_stat;
 		if (adjust_perms){
-			struct stat file_stat;
-			if (stat(filename, &file_stat) != 0)
-				die("stat, on editor_save");
+			stat(filename, &file_stat);
 			perms = file_stat.st_mode;
 		}
-		if (rename(tmp_filename, filename) != 0
-		    || (adjust_perms && chmod(filename, perms) != 0)
+
+		/* Since we write to a temporary file and then rename it to the actual
+		   one, saving a symlink would overwrite it. So in that case, we need to
+		   get the "real" filename before saving. */
+		lstat(filename, &file_stat);
+		char filenamebuf[PATH_MAX + 1];
+		char *real_filename = filename;
+		if (S_ISLNK(file_stat.st_mode)){
+			readlink(filename, filenamebuf, PATH_MAX);
+			filenamebuf[PATH_MAX] = '\0';
+			real_filename = filenamebuf;
+		}
+
+		if (rename(tmp_filename, real_filename) != 0
+		    || (adjust_perms && chmod(real_filename, perms) != 0)
 			){
 			editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
 			wstr_free(buf);
@@ -251,4 +263,3 @@ void file_auto_save(void){
 
 	buffer_switch(buf_i);
 }
-
