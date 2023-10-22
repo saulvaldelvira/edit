@@ -127,7 +127,7 @@ static void cmd_replace(wchar_t **args){
 
 	if (!args[1] || !args[2]){
 		text_wstr = editor_prompt(L"Replace with", replacement);
-		if (!text_wstr || wstr_length(text_wstr) == 0){
+		if (!text_wstr){
 			wstr_free(text_wstr);
 			return;
 		}
