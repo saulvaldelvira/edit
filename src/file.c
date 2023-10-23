@@ -177,9 +177,10 @@ int file_save(bool only_tmp, bool ask_filename){
 
 	if (!only_tmp){
 		char *filename = mb_filename(NULL, false);
-		bool adjust_perms = access(filename, F_OK) == 0;
-		mode_t perms;
 		struct stat file_stat;
+		// if the file already exists, adjust the permissions
+		bool adjust_perms = access(filename, F_OK) == 0;
+		mode_t perms = 0;
 		if (adjust_perms){
 			stat(filename, &file_stat);
 			perms = file_stat.st_mode;
