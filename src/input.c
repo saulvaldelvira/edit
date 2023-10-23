@@ -150,15 +150,16 @@ int editor_read_key(void){
 
 void editor_process_key_press(int c){
 	static int quit_times;
-#define quit_times_msg(key)						                               \
-	do{								                               \
-		if (conf.dirty && quit_times > 0){			                               \
-			editor_set_status_message(L"WARNING! File has unsaved changes. "               \
-						  "Press %s %d more times to quit.", key, quit_times); \
-			quit_times--;					                               \
-			return;						                               \
-		}else if (quit_times == 0)				                               \
-			editor_set_status_message(L"");			                               \
+#define quit_times_msg(key)						                 \
+	do{								                 \
+		if (conf.dirty && quit_times > 0){			                 \
+			editor_set_status_message(L"WARNING! File has unsaved changes. " \
+				                  L"Press %s %d more times to quit.",    \
+	                                          key, quit_times);	                 \
+			quit_times--;					                 \
+			return;						                 \
+		}else if (quit_times == 0)				                 \
+			editor_set_status_message(L"");			                 \
 	}while(0)
 
 	switch (c){
