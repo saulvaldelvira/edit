@@ -87,13 +87,12 @@ static void init(void){
 	conf.last_auto_save = time(0);
 	enable_raw_mode();
 
+	/* Prepare the pipe to "wake up" the editor on window resize.
+	   The read end of the pipe must be non-blocking so the loop in main
+	   that "discards" all written characters doesn't block the execution. */
 	pipe(pipefd);
 	signal(SIGWINCH, signal_handler);
-	int flags = fcntl(pipefd[1], F_GETFL, 0);
-	flags |= O_NONBLOCK;
-	fcntl(pipefd[1], F_SETFL, flags);
-
-	flags = fcntl(pipefd[0], F_GETFL, 0);
+	int flags = fcntl(pipefd[0], F_GETFL, 0);
 	flags |= O_NONBLOCK;
 	fcntl(pipefd[0], F_SETFL, flags);
 
@@ -166,7 +165,7 @@ int main(int argc, char *argv[]){
 	int c = NO_KEY, last_c;
 	long last_status_update = 0;
 
-	while (1){
+	for (;;){
 		last_c = c;
 		c = editor_read_key();
 	       	editor_process_key_press(c);
@@ -180,7 +179,8 @@ int main(int argc, char *argv[]){
 		}
 
 		if (c == NO_KEY){
-			static struct timeval tv = {50,0};
+			// Sleep for 30 seconds, or until input is available
+			struct timeval tv = {30,0};
 			fd_set rfds;
 			FD_ZERO(&rfds);
 			FD_SET(STDIN_FILENO, &rfds);
@@ -190,7 +190,7 @@ int main(int argc, char *argv[]){
 			select(max, &rfds, NULL, NULL, &tv);
 			char discard;
 			while (read(pipefd[0], &discard, 1) == 1)
-				editor_refresh_screen(true);
+			        editor_refresh_screen(true);
 		}
 	}
 }
