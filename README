@@ -30,6 +30,8 @@ Keybindings
 - Alt + S : Search in the buffer
 - Alt + R : Replace command
 - Alt + K : Cut the line from the cursor to the end.
+- Alt + Up Arrow:   Moves the current line up.
+- Alt + Down Arrow: Moves the current line down.
 
 Commands
 ========

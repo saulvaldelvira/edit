@@ -200,6 +200,8 @@ void editor_help(void){
 		L"Alt + 7            \t Toggle comment in the current line",
 		L"Alt + S            \t Search in the buffer",
 		L"Alt + K            \t Cut the line from the cursor to the end",
+		L"Alt + Up Arrow     \t Moves the current line up",
+		L"Alt + Down Arrow   \t Moves the current line down",
 		L"",
 		L"Commands",
 		L"========",

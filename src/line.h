@@ -10,6 +10,8 @@ void line_insert(int at, const wchar_t *line, size_t len);
 void line_append(const wchar_t *line, size_t len);
 int line_cx_to_rx(WString *line, int cx);
 void line_put_char(int c);
+void line_move_up();
+void line_move_down();
 void line_delete_char(void);
 void line_insert_newline(void);
 void line_cut(bool whole);

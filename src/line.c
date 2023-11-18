@@ -49,6 +49,18 @@ int line_cx_to_rx(WString *line, int cx){
 	return rx;
 }
 
+void line_move_up(){
+	if (conf.cy == 0) return;
+	vector_swap(conf.lines, conf.cy, conf.cy - 1);
+	conf.cy--;
+}
+
+void line_move_down(){
+	if (conf.cy == conf.num_lines - 1) return;
+	vector_swap(conf.lines, conf.cy, conf.cy + 1);
+	conf.cy++;
+}
+
 void line_put_char(int c){
 	if (conf.cy == conf.num_lines)
 		line_insert(conf.num_lines, L"", 0);

@@ -26,6 +26,13 @@ static void alt_key_process(){
 		editor_cmd(L"replace"); break;
 	case L'k':
 		line_cut(false); break;
+	case 'A': // Alt + UP
+		line_move_up(); break;
+	case 'B': // Alt + DOWN
+		line_move_down(); break;
+	case 'C': // Alt + LEFT
+	case 'D': // Alt + RIGHT
+		break;
 	default:
 		break;
 	}
@@ -87,6 +94,11 @@ int editor_read_key(void){
 							default:
 								return '\x1b';
 							}
+						}else if (seq[3] == '3'){
+							if ((seq[4] = getwchar()) == WEOF)
+								return '\x1b';
+							alt_key = seq[4];
+							return ALT_KEY;
 						}
 					}else if (seq[3] == '~'){
 						switch (seq[2]){
@@ -142,7 +154,6 @@ int editor_read_key(void){
 		}
 		return '\x1b';
 	} else {
-
 		return c;
 	}
 
