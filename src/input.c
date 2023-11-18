@@ -259,7 +259,6 @@ void editor_process_key_press(int c){
 			line_put_char(c);
 		break;
 	}
-
 	quit_times = conf.quit_times;
 	cursor_scroll();
 }

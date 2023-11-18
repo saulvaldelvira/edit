@@ -175,54 +175,55 @@ int file_save(bool only_tmp, bool ask_filename){
 	fflush(f);
 	fclose(f);
 
-	if (!only_tmp){
-		char *filename = mb_filename(NULL, false);
-		struct stat file_stat;
-		// if the file already exists, adjust the permissions
-		bool adjust_perms = access(filename, F_OK) == 0;
-		mode_t perms = 0;
-		if (adjust_perms){
-			stat(filename, &file_stat);
-			perms = file_stat.st_mode;
-		}
+	if (only_tmp) goto cleanup;
 
-		/* Since we write to a temporary file and then rename it to the actual
-		   one, saving a symlink would overwrite it. So in that case, we need to
-		   get the "real" filename before saving. */
-		lstat(filename, &file_stat);
-		char filenamebuf[PATH_MAX + 1];
-		char *real_filename = filename;
-		if (S_ISLNK(file_stat.st_mode)){
-			readlink(filename, filenamebuf, PATH_MAX);
-			filenamebuf[PATH_MAX] = '\0';
-			real_filename = filenamebuf;
-		}
-
-		if (rename(tmp_filename, real_filename) != 0
-		    || (adjust_perms && chmod(real_filename, perms) != 0)
-			){
-			editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
-			wstr_free(buf);
-		       	free(tmp_filename);
-			return -3;
-		}
-		char *magnitudes[] = {"bytes", "KiB", "MiB", "GiB"};
-		double value = len;
-		size_t magnitude = 0;
-		while ((int)(value / 1024) > 0 && magnitude < sizeof(magnitudes)){
-			magnitude++;
-			value /= 1024;
-		}
-
-		if (magnitude > 0)
-			editor_set_status_message(L"%.1f %s written to disk [%s]",
-						  value, magnitudes[magnitude], filename);
-		else
-			editor_set_status_message(L"%.0f %s written to disk [%s]",
-						  value, magnitudes[magnitude], filename);
-		conf.dirty = 0;
+	char *filename = mb_filename(NULL, false);
+	struct stat file_stat;
+	// if the file already exists, adjust the permissions
+	bool adjust_perms = access(filename, F_OK) == 0;
+	mode_t perms = 0;
+	if (adjust_perms){
+		stat(filename, &file_stat);
+		perms = file_stat.st_mode;
 	}
 
+	/* Since we write to a temporary file and then rename it to the actual
+	   one, saving a symlink would overwrite it. So in that case, we need to
+	   get the "real" filename before saving. */
+	lstat(filename, &file_stat);
+	char filenamebuf[PATH_MAX + 1];
+	char *real_filename = filename;
+	if (S_ISLNK(file_stat.st_mode)){
+		readlink(filename, filenamebuf, PATH_MAX);
+		filenamebuf[PATH_MAX] = '\0';
+		real_filename = filenamebuf;
+	}
+
+	if (rename(tmp_filename, real_filename) != 0
+	    || (adjust_perms && chmod(real_filename, perms) != 0)
+		){
+		editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
+		wstr_free(buf);
+		free(tmp_filename);
+		return -3;
+	}
+	char *magnitudes[] = {"bytes", "KiB", "MiB", "GiB"};
+	double value = len;
+	size_t magnitude = 0;
+	while ((int)(value / 1024) > 0 && magnitude < sizeof(magnitudes)){
+		magnitude++;
+		value /= 1024;
+	}
+
+	if (magnitude > 0)
+		editor_set_status_message(L"%.1f %s written to disk [%s]",
+					  value, magnitudes[magnitude], filename);
+	else
+		editor_set_status_message(L"%.0f %s written to disk [%s]",
+					  value, magnitudes[magnitude], filename);
+	conf.dirty = 0;
+
+cleanup:
 	wstr_free(buf);
 	free(tmp_filename);
 	return 1;
