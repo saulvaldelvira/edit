@@ -236,12 +236,12 @@ void editor_process_key_press(int c){
 	case CTRL_KEY('e'):
 		editor_cmd(NULL);
 		break;
+	case DEL_KEY:
+		line_delete_char_forward();
+		break;
 	case BACKSPACE:
 	case CTRL_KEY('h'):
-	case DEL_KEY:
-		if (c == DEL_KEY && cursor_move(ARROW_RIGHT) != 1)
-			break;
-		line_delete_char();
+		line_delete_char_backwards();
 		break;
 	case F5:
 		if (conf.filename){

@@ -78,7 +78,23 @@ void line_put_char(int c){
 	conf.dirty += n;
 }
 
-void line_delete_char(void){
+void line_delete_char_forward(void){
+	if (conf.cy == conf.num_lines)
+		return;
+	if (conf.cx == 0 && current_line_length() == 0){
+		vector_remove_at(conf.lines, conf.cy);
+		conf.num_lines--;
+	}else{
+		cursor_move(ARROW_RIGHT);
+		line_delete_char_backwards();
+	}
+}
+
+void line_delete_char_backwards(void){
+	if (conf.cy == conf.num_lines){
+		cursor_move(ARROW_LEFT);
+		return;
+	}
 	WString *line;
 	vector_at(conf.lines, conf.cy, &line);
 	if (conf.cx == 0){
