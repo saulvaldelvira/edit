@@ -8,28 +8,13 @@ void cursor_adjust(void){
 	size_t line_len = current_line_length();
 	if ((size_t)conf.cx > line_len)
 		conf.cx = line_len;
-}
-
-static void adjust_cx_to_rx(int rx){
-	int acc = 0;
-	WString *current = current_line();
-	WString *render;
-	vector_at(conf.lines_render, conf.cy - conf.row_offset, &render);
-	for (conf.cx = 0; (size_t)conf.cx < wstr_length(render); conf.cx++){
-		wchar_t c = wstr_get_at(current, conf.cx);
-		acc += get_character_width(c, acc);
-		if (acc > rx)
-			break;
-	}
-}
-
-void cursor_scroll(void){
-	conf.rx = 0;
+ 	conf.rx = 0;
 	if (conf.cy < conf.num_lines){
 		WString *line;
 		vector_at(conf.lines, conf.cy, &line);
 		conf.rx = line_cx_to_rx(line, conf.cx);
 	}
+	// Adjust scroll
 	if (conf.cy < conf.row_offset)
 		conf.row_offset = conf.cy;
 	if (conf.cy >= conf.row_offset + conf.screen_rows)
@@ -40,15 +25,9 @@ void cursor_scroll(void){
 		conf.col_offset = conf.rx - conf.screen_cols + 1;
 }
 
+
 int cursor_move(int key){
 	WString *row = current_line();
-
-	int rx = 0;
-	if (conf.cy < conf.num_lines){
-		WString *current;
-		vector_at(conf.lines, conf.cy, &current);
-		rx = line_cx_to_rx(current, conf.cx);
-	}
 
 	switch (key){
 	case ARROW_LEFT:
@@ -70,16 +49,12 @@ int cursor_move(int key){
 		}
 		break;
 	case ARROW_UP:
-		if (conf.cy > 0){
+		if (conf.cy > 0)
 			conf.cy--;
-			adjust_cx_to_rx(rx);
-		}
 		break;
 	case ARROW_DOWN:
-		if (conf.cy < conf.num_lines){
+		if (conf.cy < conf.num_lines)
 			conf.cy++;
-			adjust_cx_to_rx(rx);
-		}
 		break;
 	case PAGE_UP:
 		if (conf.cy > conf.row_offset){
@@ -107,6 +82,12 @@ int cursor_move(int key){
 				conf.row_offset = conf.num_lines - 1;
 
 		}
+		break;
+	case HOME_KEY:
+		conf.cx = 0;
+		break;
+	case END_KEY:
+		conf.cx = current_line_length();
 		break;
 	}
 	cursor_adjust();

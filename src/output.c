@@ -23,7 +23,7 @@ static int check_window_size(void){
 		}
 		conf.screen_rows = rows;
 		conf.screen_cols = cols;
-		cursor_scroll();
+		cursor_adjust();
 		return 1;
 	}
 	return 0;

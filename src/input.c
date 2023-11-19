@@ -181,6 +181,8 @@ void editor_process_key_press(int c){
 	case ARROW_RIGHT:
 	case PAGE_UP:
 	case PAGE_DOWN:
+	case HOME_KEY:
+	case END_KEY:
 		cursor_move(c);
 		break;
 	case CTRL_KEY('k'):
@@ -188,12 +190,6 @@ void editor_process_key_press(int c){
 		break;
 	case CTRL_KEY('s'):
 		file_save(false, true);
-		break;
-	case HOME_KEY:
-		conf.cx = 0;
-		break;
-	case END_KEY:
-		conf.cx = current_line_length();
 		break;
 	case CTRL_KEY('o'):
 		quit_times_msg("Ctrl + O");
@@ -254,7 +250,7 @@ void editor_process_key_press(int c){
 		break;
 	}
 	quit_times = conf.quit_times;
-	cursor_scroll();
+	cursor_adjust();
 }
 
 WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response){
