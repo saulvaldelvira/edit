@@ -147,10 +147,8 @@ int file_open(const wchar_t *filename){
 int file_save(bool only_tmp, bool ask_filename){
 	if (ask_filename){
 		WString *filename = editor_prompt(L"Save as", conf.filename);
-		if (!filename || wstr_length(filename) == 0){
-			editor_set_status_message(L"Save aborted");
+		if (!filename || wstr_length(filename) == 0)
 			return -1;
-		}
 		free(conf.filename);
 		conf.filename = wstr_to_cwstr(filename);
 		wstr_free(filename);
