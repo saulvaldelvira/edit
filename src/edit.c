@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/time.h>
+#include <poll.h>
 
 struct conf conf = {
 	.tab_size = 8,
@@ -162,6 +163,13 @@ int main(int argc, char *argv[]){
 	editor_set_status_message(L"");
 	editor_refresh_screen(false);
 
+	struct pollfd pollfds[2] = {
+		{.fd = STDIN_FILENO, .events = POLLIN},
+		{.fd = pipefd[0], .events = POLLIN},
+	};
+	const int poll_nfds = sizeof(pollfds) / sizeof(pollfds[0]);
+	const int poll_timeout_ms = 30000;
+
 	int c = NO_KEY, last_c;
 	long last_status_update = 0;
 
@@ -179,18 +187,13 @@ int main(int argc, char *argv[]){
 		}
 
 		if (c == NO_KEY){
-			// Sleep for 30 seconds, or until input is available
-			struct timeval tv = {30,0};
-			fd_set rfds;
-			FD_ZERO(&rfds);
-			FD_SET(STDIN_FILENO, &rfds);
-			FD_SET(pipefd[0], &rfds);
-			int max = (STDIN_FILENO > pipefd[0]) ? STDIN_FILENO : pipefd[0];
-			max++;
-			select(max, &rfds, NULL, NULL, &tv);
-			char discard;
-			while (read(pipefd[0], &discard, 1) == 1)
-			        editor_refresh_screen(true);
+			// Wait for 30 seconds, or until input is available
+			poll(pollfds, poll_nfds, poll_timeout_ms);
+			if (pollfds[1].revents & POLLIN){
+				editor_refresh_screen(true);
+				char discard;
+				while (read(pipefd[0], &discard, 1) == 1);
+			}
 		}
 	}
 }

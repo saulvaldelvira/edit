@@ -7,10 +7,10 @@
 #include "cmd.h"
 #include "cursor.h"
 #include <unistd.h>
-#include <sys/select.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <wctype.h>
+#include <poll.h>
 
 static wchar_t alt_key;
 
@@ -39,19 +39,13 @@ static void alt_key_process(){
 }
 
 int editor_read_key(void){
-	static struct timeval tv = {
-		.tv_sec = 0,
-		.tv_usec = 50000
+	static struct pollfd fds[1] = {
+		{.fd = STDIN_FILENO, .events = POLLIN}
 	};
-	fd_set rfds;
-	FD_ZERO(&rfds);
-	FD_SET(STDIN_FILENO, &rfds);
-	select(STDIN_FILENO + 1, &rfds, NULL, NULL, &tv);
-	if (FD_ISSET(STDIN_FILENO, &rfds) == 0)
+	if (poll(fds, 1, 0) == 0)
 		return NO_KEY;
 
 	wchar_t c = getwchar();
-
 	if (c == L'\x1b') {
 		wint_t seq[5];
 		if ((seq[0] = getwchar()) == WEOF)
@@ -332,10 +326,10 @@ WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response){
 			break;
 		}
 		if (c == NO_KEY){
-			fd_set rfds;
-			FD_ZERO(&rfds);
-			FD_SET(STDIN_FILENO, &rfds);
-			select(STDIN_FILENO + 1, &rfds, NULL, NULL, &(struct timeval){60,0});
+			struct pollfd fds[1] = {
+				{.fd = STDIN_FILENO, .events = POLLIN}
+			};
+			poll(fds, 1, 60000);
 		}
 	}
 }
