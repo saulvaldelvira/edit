@@ -189,16 +189,22 @@ int file_save(bool only_tmp, bool ask_filename){
 	   one, saving a symlink would overwrite it. So in that case, we need to
 	   get the "real" filename before saving. */
 	lstat(filename, &file_stat);
-	char filenamebuf[PATH_MAX + 1];
-	char *real_filename = filename;
 	if (S_ISLNK(file_stat.st_mode)){
-		readlink(filename, filenamebuf, PATH_MAX);
-		filenamebuf[PATH_MAX] = '\0';
-		real_filename = filenamebuf;
+		char link[PATH_MAX];
+		readlink(filename, link, PATH_MAX-1);
+
+		char *last_slash = strrchr(filename, '/');
+		if (last_slash) ++last_slash;
+		else last_slash = filename;
+		*last_slash = '\0';
+
+		size_t base_len = strlen(filename);
+		link[PATH_MAX - 1 - base_len] = '\0';
+		strncat(last_slash, link, PATH_MAX);
 	}
 
-	if (rename(tmp_filename, real_filename) != 0
-	    || (adjust_perms && chmod(real_filename, perms) != 0)
+	if (rename(tmp_filename, filename) != 0
+	    || (adjust_perms && chmod(filename, perms) != 0)
 		){
 		editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
 		wstr_free(buf);
