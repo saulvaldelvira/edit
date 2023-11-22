@@ -45,10 +45,11 @@ static void enable_raw_mode(void){
 }
 
 static void free_buffer(void *e){
-	struct buffer *buf = (struct buffer*) e;
+	struct buffer *buf = * (struct buffer**) e;
 	free(buf->filename);
 	if (buf->lines)
 		vector_free(buf->lines);
+	free(buf);
 }
 
 static void cleanup(void){
@@ -80,7 +81,7 @@ static void init(void){
 		WString *wstr = wstr_empty();
 		vector_append(conf.lines_render, &wstr);
 	}
-	conf.buffers = vector_init(sizeof(struct buffer), compare_equal);
+	conf.buffers = vector_init(sizeof(struct buffer*), compare_equal);
 	vector_set_destructor(conf.buffers, free_buffer);
 	atexit(cleanup);
 	conf.buffer_index = -1; // Needed so "conf.buffer_index++" sets it to 0 on first buffer

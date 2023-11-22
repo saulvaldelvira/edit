@@ -7,50 +7,50 @@
 #include <stdio.h>
 
 static void save_buffer(void){
-	struct buffer buffer;
+	struct buffer *buffer;
 	vector_at(conf.buffers, conf.buffer_index, &buffer);
-	buffer.cx = conf.cx;
-	buffer.cy = conf.cy;
-	buffer.rx = conf.rx;
-	buffer.row_offset = conf.row_offset;
-	buffer.col_offset = conf.col_offset;
-	buffer.num_lines = conf.num_lines;
-	buffer.dirty = conf.dirty;
-	free(buffer.filename);
-	buffer.filename = conf.filename;
-	buffer.lines = conf.lines;
+	buffer->cx = conf.cx;
+	buffer->cy = conf.cy;
+	buffer->rx = conf.rx;
+	buffer->row_offset = conf.row_offset;
+	buffer->col_offset = conf.col_offset;
+	buffer->num_lines = conf.num_lines;
+	buffer->dirty = conf.dirty;
+	free(buffer->filename);
+	buffer->filename = conf.filename;
+	buffer->lines = conf.lines;
 	conf.lines = NULL;
 	conf.filename = NULL;
-	buffer.eol = conf.eol;
-	vector_set_at(conf.buffers, conf.buffer_index, &buffer);
+	buffer->eol = conf.eol;
 }
 
 static void load_buffer(void){
-	struct buffer buffer;
+	struct buffer *buffer;
 	vector_at(conf.buffers, conf.buffer_index, &buffer);
 	if (conf.lines)
 		vector_free(conf.lines);
-	conf.lines = buffer.lines;
-	buffer.lines = NULL;
-	conf.cx = buffer.cx;
-	conf.cy = buffer.cy;
-	conf.rx = buffer.rx;
-	conf.col_offset = buffer.col_offset;
-	conf.row_offset = buffer.row_offset;
+	conf.lines = buffer->lines;
+	buffer->lines = NULL;
+	conf.cx = buffer->cx;
+	conf.cy = buffer->cy;
+	conf.rx = buffer->rx;
+	conf.col_offset = buffer->col_offset;
+	conf.row_offset = buffer->row_offset;
 	free(conf.filename);
-	conf.filename = buffer.filename;
-	buffer.filename = NULL;
-	conf.num_lines = buffer.num_lines;
-	conf.dirty = buffer.dirty;
-	conf.eol = buffer.eol;
-	vector_set_at(conf.buffers, conf.buffer_index, &buffer);
+	conf.filename = buffer->filename;
+	buffer->filename = NULL;
+	conf.num_lines = buffer->num_lines;
+	conf.dirty = buffer->dirty;
+	conf.eol = buffer->eol;
 }
 
 void buffer_insert(void){
 	Vector *lines = vector_init(sizeof(WString*), compare_equal);
 	vector_set_destructor(lines, free_wstr);
 
-	struct buffer buffer = {
+	struct buffer *buffer = malloc(sizeof(*buffer));
+	if (!buffer) return;
+	*buffer = (struct buffer){
 		.lines = lines,
 		.eol = DEFAULT_EOL
 	};
@@ -94,10 +94,9 @@ void buffer_drop(void){
 }
 
 void buffer_switch(int index){
-	if (index < 0 || index >= conf.n_buffers)
+	if (index < 0 || index >= conf.n_buffers || index == conf.buffer_index)
 		return;
 	save_buffer();
 	conf.buffer_index = index;
 	load_buffer();
 }
-
