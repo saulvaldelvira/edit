@@ -141,7 +141,8 @@ static void cmd_replace(wchar_t **args){
 
 	for (int i = 0; i < conf.num_lines; i++){
 		WString *line = line_at(i);
-		wstr_replace(line,text,replacement);
+		int ret = wstr_replace(line,text,replacement);
+		if (ret > 0) conf.dirty++;
 	}
 }
 
