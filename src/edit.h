@@ -9,7 +9,7 @@
 #include <termios.h>
 #include <time.h>
 #include <wchar.h>
-#include <linux/limits.h>
+#include <limits.h>
 
 #include "buffer.h"
 
