@@ -36,6 +36,12 @@ static void alt_key_process(){
 	default:
 		break;
 	}
+	for (int i = 1; i <= 9; i++){
+		if ((i + '0') == alt_key){
+			buffer_switch(i - 1);
+			return;
+		}
+	}
 }
 
 int editor_read_key(void){

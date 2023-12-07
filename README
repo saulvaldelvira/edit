@@ -32,6 +32,7 @@ Keybindings
 - Alt + K : Cut the line from the cursor to the end.
 - Alt + Up Arrow:   Moves the current line up.
 - Alt + Down Arrow: Moves the current line down.
+- Alt + [1-9] : Go to buffer number [1-9]
 
 Commands
 ========

@@ -202,6 +202,7 @@ void editor_help(void){
 		L"Alt + K            \t Cut the line from the cursor to the end",
 		L"Alt + Up Arrow     \t Moves the current line up",
 		L"Alt + Down Arrow   \t Moves the current line down",
+		L"Alt + [1-9]        \t Go to buffer number [1-9]",
 		L"",
 		L"Commands",
 		L"========",
