@@ -12,15 +12,11 @@ INSTALL_PATH ?= /usr/local
 
 install: edit
 	$(info Installing in $(INSTALL_PATH)/bin)
-	@ sudo su -c ' \
-	  install -d $(INSTALL_PATH)/bin ;\
-	  install -m  755 ./edit $(INSTALL_PATH)/bin ;\
-	  ldconfig $(INSTALL_PATH) '
+	install -d $(INSTALL_PATH)/bin
+	install -m  755 ./edit $(INSTALL_PATH)/bin
 
 uninstall:
-	@ sudo su -c ' \
-	  rm -f $(INSTALL_PATH)/bin/edit ;\
-	  ldconfig $(INSTALL_PATH) '
+	rm -f $(INSTALL_PATH)/bin/edit
 
 clean:
 	rm -f edit
