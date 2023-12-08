@@ -18,7 +18,7 @@ static void alt_key_process(){
 	switch (alt_key){
 	case L'h':
 		editor_help(); break;
-	case L'7':
+	case L'c':
 		line_toggle_comment(); break;
 	case L's':
 		editor_cmd(L"search"); break;

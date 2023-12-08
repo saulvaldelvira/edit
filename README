@@ -26,7 +26,7 @@ Keybindings
 - Ctrl + Right Arrow : Move to the buffer on the right
 - F5 : Reload file
 - Alt + H : Display the help buffer
-- Alt + 7 : Toggle comment in the current line
+- Alt + C : Toggle comment in the current line
 - Alt + S : Search in the buffer
 - Alt + R : Replace command
 - Alt + K : Cut the line from the cursor to the end.
