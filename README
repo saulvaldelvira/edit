@@ -33,6 +33,10 @@ Keybindings
 - Alt + Up Arrow:   Moves the current line up.
 - Alt + Down Arrow: Moves the current line down.
 - Alt + [1-9] : Go to buffer number [1-9]
+- Alt + Left Arrow: Jumps to the previous word
+- Alt + Righ Arrow: Jumps to the next word
+- Alt + Backspace: Deletes a word backwards
+- Alt + Supr Key: Deletes a word forward
 
 Commands
 ========

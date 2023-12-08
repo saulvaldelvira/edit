@@ -183,7 +183,7 @@ void editor_set_status_message(const wchar_t *fmt, ...){
 
 void editor_help(void){
 	buffer_insert();
-	static wchar_t* lines[] = {
+        static wchar_t *lines[] = {
 		L"Keybindings",
 		L"===========",
 		L"Ctrl + E           \t Execute command",
@@ -203,6 +203,10 @@ void editor_help(void){
 		L"Alt + Up Arrow     \t Moves the current line up",
 		L"Alt + Down Arrow   \t Moves the current line down",
 		L"Alt + [1-9]        \t Go to buffer number [1-9]",
+		L"Alt + Left Arrow   \t Jumps to the previous word ",
+		L"Alt + Righ Arrow   \t Jumps to the next word ",
+		L"Alt + Backspace    \t Deletes a word backwards ",
+		L"Alt + Supr Key     \t Deletes a word forward ",
 		L"",
 		L"Commands",
 		L"========",

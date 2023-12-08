@@ -9,9 +9,8 @@
 
 WString* line_at(int at){
 	WString *line = NULL;
-	if (at < conf.num_lines){
+	if (at < conf.num_lines)
 		vector_at(conf.lines, at, &line);
-	}
 	return line;
 }
 
@@ -26,6 +25,12 @@ WString* current_line(void){
 
 size_t current_line_length(void){
 	return line_at_len(conf.cy);
+}
+
+wchar_t line_curr_char(void){
+	WString *line = current_line();
+	if (!line) return '\0';
+	return wstr_get_at(line, conf.cx);
 }
 
 void line_insert(int at, const wchar_t *str, size_t len){
@@ -116,6 +121,30 @@ void line_delete_char_backwards(void){
 		cursor_move(ARROW_LEFT);
 	}
 	conf.dirty++;
+}
+
+void line_delete_word_forward(void){
+	if ((size_t)conf.cx == current_line_length()){
+		line_delete_char_forward();
+		return;
+	}
+	int x = conf.cx;
+	cursor_jump_word(ARROW_RIGHT);
+	int diff = conf.cx - x;
+	while (diff-- > 0)
+		line_delete_char_backwards();
+}
+
+void line_delete_word_backwards(void){
+	if (conf.cx == 0){
+		line_delete_char_backwards();
+		return;
+	}
+	int x = conf.cx;
+	cursor_jump_word(ARROW_LEFT);
+	int diff = x - conf.cx;
+	while (diff-- > 0)
+		line_delete_char_forward();
 }
 
 void line_insert_newline(void){

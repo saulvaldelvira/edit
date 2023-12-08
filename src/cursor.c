@@ -107,3 +107,19 @@ void cursor_goto(int x, int y){
 	if ((size_t)conf.cx > len)
 		conf.cx = (int)len;
 }
+
+void cursor_jump_word(int key){
+	cursor_move(key);
+	wchar_t startc = line_curr_char();
+	bool startwhite = (startc == ' ' || startc == '\t');
+	for (;;) {
+		wchar_t c = line_curr_char();
+		if (!startwhite && (c == ' ' || c == '\t')) break;
+		if (startwhite && c != ' ' && c != '\t') break;
+		if ((size_t)conf.cx == current_line_length()) return;
+		if (conf.cx == 0) return;
+		cursor_move(key);
+	}
+	if (key == ARROW_LEFT)
+		cursor_move(ARROW_RIGHT);
+}

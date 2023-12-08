@@ -31,10 +31,14 @@ static void alt_key_process(){
 	case 'B': // Alt + DOWN
 		line_move_down(); break;
 	case 'C': // Alt + LEFT
+		cursor_jump_word(ARROW_RIGHT); break;
 	case 'D': // Alt + RIGHT
-		break;
-	default:
-		break;
+		cursor_jump_word(ARROW_LEFT); break;
+	case 127: // Backspace
+		line_delete_word_backwards(); break;
+	case DEL_KEY:
+		line_delete_word_forward(); break;
+	default: break;
 	}
 	for (int i = 1; i <= 9; i++){
 		if ((i + '0') == alt_key){
@@ -126,6 +130,19 @@ int editor_read_key(void){
 						case '4': return F12;
 						default: return '\x1b';
 						}
+					}else return '\x1b';
+				case L'3':
+					if (seq[2] == ';'){
+						if (seq[3] == '3'){
+							if ((seq[4] = getwchar()) == WEOF)
+								return '\x1b';
+							switch (seq[4]){
+							case '~':
+								alt_key = DEL_KEY;
+								return ALT_KEY;
+							default: return '\x1b';
+							}
+						}else return '\x1b';
 					}else return '\x1b';
 				default:
 					return '\x1b';
