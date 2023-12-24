@@ -143,7 +143,6 @@ int file_open(const wchar_t *filename){
 	return 1;
 }
 
-// TODO: if finds ~, substitute for home tmp
 int file_save(bool only_tmp, bool ask_filename){
 	if (ask_filename){
 		WString *filename = editor_prompt(L"Save as", conf.filename);

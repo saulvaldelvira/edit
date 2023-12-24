@@ -244,24 +244,11 @@ void line_format(int cy){
 	wchar_t tab_buffer[80];
 	swprintf(tab_buffer, 80, L"%*c", conf.tab_size, ' ');
 	WString *line = line_at(cy);
-
 	if (conf.substitute_tab_with_space){
-		if (cy == conf.cy){
-			int i = wstr_find_substring(line, L"\t", 0);
-			while (i >= 0 && i < conf.cx){
-				conf.cx += conf.tab_size - 1;
-				i = wstr_find_substring(line, L"\t", i + 1);
-			}
-		}
-		wstr_replace(line, L"\t", tab_buffer);
+		int n = wstr_replace(line, L"\t", tab_buffer);
+                conf.cx += n * (conf.tab_size + 1);
 	}else{
-		if (cy == conf.cy){
-			int i = wstr_find_substring(line, tab_buffer, 0);
-			while (i >= 0 && i < conf.cx){
-				conf.cx -= conf.tab_size - 1;
-				i = wstr_find_substring(line, tab_buffer, i + conf.tab_size);
-			}
-		}
-		wstr_replace(line, tab_buffer, L"\t");
+		int n = wstr_replace(line, tab_buffer, L"\t");
+                conf.cx -= n * (conf.tab_size - 1);
 	}
 }
