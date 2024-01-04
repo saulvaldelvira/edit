@@ -102,7 +102,8 @@ int file_open(const wchar_t *filename){
 		memcpy(conf.filename, filename, len);
 	}
 
-	FILE *f = fopen(mb_filename(NULL, false), "r");
+        char *mbfilename = mb_filename(NULL, false);
+	FILE *f = fopen(mbfilename, "r");
 	if (!f)
 		return 1;
 
@@ -136,6 +137,9 @@ int file_open(const wchar_t *filename){
 	conf.dirty = 0;
 	fclose(f);
 
+        if (access(mbfilename, W_OK) != 0)
+                editor_set_status_message(L"Warning! You have opened a READ ONLY file");
+
 	// Discard any key press made while loading the file
 	while (editor_read_key() != NO_KEY)
 		;
@@ -152,6 +156,18 @@ int file_save(bool only_tmp, bool ask_filename){
 		conf.filename = wstr_to_cwstr(filename);
 		wstr_free(filename);
 	}
+
+        /* Check if the file is writable. This is because we
+           write to a temporary file and then rename it, which
+           could cause the original file to be replaced. If the
+           file does not exist it is fine to create a new one.*/
+        char *mbfilename = mb_filename(NULL, false);
+        if (access(mbfilename, F_OK) == 0    // file exists
+            && access(mbfilename, W_OK) != 0 // is NOT writable
+        ){
+                editor_set_status_message(L"Can't save! You have no permissions");
+                return -1;
+        }
 
 	if (!only_tmp){
 		editor_set_status_message(L"Saving...");

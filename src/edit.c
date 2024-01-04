@@ -105,14 +105,11 @@ int main(int argc, char *argv[]){
 	init();
 
 	wchar_t filename[NAME_MAX];
-	if (argc == 1){
+	if (argc == 1)
 		buffer_insert();
-		editor_refresh_screen(false);
-	}else{
+	else
 		wprintf(L"\x1b[2J\x1b[H");
-	}
 
-	// Parse args (must be at the start)
 	struct {
 		char *exec_cmd;
 	} args = {0};
@@ -133,13 +130,8 @@ int main(int argc, char *argv[]){
 		}
 	}
 
-	int first_buf = i-1;
 	for (; i < argc; i++){
-		editor_set_status_message(L"Loading buffer %d of %d [%s] ...",
-					  i - first_buf, argc - 1 - first_buf, argv[i]);
 		buffer_insert();
-		editor_refresh_screen(true);
-
 		mbstowcs(filename, argv[i], NAME_MAX);
 		filename[NAME_MAX-1] = '\0';
 		if (file_open(filename) != 1)
@@ -147,8 +139,9 @@ int main(int argc, char *argv[]){
 	}
 
 	buffer_switch(0);
+        editor_refresh_screen(false);
 
-	if (args.exec_cmd != NULL){
+        if (args.exec_cmd != NULL){
 		WString *tmp = wstr_empty();
 		wstr_concat_cstr(tmp, args.exec_cmd, -1);
 		for (int i = 0; i < conf.n_buffers; i++){
@@ -159,10 +152,6 @@ int main(int argc, char *argv[]){
 		wstr_free(tmp);
 		exit(0);
 	}
-
-
-	editor_set_status_message(L"");
-	editor_refresh_screen(false);
 
 	struct pollfd pollfds[2] = {
 		{.fd = STDIN_FILENO, .events = POLLIN},

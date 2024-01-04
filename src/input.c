@@ -221,12 +221,9 @@ void editor_process_key_press(int c){
 			if (filename_wstr && wstr_length(filename_wstr) > 0){
 				buffer_clear();
 				const wchar_t *filename = wstr_get_buffer(filename_wstr);
-				editor_set_status_message(L"Opening file [%ls] ...", filename);
-				editor_refresh_screen(true);
 				if (file_open(filename) != 1)
 					buffer_drop();
 			}
-			editor_set_status_message(L"");
 			wstr_free(filename_wstr);
 		}
 		break;
