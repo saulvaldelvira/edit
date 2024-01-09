@@ -1,6 +1,6 @@
 .PHONY: clean install uninstall
 CC=cc
-CFLAGS= -Wall -Wextra -pedantic -O3 -g $(FLAGS)
+CFLAGS+= -Wall -Wextra -pedantic -O3 -g
 CFILES= $(wildcard ./src/*.c) $(wildcard ./src/highlight/*.c) \
 		./src/lib/GDS/src/Vector.c ./src/lib/GDS/src/util/compare.c ./src/lib/str/wstr.c
 OFILES= $(patsubst %.c,%.o,$(CFILES))
@@ -11,7 +11,7 @@ edit: $(OFILES)
 
 -include $(DEPS)
 .c.o:
-	$(CC) -c $< -o $@ -MMD -MP $(CFLAGS) 
+	$(CC) -c $< -o $@ -MMD -MP $(CFLAGS)
 
 INSTALL_PATH ?= /usr/local
 
