@@ -7,21 +7,23 @@ OFILES= $(patsubst %.c,%.o,$(CFILES))
 DEPS= $(patsubst %.c,%.d,$(CFILES))
 
 edit: $(OFILES)
-	$(CC) -o edit $(OFILES) $(CFLAGS)
+	@ $(CC) -o edit $(OFILES) $(CFLAGS)
 
 -include $(DEPS)
 .c.o:
-	$(CC) -c $< -o $@ -MMD -MP $(CFLAGS)
+	@ echo "CC $@"
+	@ $(CC) -c $< -o $@ -MMD -MP $(CFLAGS)
 
 INSTALL_PATH ?= /usr/local
 
 install: edit
-	$(info Installing in $(INSTALL_PATH)/bin)
-	install -d $(INSTALL_PATH)/bin
-	install -m  755 ./edit $(INSTALL_PATH)/bin
+	@ echo "=> $(INSTALL_PATH)/bin/edit"
+	@ install -d $(INSTALL_PATH)/bin
+	@ install -m  755 ./edit $(INSTALL_PATH)/bin
 
 uninstall:
-	rm -f $(INSTALL_PATH)/bin/edit
+	@ echo "RM $(INSTALL_PATH)/bin/edit"
+	@ rm -f $(INSTALL_PATH)/bin/edit
 
 clean:
-	rm -f edit $(OFILES) $(DEPS) $(DEPS)
+	@ rm -f edit $(OFILES) $(DEPS) $(DEPS)
