@@ -2,12 +2,11 @@
 #include "highlight/color.h"
 #include "edit.h"
 #include "mode.h"
-#include <stdlib.h>
 
 static void default_highlight(void){
 	WString *line;
 	for (int i = 0; i < conf.screen_rows; i++){
-		vector_at(conf.lines_render, i, &line);
+		vector_at(conf.render, i, &line);
 		int match = wstr_find_substring(line, L"#", 0);
 		if (match < 0)
 			continue;

@@ -1,4 +1,5 @@
 #include "output.h"
+#include "buffer.h"
 #include "lib/str/wstr.h"
 #include "line.h"
 #include "util.h"
@@ -21,7 +22,7 @@ static int check_window_size(void){
 	if (rows != conf.screen_rows || cols != conf.screen_cols){
 		for (int i = conf.screen_rows; i < rows; i++){
 			WString *wstr = wstr_empty();
-			vector_append(conf.lines_render, &wstr);
+			vector_append(conf.render, &wstr);
 		}
 		conf.screen_rows = rows;
 		conf.screen_cols = cols;
@@ -42,7 +43,7 @@ static int num_width(int n){
 
 static void move_cursor(int x, int y, bool respect_linenr){
         if (conf.line_number && respect_linenr)
-                x += num_width(conf.num_lines) + 1;
+                x += num_width(buffers.curr->num_lines) + 1;
         wchar_t move_cursor_buf[32];
         swprintf(move_cursor_buf,
                  ARRAY_SIZE(move_cursor_buf),
@@ -74,8 +75,8 @@ void editor_refresh_screen(bool only_status_bar){
 	editor_draw_status_bar(buf);
 	editor_draw_message_bar(buf);
 	// Restore cursor position
-        move_cursor(conf.rx - conf.col_offset + 1,
-                    conf.cy - conf.row_offset + 1, true);
+        move_cursor(buffers.curr->rx - buffers.curr->col_offset + 1,
+                    buffers.curr->cy - buffers.curr->row_offset + 1, true);
 
 	wstr_concat_cwstr(buf, L"\x1b[?25h", 6);
 	wprintf(L"%ls", wstr_get_buffer(buf));
@@ -115,39 +116,39 @@ static void print_welcome_msg(WString *buf){
 }
 
 void editor_draw_rows(WString *buf){
-	if (conf.num_lines == 0
-	 && conf.filename == NULL
-	 && conf.dirty == 0
-	 && conf.n_buffers == 1
+	if (buffers.curr->num_lines == 0
+	 && buffers.curr->filename == NULL
+	 && buffers.curr->dirty == 0
+	 && buffers.amount == 1
 	 ){
 		print_welcome_msg(buf);
 		return;
 	 }
 
 	for (int y = 0; y < conf.screen_rows; y++){
-		int file_line = y + conf.row_offset;
-		if (file_line >= conf.num_lines){
+		int file_line = y + buffers.curr->row_offset;
+		if (file_line >= buffers.curr->num_lines){
 			wstr_concat_cwstr(buf, L"~", 1);
 		}else{
                         size_t screen_cols = conf.screen_cols;
                         if (conf.line_number) {
-                                screen_cols -= num_width(conf.num_lines) + 1;
+                                screen_cols -= num_width(buffers.curr->num_lines) + 1;
                                 wchar_t lnr_buf[20];
-                                int padding = num_width(conf.num_lines) - num_width(file_line + 1) + 1;
+                                int padding = num_width(buffers.curr->num_lines) - num_width(file_line + 1) + 1;
                                 swprintf(lnr_buf, sizeof(lnr_buf),
                                          L"%d%*s", file_line + 1, padding, "");
                                 wstr_concat_cwstr(buf, lnr_buf, sizeof(lnr_buf));
                         }
                         WString *line;
-                        vector_at(conf.lines_render, y, &line);
+                        vector_at(conf.render, y, &line);
                         size_t len = wstr_length(line);
-			if ((size_t)conf.col_offset < len){
-				if (len >= (size_t)conf.col_offset)
-					len -= conf.col_offset;
+			if ((size_t)buffers.curr->col_offset < len){
+				if (len >= (size_t)buffers.curr->col_offset)
+					len -= buffers.curr->col_offset;
 				if (len > screen_cols)
 					len = screen_cols;
 				const wchar_t *line_buf = wstr_get_buffer(line);
-				wstr_concat_cwstr(buf, &line_buf[conf.col_offset], len);
+				wstr_concat_cwstr(buf, &line_buf[buffers.curr->col_offset], len);
 			}
 		}
 
@@ -161,13 +162,13 @@ void editor_draw_status_bar(WString *buf){
 	wchar_t status[256], rstatus[256], sep[256];
 	int len = swprintf(status, ARRAY_SIZE(status),
 			   L" %ls - %d lines %ls",
-			   conf.filename ? conf.filename : L"[Unnamed]",
-			   conf.num_lines,
-		       	   conf.dirty ? L"(modified)" : L"");
+			   buffers.curr->filename ? buffers.curr->filename : L"[Unnamed]",
+			   buffers.curr->num_lines,
+		       	   buffers.curr->dirty ? L"(modified)" : L"");
 	int rlen = swprintf(rstatus, ARRAY_SIZE(rstatus),
 			    L"Buffer:%d/%d | Row:%d | Col:%d ",
-			    conf.buffer_index + 1, conf.n_buffers,
-			    conf.cy + 1, conf.cx + 1);
+			    buffers.curr_index + 1, buffers.amount,
+			    buffers.curr->cy + 1, buffers.curr->cx + 1);
 	if (len > conf.screen_cols)
 		len = conf.screen_cols;
 	if (rlen > conf.screen_cols - len)

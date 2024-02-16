@@ -1,7 +1,5 @@
 #include "edit.h"
 #include "util.h"
-#include "line.h"
-#include "input.h"
 #include "buffer.h"
 #include "highlight.h"
 #include <sys/ioctl.h>
@@ -16,8 +14,7 @@ void die(const char *s) {
 }
 
 void editor_end(void){
-	int n = conf.n_buffers;
-	for (int i = 0; i < n; i++)
+	for (int i = 0; i < buffers.amount; i++)
 		buffer_drop();
 	exit(0);
 }
@@ -68,12 +65,12 @@ char* editor_cwd(void){
 }
 
 static void update_line(int cy){
-	int i = cy - conf.row_offset;
+	int i = cy - buffers.curr->row_offset;
 	WString *render;
-	vector_at(conf.lines_render, i, &render);
+	vector_at(conf.render, i, &render);
 	wstr_clear(render);
 	WString *row;
-	vector_at(conf.lines, cy, &row);
+	vector_at(buffers.curr->lines, cy, &row);
 	int rx = 0;
 	for (size_t j = 0; j < wstr_length(row); j++){
 		wchar_t c = wstr_get_at(row, j);
@@ -90,14 +87,14 @@ static void update_line(int cy){
 void editor_update_render(void){
 	int i;
 	for (i = 0; i < conf.screen_rows; i++){
-		int cy = conf.row_offset + i;
-		if (cy >= conf.num_lines)
+		int cy = buffers.curr->row_offset + i;
+		if (cy >= buffers.curr->num_lines)
 			break;
 		update_line(cy);
 	}
 	for (; i < conf.screen_rows; i++){
 		WString *render;
-		vector_at(conf.lines_render, i, &render);
+		vector_at(conf.render, i, &render);
 		wstr_clear(render);
 	}
 	if (conf.syntax_highlighting)

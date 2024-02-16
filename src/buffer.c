@@ -1,79 +1,59 @@
 #include "buffer.h"
-#include "line.h"
 #include "file.h"
-#include "input.h"
 #include "util.h"
 #include <stdlib.h>
 #include <stdio.h>
 
-static void save_buffer(void){
-	struct buffer *buffer;
-	vector_at(conf.buffers, conf.buffer_index, &buffer);
-	buffer->cx = conf.cx;
-	buffer->cy = conf.cy;
-	buffer->rx = conf.rx;
-	buffer->row_offset = conf.row_offset;
-	buffer->col_offset = conf.col_offset;
-	buffer->num_lines = conf.num_lines;
-	buffer->dirty = conf.dirty;
-	free(buffer->filename);
-	buffer->filename = conf.filename;
-	buffer->lines = conf.lines;
-	conf.lines = NULL;
-	conf.filename = NULL;
-	buffer->eol = conf.eol;
+struct buffers_data buffers = {0};
+static Vector *buffers_vec;
+
+static void free_buffer(void *e){
+	struct buffer *buf = * (struct buffer**) e;
+	free(buf->filename);
+        vector_free(buf->lines);
+	free(buf);
 }
 
-static void load_buffer(void){
-	struct buffer *buffer;
-	vector_at(conf.buffers, conf.buffer_index, &buffer);
-	if (conf.lines)
-		vector_free(conf.lines);
-	conf.lines = buffer->lines;
-	buffer->lines = NULL;
-	conf.cx = buffer->cx;
-	conf.cy = buffer->cy;
-	conf.rx = buffer->rx;
-	conf.col_offset = buffer->col_offset;
-	conf.row_offset = buffer->row_offset;
-	free(conf.filename);
-	conf.filename = buffer->filename;
-	buffer->filename = NULL;
-	conf.num_lines = buffer->num_lines;
-	conf.dirty = buffer->dirty;
-	conf.eol = buffer->eol;
+static void cleanup(void){
+        vector_free(buffers_vec);
+}
+
+void buffer_init(void){
+	buffers_vec = vector_init(sizeof(struct buffer*), compare_equal);
+	vector_set_destructor(buffers_vec, free_buffer);
+	buffers.curr_index = -1;
+        buffers.curr = calloc(1, sizeof(struct buffer));
+        atexit(cleanup);
 }
 
 void buffer_insert(void){
 	Vector *lines = vector_init(sizeof(WString*), compare_equal);
 	vector_set_destructor(lines, free_wstr);
 
-	struct buffer *buffer = malloc(sizeof(*buffer));
-	if (!buffer) return;
-	*buffer = (struct buffer){
+        if (buffers.curr_index >= 0){
+	        struct buffer *buffer = malloc(sizeof(*buffer));
+        	if (!buffer) return;
+                buffers.curr = buffer;
+        }
+	*buffers.curr = (struct buffer){
 		.lines = lines,
 		.eol = DEFAULT_EOL
 	};
 
-	if (conf.n_buffers > 0)
-		save_buffer();
-
-	conf.buffer_index++;
-	vector_insert_at(conf.buffers, conf.buffer_index, &buffer);
-
-	load_buffer();
-	conf.n_buffers++;
+	buffers.curr_index++;
+	vector_insert_at(buffers_vec, buffers.curr_index, &buffers.curr);
+	buffers.amount++;
 }
 
 void buffer_clear(void){
-	vector_clear(conf.lines);
-	conf.cx = 0;
-	conf.cy = 0;
-	conf.rx = 0;
-	conf.col_offset = 0;
-	conf.row_offset = 0;
-	conf.num_lines = 0;
-	conf.dirty = 0;
+	vector_clear(buffers.curr->lines);
+	buffers.curr->cx = 0;
+	buffers.curr->cy = 0;
+	buffers.curr->rx = 0;
+	buffers.curr->col_offset = 0;
+	buffers.curr->row_offset = 0;
+	buffers.curr->num_lines = 0;
+	buffers.curr->dirty = 0;
 }
 
 void buffer_drop(void){
@@ -81,22 +61,21 @@ void buffer_drop(void){
 	if (tmp)
 		remove(tmp);
 	free(tmp);
-	if (conf.n_buffers == 1){
+	if (buffers.amount == 1){
 		wprintf(L"\x1b[2J\x1b[H");
 		exit(0);
 	}else{
-		vector_remove_at(conf.buffers, conf.buffer_index);
-		if (conf.buffer_index == conf.n_buffers - 1)
-			conf.buffer_index--;
-		conf.n_buffers--;
-		load_buffer();
+		vector_remove_at(buffers_vec, buffers.curr_index);
+		if (buffers.curr_index == buffers.amount - 1)
+			buffers.curr_index--;
+		buffers.amount--;
+                vector_at(buffers_vec, buffers.curr_index, &buffers.curr);
 	}
 }
 
 void buffer_switch(int index){
-	if (index < 0 || index >= conf.n_buffers || index == conf.buffer_index)
+	if (index < 0 || index >= buffers.amount || index == buffers.curr_index)
 		return;
-	save_buffer();
-	conf.buffer_index = index;
-	load_buffer();
+	buffers.curr_index = index;
+        vector_at(buffers_vec, buffers.curr_index, &buffers.curr);
 }

@@ -18,7 +18,7 @@
 static char* mb_filename(size_t *written, bool tmp){
 	static char mbfilename[NAME_MAX];
 	static char full_filename[PATH_MAX];
-	size_t wrt = wcstombs(mbfilename, conf.filename, NAME_MAX);
+	size_t wrt = wcstombs(mbfilename, buffers.curr->filename, NAME_MAX);
 	mbfilename[NAME_MAX - 1] = '\0';
 
 	char *last_slash = strrchr(mbfilename, '/');
@@ -48,19 +48,19 @@ static char* mb_filename(size_t *written, bool tmp){
 }
 
 static WString* editor_lines_to_string(void){
-	size_t n_lines = vector_size(conf.lines);
+	size_t n_lines = vector_size(buffers.curr->lines);
 	WString *str = wstr_empty();
 	for (size_t i = 0; i < n_lines; i++){
 		WString *line;
-		vector_at(conf.lines, i, &line);
+		vector_at(buffers.curr->lines, i, &line);
 		wstr_concat_wstr(str, line);
-		wstr_concat_cstr(str, conf.eol, -1);
+		wstr_concat_cstr(str, buffers.curr->eol, -1);
 	}
 	return str;
 }
 
 char* get_tmp_filename(void){
-	if (!conf.filename)
+	if (!buffers.curr->filename)
 		return NULL;
 	size_t written;
 	char *filename = mb_filename(&written, true);
@@ -94,12 +94,12 @@ static void switch_ctrl_c(bool allow){
 
 // TODO: if .tmp version exists (i.e. failed save in a previous session), restore it.
 int file_open(const wchar_t *filename){
-	if (!conf.filename || !filename || conf.filename != filename){
+	if (!buffers.curr->filename || !filename || buffers.curr->filename != filename){
 		size_t len = (wstrnlen(filename, FILENAME_MAX) + 1) * sizeof(wchar_t);
-		free(conf.filename);
-		conf.filename = malloc(len);
-		assert(conf.filename);
-		memcpy(conf.filename, filename, len);
+		free(buffers.curr->filename);
+		buffers.curr->filename = malloc(len);
+		assert(buffers.curr->filename);
+		memcpy(buffers.curr->filename, filename, len);
 	}
 
         char *mbfilename = mb_filename(NULL, false);
@@ -114,15 +114,15 @@ int file_open(const wchar_t *filename){
 		c = getwc(f);
 		if (c == L'\n' || c == L'\r' || c == WEOF){
 			if (c == L'\r'){
-				conf.eol = "\r\n";
+				buffers.curr->eol = "\r\n";
 				c = getwc(f); // consume the \n
 			}else if (c == L'\n'){
-				conf.eol = "\n";
+				buffers.curr->eol = "\n";
 			}
 
 			size_t len = wstr_length(buf);
 			if (len != 0 || c == L'\n' || c == L'\r')
-				line_insert(conf.num_lines, wstr_get_buffer(buf), len);
+				line_insert(buffers.curr->num_lines, wstr_get_buffer(buf), len);
 			wstr_clear(buf);
 		}else{
 			wstr_push_char(buf, c);
@@ -134,7 +134,7 @@ int file_open(const wchar_t *filename){
 	}
 	switch_ctrl_c(false);
 	wstr_free(buf);
-	conf.dirty = 0;
+	buffers.curr->dirty = 0;
 	fclose(f);
 
         if (access(mbfilename, W_OK) != 0)
@@ -149,11 +149,11 @@ int file_open(const wchar_t *filename){
 
 int file_save(bool only_tmp, bool ask_filename){
 	if (ask_filename){
-		WString *filename = editor_prompt(L"Save as", conf.filename);
+		WString *filename = editor_prompt(L"Save as", buffers.curr->filename);
 		if (!filename || wstr_length(filename) == 0)
 			return -1;
-		free(conf.filename);
-		conf.filename = wstr_to_cwstr(filename);
+		free(buffers.curr->filename);
+		buffers.curr->filename = wstr_to_cwstr(filename);
 		wstr_free(filename);
 	}
 
@@ -240,7 +240,7 @@ int file_save(bool only_tmp, bool ask_filename){
 	else
 		editor_set_status_message(L"%.0f %s written to disk [%s]",
 					  value, magnitudes[magnitude], filename);
-	conf.dirty = 0;
+	buffers.curr->dirty = 0;
 
 cleanup:
 	wstr_free(buf);
@@ -249,21 +249,21 @@ cleanup:
 }
 
 void file_reload(void){
-	int cx = conf.cx;
-	int cy = conf.cy;
-	int row_offset = conf.row_offset;
-	int col_offset = conf.col_offset;
+	int cx = buffers.curr->cx;
+	int cy = buffers.curr->cy;
+	int row_offset = buffers.curr->row_offset;
+	int col_offset = buffers.curr->col_offset;
 	buffer_clear();
-	file_open(conf.filename);
-	if (cy + row_offset <= conf.num_lines){
-		conf.cy = cy;
-		conf.row_offset = row_offset;
+	file_open(buffers.curr->filename);
+	if (cy + row_offset <= buffers.curr->num_lines){
+		buffers.curr->cy = cy;
+		buffers.curr->row_offset = row_offset;
 		WString *line;
-		vector_at(conf.lines, cy, &line);
+		vector_at(buffers.curr->lines, cy, &line);
 		size_t len = wstr_length(line);
 		if ((size_t)(cx + col_offset) <= len){
-			conf.cx = cx;
-			conf.col_offset = col_offset;
+			buffers.curr->cx = cx;
+			buffers.curr->col_offset = col_offset;
 		}
 	}
 	editor_refresh_screen(false);
@@ -272,10 +272,10 @@ void file_reload(void){
 void file_auto_save(void){
 	if (!conf.auto_save)
 		return;
-	int buf_i = conf.buffer_index;
+	int buf_i = buffers.curr_index;
 
-	if (conf.dirty && conf.filename && time(0) - conf.last_auto_save >= 60){
-		for (int i = 0; i < conf.n_buffers; i++){
+	if (buffers.curr->dirty && buffers.curr->filename && time(0) - conf.last_auto_save >= 60){
+		for (int i = 0; i < buffers.amount; i++){
 			buffer_switch(i);
 			file_save(true, false);
 		}

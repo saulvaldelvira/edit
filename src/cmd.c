@@ -41,12 +41,12 @@ static void cmd_goto(wchar_t **args){
 	}
 	y--;
 	if (!buffer){
-		if (y < 0 || y >= conf.num_lines)
+		if (y < 0 || y >= buffers.curr->num_lines)
 			editor_set_status_message(L"Invalid line number %ld", y + 1);
 		else
-			cursor_goto(conf.cx, y);
+			cursor_goto(buffers.curr->cx, y);
 	}else{
-		if (y < 0 || y >= conf.n_buffers)
+		if (y < 0 || y >= buffers.amount)
 			editor_set_status_message(L"Invalid buffer number %ld", y + 1);
 		else
 			buffer_switch(y);
@@ -72,10 +72,10 @@ static void cmd_search(bool forward, wchar_t **args){
 
 	bool found = false;
 	if (forward){
-		for (int i = conf.cy; i < conf.num_lines; i++){
+		for (int i = buffers.curr->cy; i < buffers.curr->num_lines; i++){
 			WString *line;
-			vector_at(conf.lines, i, &line);
-			int x = i == conf.cy ? conf.cx + 1 : 0;
+			vector_at(buffers.curr->lines, i, &line);
+			int x = i == buffers.curr->cy ? buffers.curr->cx + 1 : 0;
 			int substring_index = wstr_find_substring(line, search, x);
 			if (substring_index >= 0){
 				cursor_goto(substring_index, i);
@@ -84,11 +84,11 @@ static void cmd_search(bool forward, wchar_t **args){
 			}
 		}
 	}else{
-		for (int i = conf.cy; i >= 0; i--){
+		for (int i = buffers.curr->cy; i >= 0; i--){
 			WString *line;
-			vector_at(conf.lines, i, &line);
+			vector_at(buffers.curr->lines, i, &line);
 
-			unsigned int x = i == conf.cy ? (unsigned)conf.cx : wstr_length(line);
+			unsigned int x = i == buffers.curr->cy ? (unsigned)buffers.curr->cx : wstr_length(line);
 			int substring_index = -1;
 			for (unsigned int i = 0; i < x; i++){
 				int tmp = wstr_find_substring(line, search, i);
@@ -139,10 +139,10 @@ static void cmd_replace(wchar_t **args){
 	replacement = wstr_to_cwstr(text_wstr);
 	wstr_free(text_wstr);
 
-	for (int i = 0; i < conf.num_lines; i++){
+	for (int i = 0; i < buffers.curr->num_lines; i++){
 		WString *line = line_at(i);
 		int ret = wstr_replace(line,text,replacement);
-		if (ret > 0) conf.dirty++;
+		if (ret > 0) buffers.curr->dirty++;
 	}
 }
 
@@ -170,15 +170,15 @@ void editor_cmd(const wchar_t *command){
 		editor_set_status_message(L"%s", editor_cwd());
 	}
 	else if (wcscmp(cmd, L"wq") == 0){
-		bool ask_filename = conf.filename == NULL;
+		bool ask_filename = buffers.curr->filename == NULL;
 		int ret = file_save(false, ask_filename);
 		if (ret > 0){
 			buffer_drop();
 		}
 	}
 	else if (wcscmp(cmd, L"fwq") == 0){
-		bool ask_filename = conf.filename == NULL;
-		for (int i = 0; i < conf.num_lines; i++)
+		bool ask_filename = buffers.curr->filename == NULL;
+		for (int i = 0; i < buffers.curr->num_lines; i++)
 			line_format(i);
 		int ret = file_save(false, ask_filename);
 		if (ret > 0){
@@ -187,10 +187,10 @@ void editor_cmd(const wchar_t *command){
 	}
 	else if (wcscmp(cmd, L"strip") == 0){
 		if (!args[1] || wcscmp(args[1], L"line") == 0){
-			line_strip_trailing_spaces(conf.cy);
+			line_strip_trailing_spaces(buffers.curr->cy);
 		}
 		else if (args[1] && wcscmp(args[1], L"buffer") == 0){
-			for (int i = 0; i < conf.num_lines; i++)
+			for (int i = 0; i < buffers.curr->num_lines; i++)
 				line_strip_trailing_spaces(i);
 		}else{
 			// TODO: help menu
@@ -213,10 +213,10 @@ void editor_cmd(const wchar_t *command){
 	}
 	else if (wcscmp(cmd, L"format") == 0){
 		if (!args[1] || wcscmp(args[1], L"line") == 0){
-			line_format(conf.cy);
+			line_format(buffers.curr->cy);
 		}
 		else if (args[1] && wcscmp(args[1], L"buffer") == 0){
-			for (int i = 0; i < conf.num_lines; i++)
+			for (int i = 0; i < buffers.curr->num_lines; i++)
 				line_format(i);
 		}else{
 			// TODO: help menu

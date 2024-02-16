@@ -180,7 +180,7 @@ void editor_process_key_press(int c){
 	static int quit_times;
 #define quit_times_msg(key)						                 \
 	do{								                 \
-		if (conf.dirty && quit_times > 0){			                 \
+		if (buffers.curr->dirty && quit_times > 0){			         \
 			editor_set_status_message(L"WARNING! File has unsaved changes. " \
 				                  L"Press %s %d more times to quit.",    \
 	                                          key, quit_times);	                 \
@@ -217,7 +217,7 @@ void editor_process_key_press(int c){
 	case CTRL_KEY('o'):
 		quit_times_msg("Ctrl + O");
 		{
-			WString *filename_wstr = editor_prompt(L"Open file", conf.filename);
+			WString *filename_wstr = editor_prompt(L"Open file", buffers.curr->filename);
 			if (filename_wstr && wstr_length(filename_wstr) > 0){
 				buffer_clear();
 				const wchar_t *filename = wstr_get_buffer(filename_wstr);
@@ -229,7 +229,7 @@ void editor_process_key_press(int c){
 		break;
 
 	case CTRL_KEY('f'):
-		line_format(conf.cy);
+		line_format(buffers.curr->cy);
 		break;
 	case CTRL_KEY('n'):
 		buffer_insert();
@@ -238,10 +238,10 @@ void editor_process_key_press(int c){
 		alt_key_process();
 		break;
 	case CTRL_ARROW_LEFT:
-		buffer_switch(conf.buffer_index - 1);
+		buffer_switch(buffers.curr_index - 1);
 		break;
 	case CTRL_ARROW_RIGHT:
-		buffer_switch(conf.buffer_index + 1);
+		buffer_switch(buffers.curr_index + 1);
 		break;
 	case CTRL_KEY('e'):
 		editor_cmd(NULL);
@@ -254,7 +254,7 @@ void editor_process_key_press(int c){
 		line_delete_char_backwards();
 		break;
 	case F5:
-		if (conf.filename){
+		if (buffers.curr->filename){
 			quit_times_msg("F5");
 			file_reload();
 		}

@@ -44,21 +44,10 @@ static void enable_raw_mode(void){
 	setvbuf(stdout, NULL, _IONBF, 0);
 }
 
-static void free_buffer(void *e){
-	struct buffer *buf = * (struct buffer**) e;
-	free(buf->filename);
-	if (buf->lines)
-		vector_free(buf->lines);
-	free(buf);
-}
 
 static void cleanup(void){
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &conf.original_term); // restore termios
-	vector_free(conf.buffers);
-	free(conf.filename);
-	vector_free(conf.lines_render);
-	if (conf.lines)
-		vector_free(conf.lines);
+	vector_free(conf.render);
 	wprintf(L"\x1b[?1049l");
 }
 
@@ -75,16 +64,14 @@ static void init(void){
 	if (get_window_size(&conf.screen_rows, &conf.screen_cols) == -1)
 		die("get_window_size, at init_editor");
 	conf.screen_rows -= 2;
-	conf.lines_render = vector_init(sizeof(WString*), compare_equal);
-	vector_set_destructor(conf.lines_render, free_wstr);
+	conf.render = vector_init(sizeof(WString*), compare_equal);
+	vector_set_destructor(conf.render, free_wstr);
 	for (int i = 0; i < conf.screen_rows; i++){
 		WString *wstr = wstr_empty();
-		vector_append(conf.lines_render, &wstr);
+		vector_append(conf.render, &wstr);
 	}
-	conf.buffers = vector_init(sizeof(struct buffer*), compare_equal);
-	vector_set_destructor(conf.buffers, free_buffer);
+        buffer_init();
 	atexit(cleanup);
-	conf.buffer_index = -1; // Needed so "conf.buffer_index++" sets it to 0 on first buffer
 	setlocale(LC_CTYPE, "");
 	conf.last_auto_save = time(0);
 	enable_raw_mode();
@@ -144,7 +131,7 @@ int main(int argc, char *argv[]){
         if (args.exec_cmd != NULL){
 		WString *tmp = wstr_empty();
 		wstr_concat_cstr(tmp, args.exec_cmd, -1);
-		for (int i = 0; i < conf.n_buffers; i++){
+		for (int i = 0; i < buffers.amount; i++){
 			buffer_switch(i);
 			editor_cmd(wstr_get_buffer(tmp));
 			file_save(false, false);

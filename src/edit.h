@@ -10,26 +10,14 @@
 #include <time.h>
 #include <wchar.h>
 #include <limits.h>
-
 #include "buffer.h"
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 #define TMP_EXT ".tmp"
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define DEFAULT_EOL "\n"
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 extern struct conf{
-	// Current buffer's config
-	int cx, cy;
-	int rx;
-	int row_offset;
-	int col_offset;
-	int num_lines;
-	wchar_t *filename;
-	Vector *lines;
-	int dirty;
-	char *eol;
-	// General config
 	int screen_rows;
 	int screen_cols;
 	struct termios original_term;
@@ -37,10 +25,7 @@ extern struct conf{
 	int quit_times;
 	bool substitute_tab_with_space;
 	bool show_line_number;
-	Vector *lines_render;
-	Vector *buffers;
-	int n_buffers;
-	int buffer_index;
+	Vector *render;
 	wchar_t status_msg[160];
 	time_t status_msg_time;
 	bool auto_save;

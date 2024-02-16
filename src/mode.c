@@ -1,5 +1,6 @@
 #include "mode.h"
 #include "edit.h"
+#include "buffer.h"
 #include <stdlib.h>
 
 wchar_t * mode_comments[][2] = {
@@ -10,7 +11,7 @@ wchar_t * mode_comments[][2] = {
 };
 
 static wchar_t* get_filename_ext(void){
-	WString *tmp_filename_wstr = wstr_from_cwstr(conf.filename, -1);
+	WString *tmp_filename_wstr = wstr_from_cwstr(buffers.curr->filename, -1);
 	int i = wstr_find_substring(tmp_filename_wstr, L".", 1);
 	int prev_i = -1;
 	while (i >= 0){
@@ -27,7 +28,7 @@ static wchar_t* get_filename_ext(void){
 }
 
 int mode_get_current(void){
-	if (!conf.filename)
+	if (!buffers.curr->filename)
 		return NO_MODE;
 	wchar_t *ext = get_filename_ext();
 	if (!ext)

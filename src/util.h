@@ -1,5 +1,6 @@
 #ifndef UTIL_H
 #define UTIL_H
+#include "input.h"
 
 #include <stddef.h>
 

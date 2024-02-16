@@ -15,6 +15,13 @@ struct buffer {
 	char *eol;
 };
 
+extern struct buffers_data {
+        struct buffer *curr;
+        int amount;
+        int curr_index;
+} buffers;
+
+void buffer_init(void);
 void buffer_insert(void);
 void buffer_clear(void);
 void buffer_drop(void);
