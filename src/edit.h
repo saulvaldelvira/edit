@@ -46,6 +46,7 @@ extern struct conf{
 	bool auto_save;
 	time_t last_auto_save;
 	bool syntax_highlighting;
+        bool line_number;
 } conf;
 
 #endif

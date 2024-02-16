@@ -1,5 +1,4 @@
 #include "edit.h"
-#include "line.h"
 #include "input.h"
 #include "output.h"
 #include "file.h"
@@ -24,7 +23,8 @@ struct conf conf = {
 	.substitute_tab_with_space = false,
 	.show_line_number = false,
 	.syntax_highlighting = false,
-	.auto_save = true
+	.auto_save = true,
+        .line_number = true
 };
 
 static void enable_raw_mode(void){

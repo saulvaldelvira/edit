@@ -11,18 +11,18 @@ edit: $(OFILES)
 
 -include $(DEPS)
 .c.o:
-	@ echo "CC $@"
+	@ echo " CC $@"
 	@ $(CC) -c $< -o $@ -MMD -MP $(CFLAGS)
 
 INSTALL_PATH ?= /usr/local
 
 install: edit
-	@ echo "=> $(INSTALL_PATH)/bin/edit"
+	@ echo " => $(INSTALL_PATH)/bin/edit"
 	@ install -d $(INSTALL_PATH)/bin
 	@ install -m  755 ./edit $(INSTALL_PATH)/bin
 
 uninstall:
-	@ echo "RM $(INSTALL_PATH)/bin/edit"
+	@ echo " RM $(INSTALL_PATH)/bin/edit"
 	@ rm -f $(INSTALL_PATH)/bin/edit
 
 clean:

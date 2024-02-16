@@ -1,10 +1,12 @@
 #include "output.h"
+#include "lib/str/wstr.h"
 #include "line.h"
 #include "util.h"
 #include "cursor.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <wchar.h>
 
 static WString *buf = NULL;
 
@@ -29,6 +31,26 @@ static int check_window_size(void){
 	return 0;
 }
 
+static int num_width(int n){
+        int max = 1;
+        while (n >= 10){
+                n /= 10;
+                max++;
+        }
+        return max;
+}
+
+static void move_cursor(int x, int y, bool respect_linenr){
+        if (conf.line_number && respect_linenr)
+                x += num_width(conf.num_lines) + 1;
+        wchar_t move_cursor_buf[32];
+        swprintf(move_cursor_buf,
+                 ARRAY_SIZE(move_cursor_buf),
+                 L"\x1b[%d;%dH",
+                 y, x);
+        wstr_concat_cwstr(buf, move_cursor_buf, ARRAY_SIZE(move_cursor_buf));
+}
+
 void editor_refresh_screen(bool only_status_bar){
 	if (!buf){
 		buf = wstr_empty();
@@ -38,7 +60,6 @@ void editor_refresh_screen(bool only_status_bar){
 	if (check_window_size() != 0)
 		only_status_bar = false;
 
-	wchar_t move_cursor_buf[32];
 	wstr_concat_cwstr(buf, L"\x1b[?25l", 6);
 
 	if (!only_status_bar){
@@ -47,23 +68,14 @@ void editor_refresh_screen(bool only_status_bar){
 		editor_draw_rows(buf);
 	}else{
 		// Move to the last two lines (status and message)
-		swprintf(move_cursor_buf,
-			 ARRAY_SIZE(move_cursor_buf),
-			 L"\x1b[%d;%dH",
-			 conf.screen_rows + 1,
-			 0);
-		wstr_concat_cwstr(buf, move_cursor_buf, ARRAY_SIZE(move_cursor_buf));
+                move_cursor(0, conf.screen_rows + 1, false);
 	}
 
 	editor_draw_status_bar(buf);
 	editor_draw_message_bar(buf);
 	// Restore cursor position
-	swprintf(move_cursor_buf,
-		 ARRAY_SIZE(move_cursor_buf),
-		 L"\x1b[%d;%dH",
-		 conf.cy - conf.row_offset + 1,
-		 conf.rx - conf.col_offset + 1);
-	wstr_concat_cwstr(buf, move_cursor_buf, ARRAY_SIZE(move_cursor_buf));
+        move_cursor(conf.rx - conf.col_offset + 1,
+                    conf.cy - conf.row_offset + 1, true);
 
 	wstr_concat_cwstr(buf, L"\x1b[?25h", 6);
 	wprintf(L"%ls", wstr_get_buffer(buf));
@@ -88,7 +100,7 @@ static void print_welcome_msg(WString *buf){
 			welcome_len = conf.screen_cols - 2;
 		int padding = (conf.screen_cols - welcome_len) / 2;
 		wstr_concat_cwstr(buf, L"~ ", 2);
-		padding-=2;
+		padding -= 2;
 		while (padding-- > 0)
 			wstr_push_char(buf, L' ');
 		wstr_concat_cwstr(buf, msg, welcome_len);
@@ -117,14 +129,23 @@ void editor_draw_rows(WString *buf){
 		if (file_line >= conf.num_lines){
 			wstr_concat_cwstr(buf, L"~", 1);
 		}else{
-			WString *line;
-			vector_at(conf.lines_render, y, &line);
-			size_t len = wstr_length(line);
+                        size_t screen_cols = conf.screen_cols;
+                        if (conf.line_number) {
+                                screen_cols -= num_width(conf.num_lines) + 1;
+                                wchar_t lnr_buf[20];
+                                int padding = num_width(conf.num_lines) - num_width(file_line + 1) + 1;
+                                swprintf(lnr_buf, sizeof(lnr_buf),
+                                         L"%d%*s", file_line + 1, padding, "");
+                                wstr_concat_cwstr(buf, lnr_buf, sizeof(lnr_buf));
+                        }
+                        WString *line;
+                        vector_at(conf.lines_render, y, &line);
+                        size_t len = wstr_length(line);
 			if ((size_t)conf.col_offset < len){
 				if (len >= (size_t)conf.col_offset)
 					len -= conf.col_offset;
-				if (len > (size_t)conf.screen_cols)
-					len = (size_t)conf.screen_cols;
+				if (len > screen_cols)
+					len = screen_cols;
 				const wchar_t *line_buf = wstr_get_buffer(line);
 				wstr_concat_cwstr(buf, &line_buf[conf.col_offset], len);
 			}
