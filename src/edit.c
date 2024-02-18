@@ -30,7 +30,7 @@ struct conf conf = {
 static void enable_raw_mode(void){
 	struct termios term;
 	if (tcgetattr(STDIN_FILENO, &term) == -1)
-		die("tcgetattr, on enable_raw_mode");
+		die("tcgetattr failed");
 	conf.original_term = term;
 	term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
 	term.c_oflag &= ~(OPOST);
@@ -39,7 +39,7 @@ static void enable_raw_mode(void){
 	term.c_cc[VMIN] = 1;
 	term.c_cc[VTIME] = 0;
 	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) == -1)
-		die("tcsetattr, on enable_raw_mode");
+		die("tcsetattr failed");
 	setvbuf(stdin, NULL, _IONBF, 0);
 	setvbuf(stdout, NULL, _IONBF, 0);
 }
@@ -62,7 +62,7 @@ static void signal_handler(int sig){
 
 static void init(void){
 	if (get_window_size(&conf.screen_rows, &conf.screen_cols) == -1)
-		die("get_window_size, at init_editor");
+		die("get_window_size failed");
 	conf.screen_rows -= 2;
 	conf.render = vector_init(sizeof(WString*), compare_equal);
 	vector_set_destructor(conf.render, free_wstr);

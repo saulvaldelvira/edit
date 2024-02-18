@@ -3,6 +3,7 @@
 #include "util.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 struct buffers_data buffers = {0};
 static Vector *buffers_vec;
@@ -22,7 +23,8 @@ void buffer_init(void){
 	buffers_vec = vector_init(sizeof(struct buffer*), compare_equal);
 	vector_set_destructor(buffers_vec, free_buffer);
 	buffers.curr_index = -1;
-        buffers.curr = calloc(1, sizeof(struct buffer));
+        buffers.curr = xmalloc(sizeof(struct buffer));
+        memset(buffers.curr, 0, sizeof(struct buffer));
         atexit(cleanup);
 }
 
@@ -31,9 +33,7 @@ void buffer_insert(void){
 	vector_set_destructor(lines, free_wstr);
 
         if (buffers.curr_index >= 0){
-	        struct buffer *buffer = malloc(sizeof(*buffer));
-        	if (!buffer) return;
-                buffers.curr = buffer;
+                buffers.curr = xmalloc(sizeof(struct buffer));
         }
 	*buffers.curr = (struct buffer){
 		.lines = lines,

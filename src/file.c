@@ -65,7 +65,7 @@ char* get_tmp_filename(void){
 	size_t written;
 	char *filename = mb_filename(&written, true);
 	size_t tmp_filename_len = written + sizeof(TMP_EXT) + 1;
-	char *tmp_filename = malloc(tmp_filename_len * sizeof(char));
+	char *tmp_filename = xmalloc(tmp_filename_len * sizeof(char));
 	snprintf(tmp_filename, tmp_filename_len, "%s%s", filename, TMP_EXT);
 	return tmp_filename;
 }
@@ -97,7 +97,7 @@ int file_open(const wchar_t *filename){
 	if (!buffers.curr->filename || !filename || buffers.curr->filename != filename){
 		size_t len = (wstrnlen(filename, FILENAME_MAX) + 1) * sizeof(wchar_t);
 		free(buffers.curr->filename);
-		buffers.curr->filename = malloc(len);
+		buffers.curr->filename = xmalloc(len);
 		assert(buffers.curr->filename);
 		memcpy(buffers.curr->filename, filename, len);
 	}

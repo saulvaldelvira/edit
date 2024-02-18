@@ -8,15 +8,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void die(const char *s) {
-	perror(s);
-	exit(1);
-}
-
 void editor_end(void){
 	for (int i = 0; i < buffers.amount; i++)
 		buffer_drop();
 	exit(0);
+}
+
+void* xmalloc(size_t nbytes){
+        void *ptr = malloc(nbytes);
+        if (!ptr)
+                die("Could not allocate memory");
+        return ptr;
 }
 
 size_t wstrnlen(const wchar_t *wstr, size_t n){
