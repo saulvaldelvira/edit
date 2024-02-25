@@ -1,0 +1,167 @@
+.TH edit 1 "25 February 2024"
+.SH NAME
+\fBedit\fP - Terminal-based text editor
+.SH SYNOPSIS
+edit [--exec <command>] [filename1..filenameN]
+
+.SH DESCRIPTION
+\fBedit\fP is a simple text editor for the terminal.
+
+It can handle multiple files (buffers) at the same time, and comes
+with a bunch of useful commands.
+
+.SH OPTIONS
+.TP
+.B --exec <command>
+Executes <command> for every file given as a parameter.
+.TP
+.B --
+Breaks the argument parsing. Treats the rest of the arguments as filenames.
+
+.SH EXAMPLES
+Open files for editing: \fBedit my-file.txt another-file.c\fP
+
+Strip trailing spaces from files: \fBedit --exec "strip buffer" *.txt
+
+.SH KEYBINDINGS
+
+.TP
+.B Ctrl + E
+Execute a command
+
+.TP
+.B Ctrl + F
+Format line
+
+.TP
+.B Ctrl + K
+Cut line
+
+.TP
+.B Ctrl + N
+Add buffer
+
+.TP
+.B Ctrl + O
+Open file
+
+.TP
+.B Ctrl + Q
+Kill buffer
+
+.TP
+.B Ctrl + S
+Save buffer
+
+.TP
+.B Ctrl + Left Arrow
+Move to the buffer on the left
+
+.TP
+.B Ctrl + Right Arrow
+Move to the buffer on the right
+
+.TP
+.B F5
+Reload file
+
+.TP
+.B Alt + H
+Display a help buffer
+
+.TP
+.B Alt + C
+Toggle comment in the current line
+
+.TP
+.B Alt + S
+Search in the buffer
+
+.TP
+.B Alt + R
+Replace command
+
+.TP
+.B Alt + K
+Cut the line from the cursor to the end.
+
+.TP
+.B Alt + Up Arrow
+Moves the current line up.
+
+.TP
+.B Alt + Down Arrow
+Moves the current line down.
+
+.TP
+.B Alt + [1-9]
+Go to buffer number [1-9]
+
+.TP
+.B Alt + Left Arrow
+Jumps to the previous word
+
+.TP
+.B Alt + Righ Arrow
+Jumps to the next word
+
+.TP
+.B Alt + Backspace
+Deletes a word backwards
+
+.TP
+.B Alt + Supr Key
+Deletes a word forward
+
+
+.SH COMMANDS
+
+.TP
+.B !quit
+Exit the editor
+
+.TP
+.B pwd
+prints the current working directory
+
+.TP
+.B wq
+Write the buffer and close it
+
+.TP
+.B fwq
+Same as wq, but it formats the buffer first
+
+.TP
+.B strip [line|buffer]
+Strips triling whitespaces.
+
+.TP
+.B goto [line|buffer] <line-number>
+Jumps to a certain line/buffer
+
+.TP
+.B format [line|buffer]
+Formats the line/buffer. Same as Ctrl + F.
+
+.TP
+.B search <string>
+Jumps to the next occurence of the given string of text
+
+.TP
+.B search-backwards
+same as search, but backwards.
+
+.TP
+.B replace <text> <replacement>
+Replaces all instances of <text> with <replacement>
+
+.TP
+.B help
+Display the help buffer
+
+.SH AUTHOR
+Saúl Valdelvira
+
+.SH SEE ALSO
+Browse the source code at \fIhttp://git.saulv.es/edit\fP

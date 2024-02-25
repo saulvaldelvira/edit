@@ -17,13 +17,18 @@ edit: $(OFILES)
 INSTALL_PATH ?= /usr/local
 
 install: edit
-	@ echo " => $(INSTALL_PATH)/bin/edit"
+	@ echo "edit => $(INSTALL_PATH)/bin"
+	@ echo "edit.1 => $(INSTALL_PATH)/share/man/man1"
 	@ install -d $(INSTALL_PATH)/bin
 	@ install -m  755 ./edit $(INSTALL_PATH)/bin
+	@ install -d $(INSTALL_PATH)/share/man/man1
+	@ install -m  644 edit.1 $(INSTALL_PATH)/share/man/man1
 
 uninstall:
 	@ echo " RM $(INSTALL_PATH)/bin/edit"
-	@ rm -f $(INSTALL_PATH)/bin/edit
+	@ echo " RM $(INSTALL_PATH)/share/man/man1/edit.1"
+	@ rm -f $(INSTALL_PATH)/bin/edit \
+			$(INSTALL_PATH)/share/man/man1/edit.1
 
 clean:
 	@ rm -f edit $(OFILES) $(DEPS) $(DEPS)
