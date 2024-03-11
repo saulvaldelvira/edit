@@ -14,7 +14,7 @@
 
 static wchar_t alt_key;
 
-static void alt_key_process(){
+static void alt_key_process(void){
 	switch (alt_key){
 	case L'h':
 		editor_help(); break;
