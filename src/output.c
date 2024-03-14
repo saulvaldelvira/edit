@@ -133,9 +133,9 @@ void editor_draw_rows(WString *buf){
                         size_t screen_cols = conf.screen_cols;
                         if (conf.line_number) {
                                 screen_cols -= num_width(buffers.curr->num_lines) + 1;
-                                wchar_t lnr_buf[20];
+                                wchar_t lnr_buf[128];
                                 int padding = num_width(buffers.curr->num_lines) - num_width(file_line + 1) + 1;
-                                swprintf(lnr_buf, sizeof(lnr_buf),
+                                swprintf(lnr_buf, sizeof(lnr_buf) / sizeof(lnr_buf[0]),
                                          L"%d%*s", file_line + 1, padding, "");
                                 wstr_concat_cwstr(buf, lnr_buf, sizeof(lnr_buf));
                         }
