@@ -58,6 +58,8 @@ Commands
 - format [line|buffer]: The same as Ctrl + F.
     format line: format the current line.
     format buffer: format the current buffer.
+- set <key> <value>: set a configuration parameter for all new buffers
+- setlocal <key> <value>: set a configuration parameter for the current buffer
 - help: Display the help buffer
 
 Arguments

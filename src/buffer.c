@@ -5,17 +5,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-struct buffers_data buffers = {0};
-static Vector *buffers_vec;
-
-static const struct buffer default_buffer = {
-	.tab_size = 8,
-	.substitute_tab_with_space = false,
-	.syntax_highlighting = false,
-	.auto_save = true,
-        .line_number = true,
-        .eol = DEFAULT_EOL,
+struct buffers_data buffers = {
+        .default_buffer = {
+                .tab_size = 8,
+                .substitute_tab_with_space = false,
+                .syntax_highlighting = false,
+                .auto_save = true,
+                .line_number = true,
+                .eol = DEFAULT_EOL,
+        }
 };
+static Vector *buffers_vec;
 
 static void free_buffer(void *e){
 	struct buffer *buf = * (struct buffer**) e;
@@ -33,7 +33,7 @@ void buffer_init(void){
 	vector_set_destructor(buffers_vec, free_buffer);
 	buffers.curr_index = -1;
         buffers.curr = xmalloc(sizeof(struct buffer));
-        *buffers.curr = default_buffer;
+        *buffers.curr = buffers.default_buffer;
         atexit(cleanup);
 }
 
@@ -45,7 +45,7 @@ void buffer_insert(void){
                 buffers.curr = xmalloc(sizeof(struct buffer));
         }
 
-	*buffers.curr = default_buffer;
+	*buffers.curr = buffers.default_buffer;
 	buffers.curr[0].lines = lines,
 
 	buffers.curr_index++;

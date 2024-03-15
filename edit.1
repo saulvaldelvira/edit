@@ -157,8 +157,33 @@ same as search, but backwards.
 Replaces all instances of <text> with <replacement>
 
 .TP
+.B set <key> [<value>]
+Sets a configuration parameter for all new buffers
+
+.TP
+.B setlocal <key> [<value>]
+Sets a configuration parameter for the current buffer
+
+.TP
 .B help
 Display the help buffer
+
+.SH SET
+.TP
+.B linenumber
+Display line numbers
+.TP
+.B nolinenumber
+Don't display line numbers
+.TP
+.B tabwidth <int>
+Set tab width
+.TP
+.B highlighting
+Enable syntax highlighting
+.TP
+.B nohighlighting
+Disable syntax highlighting
 
 .SH AUTHOR
 Saúl Valdelvira

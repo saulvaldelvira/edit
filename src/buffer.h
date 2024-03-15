@@ -26,6 +26,7 @@ extern struct buffers_data {
         struct buffer *curr;
         int amount;
         int curr_index;
+        struct buffer default_buffer;
 } buffers;
 
 void buffer_init(void);
