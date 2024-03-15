@@ -16,22 +16,18 @@
 #include <sys/time.h>
 #include <poll.h>
 
+static struct termios original_term;
+
 struct conf conf = {
-	.tab_size = 8,
 	.quit_times = 3,
 	.status_msg[0] = '\0',
-	.substitute_tab_with_space = false,
-	.show_line_number = false,
-	.syntax_highlighting = false,
-	.auto_save = true,
-        .line_number = true
 };
 
 static void enable_raw_mode(void){
 	struct termios term;
 	if (tcgetattr(STDIN_FILENO, &term) == -1)
 		die("tcgetattr failed");
-	conf.original_term = term;
+	original_term = term;
 	term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
 	term.c_oflag &= ~(OPOST);
 	term.c_cflag |= (CS8);
@@ -46,7 +42,7 @@ static void enable_raw_mode(void){
 
 
 static void cleanup(void){
-	tcsetattr(STDIN_FILENO, TCSAFLUSH, &conf.original_term); // restore termios
+	tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_term); // restore termios
 	vector_free(conf.render);
 	wprintf(L"\x1b[?1049l");
 }
@@ -73,7 +69,6 @@ static void init(void){
         buffer_init();
 	atexit(cleanup);
 	setlocale(LC_CTYPE, "");
-	conf.last_auto_save = time(0);
 	enable_raw_mode();
 
 	/* Prepare the pipe to "wake up" the editor on window resize.

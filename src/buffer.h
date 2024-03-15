@@ -3,6 +3,7 @@
 
 #include "./lib/GDS/src/Vector.h"
 #include <stddef.h>
+#include <time.h>
 
 struct buffer {
 	int cx, cy;
@@ -13,6 +14,12 @@ struct buffer {
 	Vector *lines;
 	int dirty;
 	char *eol;
+        int tab_size;
+        bool substitute_tab_with_space;
+        bool auto_save;
+        time_t last_auto_save;
+        bool syntax_highlighting;
+        bool line_number;
 };
 
 extern struct buffers_data {

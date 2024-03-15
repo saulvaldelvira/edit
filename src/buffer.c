@@ -1,12 +1,21 @@
+#include "edit.h"
 #include "buffer.h"
 #include "file.h"
 #include "util.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 struct buffers_data buffers = {0};
 static Vector *buffers_vec;
+
+static const struct buffer default_buffer = {
+	.tab_size = 8,
+	.substitute_tab_with_space = false,
+	.syntax_highlighting = false,
+	.auto_save = true,
+        .line_number = true,
+        .eol = DEFAULT_EOL,
+};
 
 static void free_buffer(void *e){
 	struct buffer *buf = * (struct buffer**) e;
@@ -24,7 +33,7 @@ void buffer_init(void){
 	vector_set_destructor(buffers_vec, free_buffer);
 	buffers.curr_index = -1;
         buffers.curr = xmalloc(sizeof(struct buffer));
-        memset(buffers.curr, 0, sizeof(struct buffer));
+        *buffers.curr = default_buffer;
         atexit(cleanup);
 }
 
@@ -35,10 +44,9 @@ void buffer_insert(void){
         if (buffers.curr_index >= 0){
                 buffers.curr = xmalloc(sizeof(struct buffer));
         }
-	*buffers.curr = (struct buffer){
-		.lines = lines,
-		.eol = DEFAULT_EOL
-	};
+
+	*buffers.curr = default_buffer;
+	buffers.curr[0].lines = lines,
 
 	buffers.curr_index++;
 	vector_insert_at(buffers_vec, buffers.curr_index, &buffers.curr);

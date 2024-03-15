@@ -99,13 +99,13 @@ void editor_update_render(void){
 		vector_at(conf.render, i, &render);
 		wstr_clear(render);
 	}
-	if (conf.syntax_highlighting)
+	if (buffers.curr->syntax_highlighting)
 		editor_highlight();
 }
 
 int get_character_width(wchar_t c, int accumulated_rx){
 	if (c == L'\t')
-		return conf.tab_size - (accumulated_rx % conf.tab_size);
+		return buffers.curr->tab_size - (accumulated_rx % buffers.curr->tab_size);
 	else
 		return wcwidth(c);
 

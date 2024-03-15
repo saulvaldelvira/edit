@@ -270,16 +270,16 @@ void file_reload(void){
 }
 
 void file_auto_save(void){
-	if (!conf.auto_save)
+	if (!buffers.curr->auto_save)
 		return;
 	int buf_i = buffers.curr_index;
 
-	if (buffers.curr->dirty && buffers.curr->filename && time(0) - conf.last_auto_save >= 60){
+	if (buffers.curr->dirty && buffers.curr->filename && time(0) - buffers.curr->last_auto_save >= 60){
 		for (int i = 0; i < buffers.amount; i++){
 			buffer_switch(i);
 			file_save(true, false);
 		}
-		conf.last_auto_save = time(0);
+		buffers.curr->last_auto_save = time(0);
 	}
 
 	buffer_switch(buf_i);

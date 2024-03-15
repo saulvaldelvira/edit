@@ -42,7 +42,7 @@ static int num_width(int n){
 }
 
 static void move_cursor(int x, int y, bool respect_linenr){
-        if (conf.line_number && respect_linenr)
+        if (buffers.curr->line_number && respect_linenr)
                 x += num_width(buffers.curr->num_lines) + 1;
         wchar_t move_cursor_buf[32];
         swprintf(move_cursor_buf,
@@ -131,7 +131,7 @@ void editor_draw_rows(WString *buf){
 			wstr_concat_cwstr(buf, L"~", 1);
 		}else{
                         size_t screen_cols = conf.screen_cols;
-                        if (conf.line_number) {
+                        if (buffers.curr->line_number) {
                                 screen_cols -= num_width(buffers.curr->num_lines) + 1;
                                 wchar_t lnr_buf[128];
                                 int padding = num_width(buffers.curr->num_lines) - num_width(file_line + 1) + 1;
