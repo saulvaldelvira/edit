@@ -205,6 +205,7 @@ void editor_set_status_message(const wchar_t *fmt, ...){
 
 void editor_help(void){
 	buffer_insert();
+        buffers.curr->line_number = false;
         static wchar_t *lines[] = {
 		L"Keybindings",
 		L"===========",
