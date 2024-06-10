@@ -11,7 +11,7 @@ struct buffers_data buffers = {
                 .substitute_tab_with_space = false,
                 .syntax_highlighting = false,
                 .auto_save = true,
-                .line_number = true,
+                .line_number = false,
                 .eol = DEFAULT_EOL,
         }
 };
