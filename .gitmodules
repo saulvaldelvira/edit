@@ -3,4 +3,4 @@
 	url = https://git.saulv.es/str/
 [submodule "GDS"]
 	path = src/lib/GDS
-	url = https://git.saulv.es/Generic-Data-Structures/
+	url = https://git.saulv.es/GDS/
