@@ -48,7 +48,7 @@ static void alt_key_process(void){
 	default: break;
 	}
 	for (int i = 1; i <= 9; i++){
-		if ((i + '0') == alt_key){
+		if ((wchar_t)(i + '0') == alt_key){
 			buffer_switch(i - 1);
 			return;
 		}
@@ -185,25 +185,26 @@ int editor_read_key(void){
 
 void editor_process_key_press(int c){
 	static int quit_times;
-#define quit_times_msg(key)						                 \
-	do{								                 \
-		if (buffers.curr->dirty && quit_times > 0){			         \
-			editor_set_status_message(L"WARNING! File has unsaved changes. " \
-				                  L"Press %s %d more times to quit.",    \
-	                                          key, quit_times);	                 \
-			quit_times--;					                 \
-			return;						                 \
-		}else if (quit_times == 0)				                 \
-			editor_set_status_message(L"");			                 \
-	}while(0)
+#define confirm_action(key, body)                                                        \
+        do{                                                                              \
+                if (buffers.curr->dirty && quit_times > 0){                              \
+                        editor_set_status_message(L"WARNING! File has unsaved changes. " \
+                                                  L"Press %s %d more times to quit.",    \
+                                                  key, quit_times);                      \
+                        quit_times--;                                                    \
+                        return;                                                          \
+                }else if (quit_times == 0) {                                             \
+                        editor_set_status_message(L"");                                  \
+                        body                                                             \
+                }                                                                        \
+        }while(0)
 
 	switch (c){
 	case '\r':
 		line_insert_newline();
 		break;
 	case CTRL_KEY('q'):
-		quit_times_msg("Ctrl + Q");
-		buffer_drop();
+                confirm_action("Ctrl + Q", { buffer_drop(); } );
 		break;
 	case ARROW_UP:
 	case ARROW_DOWN:
@@ -222,8 +223,7 @@ void editor_process_key_press(int c){
 		file_save(false, true);
 		break;
 	case CTRL_KEY('o'):
-		quit_times_msg("Ctrl + O");
-                file_open(NULL);
+		confirm_action("Ctrl + O", { file_open(NULL); });
 		break;
 
 	case CTRL_KEY('f'):
@@ -253,8 +253,7 @@ void editor_process_key_press(int c){
 		break;
 	case F5:
 		if (buffers.curr->filename){
-			quit_times_msg("F5");
-			file_reload();
+			confirm_action("F5", { file_reload(); });
 		}
 		break;
 	case '\x1b':
