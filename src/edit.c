@@ -1,9 +1,10 @@
-#include "edit.h"
 #include "input.h"
 #include "output.h"
 #include "file.h"
 #include "util.h"
 #include "buffer.h"
+#include "args.h"
+#include "conf.h"
 #include "cmd.h"
 #include <stdlib.h>
 #include <unistd.h>
@@ -17,11 +18,6 @@
 #include <poll.h>
 
 static struct termios original_term;
-
-struct conf conf = {
-	.quit_times = 3,
-	.status_msg[0] = '\0',
-};
 
 static void enable_raw_mode(void){
 	struct termios term;
@@ -59,7 +55,7 @@ static void signal_handler(int sig){
 static void init(void){
 	if (get_window_size(&conf.screen_rows, &conf.screen_cols) == -1)
 		die("get_window_size failed");
-	conf.screen_rows -= 2;
+	conf.screen_rows -= BOTTOM_MENU_HEIGHT;
 	conf.render = vector_init(sizeof(WString*), compare_equal);
 	vector_set_destructor(conf.render, free_wstr);
 	for (int i = 0; i < conf.screen_rows; i++){
@@ -85,40 +81,7 @@ static void init(void){
 
 int main(int argc, char *argv[]){
 	init();
-
-	wchar_t filename[NAME_MAX];
-	if (argc == 1)
-		buffer_insert();
-	else
-		wprintf(L"\x1b[2J\x1b[H");
-
-	struct {
-		char *exec_cmd;
-	} args = {0};
-
-	int i;
-	for (i = 1; i < argc && argv[i][0] == '-'; i++){
-		if (strcmp("--exec", argv[i]) == 0){
-			if (i == argc - 1){
-				wprintf(L"\x1b[?1049l");
-				wprintf(L"Missing argument for \"--exec\" command\n\r");
-				exit(1);
-			}else{
-				args.exec_cmd = argv[++i];
-			}
-		}else if (strcmp("--", argv[i]) == 0){
-			i++;
-			break;
-		}
-	}
-
-	for (; i < argc; i++){
-		buffer_insert();
-		mbstowcs(filename, argv[i], NAME_MAX);
-		filename[NAME_MAX-1] = '\0';
-		if (file_open(filename) != 1)
-			editor_end();
-	}
+        args_parse(argc,argv);
 
 	buffer_switch(0);
         editor_refresh_screen(false);

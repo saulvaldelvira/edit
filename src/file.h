@@ -1,7 +1,8 @@
 #ifndef FILE_H
 #define FILE_H
 
-#include "edit.h"
+#include <stdbool.h>
+#include <wchar.h>
 
 int file_open(const wchar_t *filename);
 void file_auto_save(void);

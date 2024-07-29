@@ -1,6 +1,6 @@
 #include "highlight.h"
 #include "highlight/color.h"
-#include "edit.h"
+#include "conf.h"
 #include "mode.h"
 
 static void default_highlight(void){

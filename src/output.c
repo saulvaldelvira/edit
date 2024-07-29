@@ -1,5 +1,6 @@
 #include "output.h"
 #include "buffer.h"
+#include "conf.h"
 #include "lib/str/wstr.h"
 #include "line.h"
 #include "util.h"
@@ -98,10 +99,10 @@ static void print_welcome_msg(WString *buf){
 		wchar_t *msg = *line;
 		int welcome_len = wstrnlen(msg, -1);
 		if (welcome_len > conf.screen_cols - 2)
-			welcome_len = conf.screen_cols - 2;
+			welcome_len = conf.screen_cols - BOTTOM_MENU_HEIGHT;
 		int padding = (conf.screen_cols - welcome_len) / 2;
+                padding -= BOTTOM_MENU_HEIGHT;
 		wstr_concat_cwstr(buf, L"~ ", 2);
-		padding -= 2;
 		while (padding-- > 0)
 			wstr_push_char(buf, L' ');
 		wstr_concat_cwstr(buf, msg, welcome_len);

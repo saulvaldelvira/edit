@@ -3,6 +3,7 @@
 #include "line.h"
 #include "file.h"
 #include "util.h"
+#include "conf.h"
 #include "buffer.h"
 #include "cmd.h"
 #include "cursor.h"

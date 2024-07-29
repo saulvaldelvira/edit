@@ -1,9 +1,11 @@
-#include "edit.h"
 #include "buffer.h"
 #include "file.h"
+#include "lib/str/wstr.h"
 #include "util.h"
 #include <stdlib.h>
 #include <stdio.h>
+
+#define DEFAULT_EOL "\n"
 
 struct buffers_data buffers = {
         .default_buffer = {

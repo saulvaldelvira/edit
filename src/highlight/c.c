@@ -1,4 +1,5 @@
 #include "../edit.h"
+#include "../conf.h"
 #include "../highlight.h"
 #include "color.h"
 

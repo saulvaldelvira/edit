@@ -1,28 +1,28 @@
-#include "cursor.h"
 #include "edit.h"
+#include "cursor.h"
+#include "conf.h"
 #include "input.h"
 #include "line.h"
-#include "util.h"
 
 void cursor_adjust(void){
-	size_t line_len = current_line_length();
-	if ((size_t)buffers.curr->cx > line_len)
-		buffers.curr->cx = line_len;
- 	buffers.curr->rx = 0;
-	if (buffers.curr->cy < buffers.curr->num_lines){
-		WString *line;
-		vector_at(buffers.curr->lines, buffers.curr->cy, &line);
-		buffers.curr->rx = line_cx_to_rx(line, buffers.curr->cx);
-	}
-	// Adjust scroll
-	if (buffers.curr->cy < buffers.curr->row_offset)
-		buffers.curr->row_offset = buffers.curr->cy;
-	if (buffers.curr->cy >= buffers.curr->row_offset + conf.screen_rows)
-		buffers.curr->row_offset = buffers.curr->cy - conf.screen_rows + 1;
-	if (buffers.curr->rx < buffers.curr->col_offset)
-		buffers.curr->col_offset = buffers.curr->rx;
-	if (buffers.curr->rx >= buffers.curr->col_offset + conf.screen_cols)
-		buffers.curr->col_offset = buffers.curr->rx - conf.screen_cols + 1;
+        size_t line_len = current_line_length();
+        if ((size_t)buffers.curr->cx > line_len)
+                buffers.curr->cx = line_len;
+        buffers.curr->rx = 0;
+        if (buffers.curr->cy < buffers.curr->num_lines){
+                WString *line;
+                vector_at(buffers.curr->lines, buffers.curr->cy, &line);
+                buffers.curr->rx = line_cx_to_rx(line, buffers.curr->cx);
+        }
+        // Adjust scroll
+        if (buffers.curr->cy < buffers.curr->row_offset)
+                buffers.curr->row_offset = buffers.curr->cy;
+        if (buffers.curr->cy >= buffers.curr->row_offset + conf.screen_rows)
+                buffers.curr->row_offset = buffers.curr->cy - conf.screen_rows + 1;
+        if (buffers.curr->rx < buffers.curr->col_offset)
+                buffers.curr->col_offset = buffers.curr->rx;
+        if (buffers.curr->rx >= buffers.curr->col_offset + conf.screen_cols)
+                buffers.curr->col_offset = buffers.curr->rx - conf.screen_cols + 1;
 }
 
 

@@ -1,4 +1,6 @@
 #include "edit.h"
+#include "conf.h"
+#include <wchar.h>
 #include "util.h"
 #include "buffer.h"
 #include "highlight.h"

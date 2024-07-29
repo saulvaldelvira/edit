@@ -1,3 +1,4 @@
+#include "edit.h"
 #include "file.h"
 #include "line.h"
 #include "util.h"
