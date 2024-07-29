@@ -1,5 +1,5 @@
 #include "mode.h"
-#include "edit.h"
+#include "prelude.h"
 #include "buffer.h"
 #include <stdlib.h>
 

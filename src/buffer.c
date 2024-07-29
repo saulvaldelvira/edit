@@ -30,7 +30,8 @@ static void cleanup(void){
         vector_free(buffers_vec);
 }
 
-void buffer_init(void){
+void init_buffer(void){
+        CLEANUP_GUARD;
 	buffers_vec = vector_init(sizeof(struct buffer*), compare_equal);
 	vector_set_destructor(buffers_vec, free_buffer);
 	buffers.curr_index = -1;

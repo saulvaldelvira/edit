@@ -1,4 +1,8 @@
+#include "prelude.h"
+
 #include "input.h"
+#include "lib/GDS/src/LinkedList.h"
+#include "lib/str/wstr.h"
 #include "output.h"
 #include "line.h"
 #include "file.h"
@@ -7,8 +11,10 @@
 #include "buffer.h"
 #include "cmd.h"
 #include "cursor.h"
+#include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <wchar.h>
 #include <stdio.h>
 #include <wctype.h>
 #include <poll.h>
@@ -217,16 +223,7 @@ void editor_process_key_press(int c){
 		break;
 	case CTRL_KEY('o'):
 		quit_times_msg("Ctrl + O");
-		{
-			WString *filename_wstr = editor_prompt(L"Open file", buffers.curr->filename);
-			if (filename_wstr && wstr_length(filename_wstr) > 0){
-				buffer_clear();
-				const wchar_t *filename = wstr_get_buffer(filename_wstr);
-				if (file_open(filename) != 1)
-					buffer_drop();
-			}
-			wstr_free(filename_wstr);
-		}
+                file_open(NULL);
 		break;
 
 	case CTRL_KEY('f'):
@@ -274,7 +271,18 @@ void editor_process_key_press(int c){
 	cursor_adjust();
 }
 
-WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response){
+static inline int __replace_with(WString *wstr, wchar_t *new) {
+        wstr_clear(wstr);
+        if (new)
+                wstr_concat_cwstr(wstr, new, -1);
+        return wstr_length(wstr);
+}
+
+WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, LinkedList *history){
+        LinkedListIterator it = {0};
+        if (history)
+                it = list_iterator_from_back(history);
+
 	WString *response = wstr_empty();
 	if (default_response)
 		wstr_concat_cwstr(response, default_response, FILENAME_MAX);
@@ -282,7 +290,9 @@ WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response){
 	size_t x = wstr_length(response);
 	size_t base_x = wstrnlen(prompt, -1) + 2;
 	int c = 'C';
-	while (true){
+        bool end = false;
+        enum { UP, DOWN } direction = UP;
+	while (!end){
 		size_t offset = 0;
 		if (base_x + x + 1 >= (size_t) conf.screen_cols)
 			offset = base_x + x + 1 - conf.screen_cols;
@@ -300,9 +310,7 @@ WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response){
 		{
 		case NO_KEY:
 		case '\x1b':
-		case ARROW_UP:
-		case ARROW_DOWN:
-			break;
+                        break;
 		case DEL_KEY:
 		case CTRL_KEY(L'h'):
 		case BACKSPACE:
@@ -319,8 +327,8 @@ WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response){
 			wstr_free(response);
 			return NULL;
 		case '\r':
-			editor_set_status_message(L"");
-			return response;
+                        end = true;
+                        break;
 		case ARROW_LEFT:
 			if (x > 0)
 				x--;
@@ -329,6 +337,24 @@ WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response){
 			if (x < wstr_length(response))
 				x++;
 			break;
+                case ARROW_UP:
+                        if (!history) break;
+                        wchar_t *prev;
+                        if (direction == DOWN) list_it_prev(&it, &prev);
+                        direction = UP;
+                        if (list_it_prev(&it, &prev) != NULL) {
+                                x = __replace_with(response, prev);
+                        }
+                        break;
+                case ARROW_DOWN:
+                        if (!history) break;
+                        wchar_t *next;
+                        if (direction == UP) list_it_next(&it, &next);
+                        direction = DOWN;
+                        if (list_it_next(&it, &next) != NULL) {
+                                x = __replace_with(response, next);
+                        }
+                        break;
 		case HOME_KEY:
 			x = 0;
 			break;
@@ -349,10 +375,21 @@ WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response){
 			poll(fds, 1, 60000);
 		}
 	}
+        editor_set_status_message(L"");
+        if (history) {
+                wchar_t *last;
+                if (!list_get_back(history, &last)
+                        || wstr_cmp_cwstr(response, last) != 0)
+                {
+                        wchar_t *entry = wstr_cloned_cwstr(response);
+                        list_append(history, &entry);
+                }
+        }
+        return response;
 }
 
 bool editor_ask_confirmation(void){
-	WString *response = editor_prompt(L"Are you sure? Y/n", L"Y");
+	WString *response = editor_prompt(L"Are you sure? Y/n", L"Y", NULL);
 	bool result =
 		response != NULL
 		&& wstr_length(response) == 1

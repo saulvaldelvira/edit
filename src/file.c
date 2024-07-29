@@ -1,4 +1,6 @@
-#include "edit.h"
+#include "prelude.h"
+
+#include "lib/GDS/src/LinkedList.h"
 #include "file.h"
 #include "line.h"
 #include "util.h"
@@ -9,12 +11,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <wchar.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <assert.h>
+
+static LinkedList *history = NULL;
+
+static void cleanup_file(void) {
+        list_free(history);
+}
+
+void init_file(void) {
+        CLEANUP_GUARD;
+        history = list_init(sizeof(wchar_t*), compare_pointer);
+        list_set_destructor(history, destroy_ptr);
+        atexit(cleanup_file);
+}
 
 static char* mb_filename(size_t *written, bool tmp){
 	static char mbfilename[NAME_MAX];
@@ -94,7 +110,7 @@ static void switch_ctrl_c(bool allow){
 }
 
 // TODO: if .tmp version exists (i.e. failed save in a previous session), restore it.
-int file_open(const wchar_t *filename){
+int _file_open(const wchar_t *filename) {
 	if (!buffers.curr->filename || !filename || buffers.curr->filename != filename){
 		size_t len = (wstrnlen(filename, FILENAME_MAX) + 1) * sizeof(wchar_t);
 		free(buffers.curr->filename);
@@ -148,9 +164,25 @@ int file_open(const wchar_t *filename){
 	return 1;
 }
 
+int file_open(const wchar_t *filename) {
+        if (filename)
+                return _file_open(filename);
+        WString *filename_wstr = editor_prompt(L"Open file", buffers.curr->filename, history);
+        if (filename_wstr && wstr_length(filename_wstr) > 0){
+                buffer_clear();
+                filename = wstr_get_buffer(filename_wstr);
+                if (_file_open(filename) != 1) {
+                        buffer_drop();
+                        return FAILURE;
+                }
+        }
+        wstr_free(filename_wstr);
+        return SUCCESS;
+}
+
 int file_save(bool only_tmp, bool ask_filename){
 	if (ask_filename){
-		WString *filename = editor_prompt(L"Save as", buffers.curr->filename);
+		WString *filename = editor_prompt(L"Save as", buffers.curr->filename, history);
 		if (!filename || wstr_length(filename) == 0)
 			return -1;
 		free(buffers.curr->filename);
@@ -183,6 +215,7 @@ int file_save(bool only_tmp, bool ask_filename){
 		return -2;
 	}
 
+        int status = SUCCESS;
 	WString *buf = editor_lines_to_string();
 	size_t len = wstr_length(buf);
 	fwprintf(f, L"%ls", wstr_get_buffer(buf));
@@ -207,7 +240,10 @@ int file_save(bool only_tmp, bool ask_filename){
 	lstat(filename, &file_stat);
 	if (S_ISLNK(file_stat.st_mode)){
 		char link[PATH_MAX];
-		readlink(filename, link, PATH_MAX-1);
+                if (readlink(filename, link, PATH_MAX-1) == -1) {
+                        status = -3;
+                        goto cleanup;
+                }
 
 		char *last_slash = strrchr(filename, '/');
 		if (last_slash) ++last_slash;
@@ -223,9 +259,8 @@ int file_save(bool only_tmp, bool ask_filename){
 	    || (adjust_perms && chmod(filename, perms) != 0)
 		){
 		editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
-		wstr_free(buf);
-		free(tmp_filename);
-		return -3;
+                status = -4;
+                goto cleanup;
 	}
 	char *magnitudes[] = {"bytes", "KiB", "MiB", "GiB"};
 	double value = len;
@@ -246,7 +281,7 @@ int file_save(bool only_tmp, bool ask_filename){
 cleanup:
 	wstr_free(buf);
 	free(tmp_filename);
-	return 1;
+	return status;
 }
 
 void file_reload(void){

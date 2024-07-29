@@ -1,6 +1,6 @@
 #ifndef LINE_H
 #define LINE_H
-#include "edit.h"
+#include "prelude.h"
 
 WString* current_line(void);
 size_t current_line_length(void);

@@ -1,7 +1,8 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#include "edit.h"
+#include "prelude.h"
+#include "lib/GDS/src/LinkedList.h"
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 
@@ -26,7 +27,7 @@ enum editor_key {
 
 int editor_read_key(void);
 void editor_process_key_press(int c);
-WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response);
+WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, LinkedList *history);
 bool editor_ask_confirmation(void);
 
 #endif

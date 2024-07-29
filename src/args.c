@@ -1,4 +1,4 @@
-#include "edit.h"
+#include "prelude.h"
 #include <string.h>
 #include <wchar.h>
 #include <limits.h>

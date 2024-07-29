@@ -1,4 +1,4 @@
-#include "edit.h"
+#include "prelude.h"
 #include "conf.h"
 #include <wchar.h>
 #include "util.h"
@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 void editor_end(void){
 	for (int i = 0; i < buffers.amount; i++)
@@ -28,6 +29,13 @@ size_t wstrnlen(const wchar_t *wstr, size_t n){
 	while (*wstr++ != '\0' && n-- > 0)
 		len++;
 	return len;
+}
+
+void debug(const wchar_t *fmt, ...) {
+        va_list ap;
+        va_start(ap, fmt);
+        vfwprintf(stderr, fmt, ap);
+        va_end(ap);
 }
 
 static int get_cursor_position(int *row, int *col){

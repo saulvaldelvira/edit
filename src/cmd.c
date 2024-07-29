@@ -1,5 +1,8 @@
 #include "cmd.h"
 #include "input.h"
+#include "lib/GDS/src/Vector.h"
+#include "lib/GDS/src/util/compare.h"
+#include "lib/str/wstr.h"
 #include "output.h"
 #include "line.h"
 #include "util.h"
@@ -8,8 +11,11 @@
 #include "cursor.h"
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 #include <wchar.h>
+#include "lib/GDS/src/LinkedList.h"
+#include "util.h"
 
 static void cmd_goto(wchar_t **args){
 	long y;
@@ -27,9 +33,9 @@ static void cmd_goto(wchar_t **args){
 	if (!arg) {
 		WString *number;
 		if (buffer)
-    			number = editor_prompt(L"Buffer number", NULL);
+    			number = editor_prompt(L"Buffer number", NULL, NULL);
 		else
-			number = editor_prompt(L"Line number", NULL);
+			number = editor_prompt(L"Line number", NULL, NULL);
 		if (!number || wstr_length(number) == 0){
 		 	wstr_free(number);
 			return;
@@ -58,7 +64,7 @@ static void cmd_search(bool forward, wchar_t **args){
 
 	WString *search_wstr;
 	if (!args[1]){
-		search_wstr = editor_prompt(L"Search text", search);
+		search_wstr = editor_prompt(L"Search text", search, NULL);
 		if (!search_wstr || wstr_length(search_wstr) == 0){
 			wstr_free(search_wstr);
 			return;
@@ -112,7 +118,7 @@ static void cmd_replace(wchar_t **args){
 
 	WString *text_wstr;
 	if (!args[1]){
-		text_wstr = editor_prompt(L"Replace", text);
+		text_wstr = editor_prompt(L"Replace", text, NULL);
 		if (!text_wstr || wstr_length(text_wstr) == 0){
 			wstr_free(text_wstr);
 			return;
@@ -126,7 +132,7 @@ static void cmd_replace(wchar_t **args){
 	wstr_clear(text_wstr);
 
 	if (!args[1] || !args[2]){
-		text_wstr = editor_prompt(L"Replace with", replacement);
+		text_wstr = editor_prompt(L"Replace with", replacement, NULL);
 		if (!text_wstr){
 			wstr_free(text_wstr);
 			return;
@@ -170,11 +176,23 @@ void cmd_set(wchar_t **args, bool local){
         }
 }
 
+static LinkedList *history = NULL;
+
+static void __cleanup_cmd(void) {
+        list_free(history);
+}
+
+void init_cmd(void) {
+        CLEANUP_GUARD;
+        history = list_init(sizeof(wchar_t*), compare_pointer);
+        list_set_destructor(history, destroy_ptr);
+        atexit(__cleanup_cmd);
+}
+
 void editor_cmd(const wchar_t *command){
-        static wchar_t *last_cmd = NULL;
         WString *cmdstr = NULL;
         if (!command){
-                cmdstr = editor_prompt(L"Execute command", last_cmd);
+                cmdstr = editor_prompt(L"Execute command", NULL, history);
                 if (!cmdstr || wstr_length(cmdstr) == 0){
                         editor_set_status_message(L"");
                         wstr_free(cmdstr);
@@ -262,7 +280,5 @@ void editor_cmd(const wchar_t *command){
         for (wchar_t **p = args; *p; p++)
                 free(*p);
         free(args);
-        free(last_cmd);
-        last_cmd = wstr_to_cwstr(cmdstr);
         wstr_free(cmdstr);
 }

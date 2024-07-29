@@ -62,8 +62,13 @@ static void init(void){
 		WString *wstr = wstr_empty();
 		vector_append(conf.render, &wstr);
 	}
-        buffer_init();
-	atexit(cleanup);
+
+        atexit(cleanup);
+
+        init_buffer();
+        init_cmd();
+        init_file();
+
 	setlocale(LC_CTYPE, "");
 	enable_raw_mode();
 

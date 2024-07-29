@@ -1,4 +1,4 @@
-#include "edit.h"
+#include "prelude.h"
 #include "cursor.h"
 #include "conf.h"
 #include "input.h"

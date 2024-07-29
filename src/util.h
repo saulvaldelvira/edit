@@ -11,6 +11,13 @@
                 exit(1);                                             \
         }while (0)
 
+void debug(const wchar_t *fmt, ...);
+
+#define CLEANUP_GUARD \
+        static bool _flag = false; \
+        if (_flag) debug(L"Cleanup function \"%s\" reached twice\n", __func__); \
+        _flag = true
+
 void* xmalloc(size_t nbytes);
 void editor_end(void);
 void editor_scroll(void);

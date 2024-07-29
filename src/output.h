@@ -1,7 +1,7 @@
 #ifndef OUTPUT_H
 #define OUTPUT_H
 
-#include "edit.h"
+#include "prelude.h"
 
 void editor_refresh_screen(bool only_status_bar);
 void editor_draw_rows(WString *buf);
