@@ -5,6 +5,29 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+static Vector *buffers_vec;
+
+static void free_buffer(void *e){
+	struct buffer *buf = * (struct buffer**) e;
+	free(buf->filename);
+        vector_free(buf->lines);
+	free(buf);
+}
+
+static void cleanup_buffer(void){
+        vector_free(buffers_vec);
+}
+
+void init_buffer(void){
+        CLEANUP_GUARD;
+	buffers_vec = vector_init(sizeof(struct buffer*), compare_equal);
+	vector_set_destructor(buffers_vec, free_buffer);
+	buffers.curr_index = -1;
+        buffers.curr = xmalloc(sizeof(struct buffer));
+        *buffers.curr = buffers.default_buffer;
+        atexit(cleanup_buffer);
+}
+
 #define DEFAULT_EOL "\n"
 
 struct buffers_data buffers = {
@@ -17,28 +40,6 @@ struct buffers_data buffers = {
                 .eol = DEFAULT_EOL,
         }
 };
-static Vector *buffers_vec;
-
-static void free_buffer(void *e){
-	struct buffer *buf = * (struct buffer**) e;
-	free(buf->filename);
-        vector_free(buf->lines);
-	free(buf);
-}
-
-static void cleanup(void){
-        vector_free(buffers_vec);
-}
-
-void init_buffer(void){
-        CLEANUP_GUARD;
-	buffers_vec = vector_init(sizeof(struct buffer*), compare_equal);
-	vector_set_destructor(buffers_vec, free_buffer);
-	buffers.curr_index = -1;
-        buffers.curr = xmalloc(sizeof(struct buffer));
-        *buffers.curr = buffers.default_buffer;
-        atexit(cleanup);
-}
 
 void buffer_insert(void){
 	Vector *lines = vector_init(sizeof(WString*), compare_equal);

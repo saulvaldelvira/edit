@@ -2,6 +2,7 @@
 #define INPUT_H
 
 #include "prelude.h"
+#include <io/poll.h>
 #include "lib/GDS/src/LinkedList.h"
 
 #define CTRL_KEY(k) ((k) & 0x1f)

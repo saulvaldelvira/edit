@@ -1,11 +1,9 @@
 #include "prelude.h"
 
-#include "lib/GDS/src/LinkedList.h"
 #include "file.h"
 #include "line.h"
 #include "util.h"
-#include "output.h"
-#include "input.h"
+#include "io.h"
 #include "buffer.h"
 #include <errno.h>
 #include <stdio.h>
@@ -19,7 +17,7 @@
 #include <signal.h>
 #include <assert.h>
 
-static LinkedList *history = NULL;
+static LinkedList *history;
 
 static void cleanup_file(void) {
         list_free(history);

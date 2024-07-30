@@ -3,13 +3,21 @@
 #include <wchar.h>
 #include "util.h"
 #include "buffer.h"
-#include "highlight.h"
+#include "buffer/highlight.h"
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+
+void die(char *msg) {
+        fprintf(stderr, "ERROR: %s. "
+                        "In %s, line %d (%s)n",
+                        msg, __FILE__, __LINE__, __func__);
+        exit(1);
+}                                                     \
+
 
 void editor_end(void){
 	for (int i = 0; i < buffers.amount; i++)

@@ -1,5 +1,5 @@
-#include "../prelude.h"
-#include "../conf.h"
+#include <prelude.h>
+#include <conf.h>
 #include "../highlight.h"
 #include "color.h"
 

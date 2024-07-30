@@ -1,7 +1,7 @@
 #include "prelude.h"
 #include "cursor.h"
 #include "conf.h"
-#include "input.h"
+#include "io/input.h"
 #include "line.h"
 
 void cursor_adjust(void){

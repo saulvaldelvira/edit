@@ -17,7 +17,6 @@
 #include <wchar.h>
 #include <stdio.h>
 #include <wctype.h>
-#include <poll.h>
 
 static wchar_t alt_key;
 
@@ -56,13 +55,9 @@ static void alt_key_process(void){
 }
 
 int editor_read_key(void){
-	static struct pollfd fds[1] = {
-		{.fd = STDIN_FILENO, .events = POLLIN}
-	};
-	if (poll(fds, 1, 0) == 0)
-		return NO_KEY;
-
-	wchar_t c = getwchar();
+	static wchar_t c;
+        if (!try_read_char(&c))
+                return NO_KEY;
 	if (c == L'\x1b') {
 		wint_t seq[5];
 		if ((seq[0] = getwchar()) == WEOF)
@@ -195,8 +190,8 @@ void editor_process_key_press(int c){
                         return;                                                          \
                 }else if (quit_times == 0) {                                             \
                         editor_set_status_message(L"");                                  \
-                        body                                                             \
                 }                                                                        \
+                body                                                                     \
         }while(0)
 
 	switch (c){
@@ -368,10 +363,7 @@ WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, L
 			break;
 		}
 		if (c == NO_KEY){
-			struct pollfd fds[1] = {
-				{.fd = STDIN_FILENO, .events = POLLIN}
-			};
-			poll(fds, 1, 60000);
+                        wait_for_input(60000);
 		}
 	}
         editor_set_status_message(L"");

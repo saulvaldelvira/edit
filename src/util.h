@@ -3,14 +3,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#define die(msg)                                                     \
-        do {                                                         \
-                fprintf(stderr, "ERROR: %s. "                        \
-                                "In %s, line %d (%s)\n",             \
-                                msg, __FILE__, __LINE__, __func__);  \
-                exit(1);                                             \
-        }while (0)
-
 void debug(const wchar_t *fmt, ...);
 
 #define CLEANUP_GUARD \
@@ -18,6 +10,7 @@ void debug(const wchar_t *fmt, ...);
         if (_flag) debug(L"Cleanup function \"%s\" reached twice\n", __func__); \
         _flag = true
 
+void die(char *msg);
 void* xmalloc(size_t nbytes);
 void editor_end(void);
 void editor_scroll(void);

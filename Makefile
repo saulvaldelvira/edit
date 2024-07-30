@@ -1,7 +1,7 @@
 .PHONY: clean install uninstall
 CC := cc
-CFLAGS+= -Wall -Wextra -pedantic -O3 -g -Wstrict-prototypes
-CFILES= $(wildcard ./src/*.c) $(wildcard ./src/**/*.c) \
+CFLAGS+= -Wall -Wextra -pedantic -O3 -g -Wstrict-prototypes -I./src
+CFILES=  $(shell find src -name '*.c' -not -path "src/lib/*") \
 		./src/lib/GDS/src/Vector.c ./src/lib/GDS/src/LinkedList.c \
 		./src/lib/GDS/src/util/compare.c ./src/lib/str/wstr.c
 OFILES= $(patsubst %.c,%.o,$(CFILES))
@@ -28,6 +28,11 @@ uninstall:
 	@ echo " RM $(INSTALL_PATH)/share/man/man1/edit.1"
 	@ rm -f $(INSTALL_PATH)/bin/edit \
 			$(INSTALL_PATH)/share/man/man1/edit.1
+
+clangd:
+	@ echo -e \
+	"CompileFlags: \n" \
+	"Add: -I$(shell pwd)/src/" > .clangd
 
 clean:
 	@ rm -f edit $(OFILES)

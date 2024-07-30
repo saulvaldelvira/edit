@@ -29,7 +29,6 @@ extern struct buffers_data {
         struct buffer default_buffer;
 } buffers;
 
-void init_buffer(void);
 void buffer_insert(void);
 void buffer_clear(void);
 void buffer_drop(void);

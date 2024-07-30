@@ -7,10 +7,13 @@
 #include "file.h"
 #include "util.h"
 #include "args.h"
-
-struct args args = {0};
+#include <cmd.h>
 
 void args_parse(int argc, char *argv[]) {
+        struct args {
+                char *exec_cmd;
+        } args = {0};
+
 	wchar_t filename[NAME_MAX];
 	if (argc == 1)
 		buffer_insert();
@@ -39,5 +42,17 @@ void args_parse(int argc, char *argv[]) {
 		filename[NAME_MAX-1] = '\0';
 		if (file_open(filename) != 1)
 			editor_end();
+	}
+
+        if (args.exec_cmd != NULL){
+		WString *tmp = wstr_empty();
+		wstr_concat_cstr(tmp, args.exec_cmd, -1);
+		for (int i = 0; i < buffers.amount; i++){
+			buffer_switch(i);
+			editor_cmd(wstr_get_buffer(tmp));
+			file_save(false, false);
+		}
+		wstr_free(tmp);
+		exit(0);
 	}
 }
