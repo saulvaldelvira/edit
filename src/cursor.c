@@ -30,6 +30,7 @@ int cursor_move(int key){
 	WString *row = current_line();
 
 	switch (key){
+        case CTRL_KEY('h'):
 	case ARROW_LEFT:
 		if (buffers.curr->cx > 0){
 			buffers.curr->cx--;
@@ -38,6 +39,7 @@ int cursor_move(int key){
 			buffers.curr->cx = current_line_length();
 		}
 		break;
+        case CTRL_KEY('l'):
 	case ARROW_RIGHT:
 		if (row && (size_t)buffers.curr->cx < wstr_length(row)){
 			buffers.curr->cx++;
@@ -48,10 +50,12 @@ int cursor_move(int key){
 			buffers.curr->cx = 0;
 		}
 		break;
+        case CTRL_KEY('k'):
 	case ARROW_UP:
 		if (buffers.curr->cy > 0)
 			buffers.curr->cy--;
 		break;
+        case CTRL_KEY('j'):
 	case ARROW_DOWN:
 		if (buffers.curr->cy < buffers.curr->num_lines)
 			buffers.curr->cy++;

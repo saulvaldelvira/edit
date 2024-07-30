@@ -201,9 +201,13 @@ void editor_process_key_press(int c){
 	case CTRL_KEY('q'):
                 confirm_action("Ctrl + Q", { buffer_drop(); } );
 		break;
+        case CTRL_KEY('k'):
 	case ARROW_UP:
+        case CTRL_KEY('j'):
 	case ARROW_DOWN:
+        case CTRL_KEY('h'):
 	case ARROW_LEFT:
+        case CTRL_KEY('l'):
 	case ARROW_RIGHT:
 	case PAGE_UP:
 	case PAGE_DOWN:
@@ -211,7 +215,7 @@ void editor_process_key_press(int c){
 	case END_KEY:
 		cursor_move(c);
 		break;
-	case CTRL_KEY('k'):
+	case CTRL_KEY('x'):
 		line_cut(true);
 		break;
 	case CTRL_KEY('s'):
@@ -243,7 +247,6 @@ void editor_process_key_press(int c){
 		line_delete_char_forward();
 		break;
 	case BACKSPACE:
-	case CTRL_KEY('h'):
 		line_delete_char_backwards();
 		break;
 	case F5:
