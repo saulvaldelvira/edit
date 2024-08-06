@@ -1,17 +1,24 @@
 #ifndef CONF_H
 #define CONF_H
 
-#include "./lib/GDS/src/Vector.h"
-#include "./lib/str/wstr.h"
-#include <time.h>
+#include <stdbool.h>
 
-extern struct conf{
-	int screen_rows;
-	int screen_cols;
-	int quit_times;
-	Vector *render;
-	wchar_t status_msg[160];
-	time_t status_msg_time;
-} conf;
+struct conf {
+        int quit_times;
+};
 
-#endif // CONF_H
+struct buffer_conf {
+        char *eol;
+        int tab_size;
+        bool substitute_tab_with_space;
+        bool auto_save;
+        bool syntax_highlighting;
+        bool line_number;
+};
+
+extern struct conf conf;
+extern struct buffer_conf buffer_conf;
+
+void conf_parse(int argc, char *argv[]);
+
+#endif

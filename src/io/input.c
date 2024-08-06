@@ -7,7 +7,7 @@
 #include "line.h"
 #include "file.h"
 #include "util.h"
-#include "conf.h"
+#include "state.h"
 #include "buffer.h"
 #include "cmd.h"
 #include "cursor.h"
@@ -291,14 +291,14 @@ WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, L
         enum { UP, DOWN } direction = UP;
 	while (!end){
 		size_t offset = 0;
-		if (base_x + x + 1 >= (size_t) conf.screen_cols)
-			offset = base_x + x + 1 - conf.screen_cols;
+		if (base_x + x + 1 >= (size_t) state.screen_cols)
+			offset = base_x + x + 1 - state.screen_cols;
 		const wchar_t *buf = wstr_get_buffer(response);
 		editor_set_status_message(L"%ls: %ls", prompt, &buf[offset]);
 		// TODO: check screen size and reisze if needed
 		if (c != NO_KEY)
 			editor_refresh_screen(true);
-		wprintf(L"\x1b[%d;%zuH", conf.screen_rows + 2, base_x + x + 1);
+		wprintf(L"\x1b[%d;%zuH", state.screen_rows + 2, base_x + x + 1);
 		fflush(stdout);
 
 		c = editor_read_key();

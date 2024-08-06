@@ -1,5 +1,6 @@
 #include "prelude.h"
-#include "conf.h"
+#include "state.h"
+#include <sys/stat.h>
 #include <wchar.h>
 #include "util.h"
 #include "buffer.h"
@@ -39,10 +40,10 @@ size_t wstrnlen(const wchar_t *wstr, size_t n){
 	return len;
 }
 
-void debug(const wchar_t *fmt, ...) {
+void debug(const char *fmt, ...) {
         va_list ap;
         va_start(ap, fmt);
-        vfwprintf(stderr, fmt, ap);
+        vfprintf(stderr, fmt, ap);
         va_end(ap);
 }
 
@@ -87,7 +88,7 @@ char* editor_cwd(void){
 static void update_line(int cy){
 	int i = cy - buffers.curr->row_offset;
 	WString *render;
-	vector_at(conf.render, i, &render);
+	vector_at(state.render, i, &render);
 	wstr_clear(render);
 	WString *row;
 	vector_at(buffers.curr->lines, cy, &row);
@@ -106,24 +107,24 @@ static void update_line(int cy){
 
 void editor_update_render(void){
 	int i;
-	for (i = 0; i < conf.screen_rows; i++){
+	for (i = 0; i < state.screen_rows; i++){
 		int cy = buffers.curr->row_offset + i;
 		if (cy >= buffers.curr->num_lines)
 			break;
 		update_line(cy);
 	}
-	for (; i < conf.screen_rows; i++){
+	for (; i < state.screen_rows; i++){
 		WString *render;
-		vector_at(conf.render, i, &render);
+		vector_at(state.render, i, &render);
 		wstr_clear(render);
 	}
-	if (buffers.curr->syntax_highlighting)
+	if (buffers.curr->conf.syntax_highlighting)
 		editor_highlight();
 }
 
 int get_character_width(wchar_t c, int accumulated_rx){
 	if (c == L'\t')
-		return buffers.curr->tab_size - (accumulated_rx % buffers.curr->tab_size);
+		return buffers.curr->conf.tab_size - (accumulated_rx % buffers.curr->conf.tab_size);
 	else
 		return wcwidth(c);
 
@@ -137,4 +138,8 @@ long get_time_millis(void){
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+}
+
+bool file_exists(char *filename) {
+        return access(filename, F_OK) == 0;
 }

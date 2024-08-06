@@ -1,6 +1,8 @@
 #include "io.h"
+#include "conf.h"
+#include "io/output.h"
 #include "util.h"
-#include "args.h"
+#include "conf.h"
 #include <unistd.h>
 #include <sys/time.h>
 #include <poll.h>
@@ -9,7 +11,9 @@
 int main(int argc, char *argv[]){
 	init();
 
-        args_parse(argc,argv);
+        conf_parse(argc,argv);
+
+        editor_refresh_screen(false);
 
 	const int wait_timeout_ms = 30000;
 

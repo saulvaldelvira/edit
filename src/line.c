@@ -74,7 +74,7 @@ void line_put_char(int c){
 	WString *line;
 	vector_at(buffers.curr->lines, buffers.curr->cy, &line);
 	int n = 1;
-	if (c == L'\t' && buffers.curr->substitute_tab_with_space){
+	if (c == L'\t' && buffers.curr->conf.substitute_tab_with_space){
 		n = get_character_width(L'\t', buffers.curr->cx);
 		for (int i = 0; i < n; i++)
 			wstr_insert(line, ' ', buffers.curr->cx);
@@ -242,13 +242,13 @@ void line_strip_trailing_spaces(int cy){
 void line_format(int cy){
 	line_strip_trailing_spaces(cy);
 	wchar_t tab_buffer[80];
-	swprintf(tab_buffer, 80, L"%*c", buffers.curr->tab_size, ' ');
+	swprintf(tab_buffer, 80, L"%*c", buffers.curr->conf.tab_size, ' ');
 	WString *line = line_at(cy);
-	if (buffers.curr->substitute_tab_with_space){
+	if (buffers.curr->conf.substitute_tab_with_space){
 		int n = wstr_replace(line, L"\t", tab_buffer);
-                buffers.curr->cx += n * (buffers.curr->tab_size + 1);
+                buffers.curr->cx += n * (buffers.curr->conf.tab_size + 1);
 	}else{
 		int n = wstr_replace(line, tab_buffer, L"\t");
-                buffers.curr->cx -= n * (buffers.curr->tab_size - 1);
+                buffers.curr->cx -= n * (buffers.curr->conf.tab_size - 1);
 	}
 }

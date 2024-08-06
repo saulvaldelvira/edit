@@ -4,3 +4,6 @@
 [submodule "GDS"]
 	path = src/lib/GDS
 	url = https://git.saulv.es/GDS/
+[submodule "src/lib/json"]
+	path = src/lib/json
+	url = https://git.saulv.es/json.c/

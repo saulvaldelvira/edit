@@ -1,6 +1,6 @@
 #include "prelude.h"
 #include "cursor.h"
-#include "conf.h"
+#include "state.h"
 #include "io/input.h"
 #include "line.h"
 
@@ -17,12 +17,12 @@ void cursor_adjust(void){
         // Adjust scroll
         if (buffers.curr->cy < buffers.curr->row_offset)
                 buffers.curr->row_offset = buffers.curr->cy;
-        if (buffers.curr->cy >= buffers.curr->row_offset + conf.screen_rows)
-                buffers.curr->row_offset = buffers.curr->cy - conf.screen_rows + 1;
+        if (buffers.curr->cy >= buffers.curr->row_offset + state.screen_rows)
+                buffers.curr->row_offset = buffers.curr->cy - state.screen_rows + 1;
         if (buffers.curr->rx < buffers.curr->col_offset)
                 buffers.curr->col_offset = buffers.curr->rx;
-        if (buffers.curr->rx >= buffers.curr->col_offset + conf.screen_cols)
-                buffers.curr->col_offset = buffers.curr->rx - conf.screen_cols + 1;
+        if (buffers.curr->rx >= buffers.curr->col_offset + state.screen_cols)
+                buffers.curr->col_offset = buffers.curr->rx - state.screen_cols + 1;
 }
 
 
@@ -64,8 +64,8 @@ int cursor_move(int key){
 		if (buffers.curr->cy > buffers.curr->row_offset){
 			buffers.curr->cy = buffers.curr->row_offset;
 		}else{
-			buffers.curr->cy -= conf.screen_rows;
-			buffers.curr->row_offset -= conf.screen_rows;
+			buffers.curr->cy -= state.screen_rows;
+			buffers.curr->row_offset -= state.screen_rows;
 			if (buffers.curr->cy < 0)
 				buffers.curr->cy = 0;
 			if (buffers.curr->row_offset < 0)
@@ -73,13 +73,13 @@ int cursor_move(int key){
 		}
 		break;
 	case PAGE_DOWN:
-		if (buffers.curr->cy < buffers.curr->row_offset + conf.screen_rows - 1){
-			buffers.curr->cy = buffers.curr->row_offset + conf.screen_rows - 1;
+		if (buffers.curr->cy < buffers.curr->row_offset + state.screen_rows - 1){
+			buffers.curr->cy = buffers.curr->row_offset + state.screen_rows - 1;
 			if (buffers.curr->cy >= buffers.curr->num_lines)
 				buffers.curr->cy = buffers.curr->num_lines - 1;
 		}else{
-			buffers.curr->cy += conf.screen_rows;
-			buffers.curr->row_offset += conf.screen_rows;
+			buffers.curr->cy += state.screen_rows;
+			buffers.curr->row_offset += state.screen_rows;
 			if (buffers.curr->cy >= buffers.curr->num_lines)
 				buffers.curr->cy = buffers.curr->num_lines - 1;
 			if (buffers.curr->row_offset >= buffers.curr->num_lines)
@@ -101,11 +101,11 @@ int cursor_move(int key){
 void cursor_goto(int x, int y){
 	buffers.curr->cy = y;
 	buffers.curr->cx = x;
-	if (y < buffers.curr->row_offset || y >= (buffers.curr->row_offset + conf.screen_rows)){
-		if (y <= conf.screen_rows)
+	if (y < buffers.curr->row_offset || y >= (buffers.curr->row_offset + state.screen_rows)){
+		if (y <= state.screen_rows)
 			buffers.curr->row_offset = 0;
 		else
-			buffers.curr->row_offset = y - conf.screen_rows / 2;
+			buffers.curr->row_offset = y - state.screen_rows / 2;
 	}
 	size_t len = current_line_length();
 	if ((size_t)buffers.curr->cx > len)

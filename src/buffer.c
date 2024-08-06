@@ -1,9 +1,12 @@
 #include "buffer.h"
+#include "conf.h"
 #include "file.h"
 #include "lib/str/wstr.h"
 #include "util.h"
 #include <stdlib.h>
 #include <stdio.h>
+
+struct buffers_data buffers = {0};
 
 static Vector *buffers_vec;
 
@@ -23,33 +26,16 @@ void init_buffer(void){
 	buffers_vec = vector_init(sizeof(struct buffer*), compare_equal);
 	vector_set_destructor(buffers_vec, free_buffer);
 	buffers.curr_index = -1;
-        buffers.curr = xmalloc(sizeof(struct buffer));
-        *buffers.curr = buffers.default_buffer;
         atexit(cleanup_buffer);
 }
-
-#define DEFAULT_EOL "\n"
-
-struct buffers_data buffers = {
-        .default_buffer = {
-                .tab_size = 8,
-                .substitute_tab_with_space = false,
-                .syntax_highlighting = false,
-                .auto_save = true,
-                .line_number = false,
-                .eol = DEFAULT_EOL,
-        }
-};
 
 void buffer_insert(void){
 	Vector *lines = vector_init(sizeof(WString*), compare_equal);
 	vector_set_destructor(lines, free_wstr);
 
-        if (buffers.curr_index >= 0){
-                buffers.curr = xmalloc(sizeof(struct buffer));
-        }
+        buffers.curr = xmalloc(sizeof(struct buffer));
 
-	*buffers.curr = buffers.default_buffer;
+	*buffers.curr = (struct buffer) { .conf = buffer_conf };
 	buffers.curr[0].lines = lines,
 
 	buffers.curr_index++;

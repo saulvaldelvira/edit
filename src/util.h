@@ -1,14 +1,14 @@
 #ifndef UTIL_H
 #define UTIL_H
+#include <stdbool.h>
 #include <stddef.h>
-#include <stdio.h>
 
-void debug(const wchar_t *fmt, ...);
+void debug(const char *fmt, ...);
 
-#define CLEANUP_GUARD \
+#define CLEANUP_GUARD do { \
         static bool _flag = false; \
-        if (_flag) debug(L"Cleanup function \"%s\" reached twice\n", __func__); \
-        _flag = true
+        if (_flag) debug("Cleanup function \"%s\" reached twice\n", __func__); \
+        _flag = true; } while (0)
 
 void die(char *msg);
 void* xmalloc(size_t nbytes);
@@ -21,5 +21,6 @@ void editor_update_render(void);
 int get_character_width(wchar_t c, int accumulated_rx);
 void free_wstr(void *e);
 long get_time_millis(void);
+bool file_exists(char *filename);
 
 #endif

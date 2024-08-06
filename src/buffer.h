@@ -2,6 +2,7 @@
 #define BUFFER_H
 
 #include "./lib/GDS/src/Vector.h"
+#include "conf.h"
 #include <stddef.h>
 #include <time.h>
 
@@ -13,20 +14,14 @@ struct buffer {
 	wchar_t *filename;
 	Vector *lines;
 	int dirty;
-	char *eol;
-        int tab_size;
-        bool substitute_tab_with_space;
-        bool auto_save;
+        struct buffer_conf conf;
         time_t last_auto_save;
-        bool syntax_highlighting;
-        bool line_number;
 };
 
 extern struct buffers_data {
         struct buffer *curr;
         int amount;
         int curr_index;
-        struct buffer default_buffer;
 } buffers;
 
 void buffer_insert(void);

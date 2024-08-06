@@ -1,9 +1,9 @@
 #include "output.h"
 #include "buffer.h"
-#include "conf.h"
 #include "lib/str/wstr.h"
 #include "line.h"
 #include "util.h"
+#include "state.h"
 #include "cursor.h"
 #include <stdarg.h>
 #include <stdio.h>
@@ -20,13 +20,13 @@ static int check_window_size(void){
 	int rows, cols;
 	get_window_size(&rows, &cols);
 	rows -= 2;
-	if (rows != conf.screen_rows || cols != conf.screen_cols){
-		for (int i = conf.screen_rows; i < rows; i++){
+	if (rows != state.screen_rows || cols != state.screen_cols){
+		for (int i = state.screen_rows; i < rows; i++){
 			WString *wstr = wstr_empty();
-			vector_append(conf.render, &wstr);
+			vector_append(state.render, &wstr);
 		}
-		conf.screen_rows = rows;
-		conf.screen_cols = cols;
+		state.screen_rows = rows;
+		state.screen_cols = cols;
 		cursor_adjust();
 		return 1;
 	}
@@ -43,7 +43,7 @@ static int num_width(int n){
 }
 
 static void move_cursor(int x, int y, bool respect_linenr){
-        if (buffers.curr->line_number && respect_linenr)
+        if (buffers.curr->conf.line_number && respect_linenr)
                 x += num_width(buffers.curr->num_lines) + 1;
         wchar_t move_cursor_buf[32];
         swprintf(move_cursor_buf,
@@ -70,7 +70,7 @@ void editor_refresh_screen(bool only_status_bar){
 		editor_draw_rows(buf);
 	}else{
 		// Move to the last two lines (status and message)
-                move_cursor(0, conf.screen_rows + 1, false);
+                move_cursor(0, state.screen_rows + 1, false);
 	}
 
 	editor_draw_status_bar(buf);
@@ -92,15 +92,15 @@ static void print_welcome_msg(WString *buf){
 		NULL
 	};
 	int i;
-	for (i = 0; i < conf.screen_rows / 4; i++)
+	for (i = 0; i < state.screen_rows / 4; i++)
 		wstr_concat_cwstr(buf, L"~\x1b[K\r\n", 6);
 
 	for (wchar_t **line = welcome_messages; *line != NULL;){
 		wchar_t *msg = *line;
 		int welcome_len = wstrnlen(msg, -1);
-		if (welcome_len > conf.screen_cols - 2)
-			welcome_len = conf.screen_cols - BOTTOM_MENU_HEIGHT;
-		int padding = (conf.screen_cols - welcome_len) / 2;
+		if (welcome_len > state.screen_cols - 2)
+			welcome_len = state.screen_cols - BOTTOM_MENU_HEIGHT;
+		int padding = (state.screen_cols - welcome_len) / 2;
                 padding -= BOTTOM_MENU_HEIGHT;
 		wstr_concat_cwstr(buf, L"~ ", 2);
 		while (padding-- > 0)
@@ -108,11 +108,11 @@ static void print_welcome_msg(WString *buf){
 		wstr_concat_cwstr(buf, msg, welcome_len);
 		line++;
 		wstr_concat_cwstr(buf, L"\x1b[K\r\n", 5);
-		if (++i >= conf.screen_rows)
+		if (++i >= state.screen_rows)
 			break;
 	}
 
-	for (; i <= conf.screen_rows; i++)
+	for (; i <= state.screen_rows; i++)
 		wstr_concat_cwstr(buf, L"~\x1b[K\r\n", 7);
 }
 
@@ -126,13 +126,13 @@ void editor_draw_rows(WString *buf){
 		return;
 	 }
 
-	for (int y = 0; y < conf.screen_rows; y++){
+	for (int y = 0; y < state.screen_rows; y++){
 		int file_line = y + buffers.curr->row_offset;
 		if (file_line >= buffers.curr->num_lines){
 			wstr_concat_cwstr(buf, L"~", 1);
 		}else{
-                        size_t screen_cols = conf.screen_cols;
-                        if (buffers.curr->line_number) {
+                        size_t screen_cols = state.screen_cols;
+                        if (buffers.curr->conf.line_number) {
                                 screen_cols -= num_width(buffers.curr->num_lines) + 1;
                                 wchar_t lnr_buf[128];
                                 int padding = num_width(buffers.curr->num_lines) - num_width(file_line + 1) + 1;
@@ -141,7 +141,7 @@ void editor_draw_rows(WString *buf){
                                 wstr_concat_cwstr(buf, lnr_buf, sizeof(lnr_buf));
                         }
                         WString *line;
-                        vector_at(conf.render, y, &line);
+                        vector_at(state.render, y, &line);
                         size_t len = wstr_length(line);
 			if ((size_t)buffers.curr->col_offset < len){
 				if (len >= (size_t)buffers.curr->col_offset)
@@ -170,12 +170,12 @@ void editor_draw_status_bar(WString *buf){
 			    L"Buffer:%d/%d | Row:%d | Col:%d ",
 			    buffers.curr_index + 1, buffers.amount,
 			    buffers.curr->cy + 1, buffers.curr->cx + 1);
-	if (len > conf.screen_cols)
-		len = conf.screen_cols;
-	if (rlen > conf.screen_cols - len)
+	if (len > state.screen_cols)
+		len = state.screen_cols;
+	if (rlen > state.screen_cols - len)
 		rlen = 0;
 
-	int sep_len = conf.screen_cols - len - rlen;
+	int sep_len = state.screen_cols - len - rlen;
 	swprintf(sep, ARRAY_SIZE(sep), L"%*s", sep_len, " ");
 
 	wstr_concat_cwstr(buf, status, len);
@@ -187,26 +187,26 @@ void editor_draw_status_bar(WString *buf){
 }
 
 void editor_draw_message_bar(WString *buf){
-	size_t len = ARRAY_SIZE(conf.status_msg);
-	if (len > (size_t)conf.screen_cols)
-		len = (size_t)conf.screen_cols;
+	size_t len = ARRAY_SIZE(state.status_msg);
+	if (len > (size_t)state.screen_cols)
+		len = (size_t)state.screen_cols;
 	wstr_concat_cwstr(buf, L"\x1b[K", 3);
-	if(time(NULL) - conf.status_msg_time < 5)
-		wstr_concat_cwstr(buf, conf.status_msg, len);
+	if(time(NULL) - state.status_msg_time < 5)
+		wstr_concat_cwstr(buf, state.status_msg, len);
 
 }
 
 void editor_set_status_message(const wchar_t *fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
-	vswprintf(conf.status_msg, ARRAY_SIZE(conf.status_msg), fmt, ap);
+	vswprintf(state.status_msg, ARRAY_SIZE(state.status_msg), fmt, ap);
 	va_end(ap);
-	conf.status_msg_time = time(NULL);
+	state.status_msg_time = time(NULL);
 }
 
 void editor_help(void){
 	buffer_insert();
-        buffers.curr->line_number = false;
+        buffers.curr->conf.line_number = false;
         static wchar_t *lines[] = {
 		L"Keybindings",
 		L"===========",
@@ -244,8 +244,8 @@ void editor_help(void){
 		L"replace <text> <replacement>  Replaces all instances of <text> with <replacement>",L"",
 		L"goto [line|buffer] <number>   Jumps to a certain line/buffer",L"",
 		L"format [line|buffer]	The same as Ctrl + F.",L"",
-                L"set <key> <value> Set a configuration parameter for all new buffers",L"",
-                L"setlocal <key> <value> Set a configuration parameter for the current buffer",L"",
+                L"set <key> <value> Set a state.guration parameter for all new buffers",L"",
+                L"setlocal <key> <value> Set a state.guration parameter for the current buffer",L"",
 		L"help	Display the help buffer",
 		NULL
 	};

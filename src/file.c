@@ -69,7 +69,7 @@ static WString* editor_lines_to_string(void){
 		WString *line;
 		vector_at(buffers.curr->lines, i, &line);
 		wstr_concat_wstr(str, line);
-		wstr_concat_cstr(str, buffers.curr->eol, -1);
+		wstr_concat_cstr(str, buffers.curr->conf.eol, -1);
 	}
 	return str;
 }
@@ -129,10 +129,10 @@ int _file_open(const wchar_t *filename) {
 		c = getwc(f);
 		if (c == L'\n' || c == L'\r' || c == WEOF){
 			if (c == L'\r'){
-				buffers.curr->eol = "\r\n";
+				buffers.curr->conf.eol = "\r\n";
 				c = getwc(f); // consume the \n
 			}else if (c == L'\n'){
-				buffers.curr->eol = "\n";
+				buffers.curr->conf.eol = "\n";
 			}
 
 			size_t len = wstr_length(buf);
@@ -304,7 +304,7 @@ void file_reload(void){
 }
 
 void file_auto_save(void){
-	if (!buffers.curr->auto_save)
+	if (!buffers.curr->conf.auto_save)
 		return;
 	int buf_i = buffers.curr_index;
 

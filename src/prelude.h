@@ -10,6 +10,7 @@
 #include "buffer.h"
 #include <util.h>
 #include "./lib/str/wstr.h"
+#include <state.h>
 
 #define SUCCESS 1
 #define FAILURE 0

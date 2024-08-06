@@ -3,7 +3,8 @@ CC := cc
 CFLAGS+= -Wall -Wextra -pedantic -O3 -g -Wstrict-prototypes -I./src
 CFILES=  $(shell find src -name '*.c' -not -path "src/lib/*") \
 		./src/lib/GDS/src/Vector.c ./src/lib/GDS/src/LinkedList.c \
-		./src/lib/GDS/src/util/compare.c ./src/lib/str/wstr.c
+		./src/lib/GDS/src/util/compare.c ./src/lib/str/wstr.c \
+		$(wildcard src/lib/json/src/*.c)
 OFILES= $(patsubst %.c,%.o,$(CFILES))
 
 edit: $(OFILES)
