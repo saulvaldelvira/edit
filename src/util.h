@@ -21,6 +21,5 @@ void editor_update_render(void);
 int get_character_width(wchar_t c, int accumulated_rx);
 void free_wstr(void *e);
 long get_time_millis(void);
-bool file_exists(char *filename);
 
 #endif

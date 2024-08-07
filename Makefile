@@ -1,10 +1,14 @@
 .PHONY: clean install uninstall
+
+TARGET_PLATFORM := unix
+
 CC := cc
 CFLAGS+= -Wall -Wextra -pedantic -O3 -g -Wstrict-prototypes -I./src
-CFILES=  $(shell find src -name '*.c' -not -path "src/lib/*") \
+CFILES=  $(shell find src -name '*.c' -not -path "src/lib/*" -not -path "src/platform/*") \
 		./src/lib/GDS/src/Vector.c ./src/lib/GDS/src/LinkedList.c \
 		./src/lib/GDS/src/util/compare.c ./src/lib/str/wstr.c \
-		$(wildcard src/lib/json/src/*.c)
+		$(wildcard src/lib/json/src/*.c) \
+		$(shell find src/platform/$(TARGET_PLATFORM) -name '*.c')
 OFILES= $(patsubst %.c,%.o,$(CFILES))
 
 edit: $(OFILES)

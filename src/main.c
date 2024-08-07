@@ -7,7 +7,6 @@
 #include "conf.h"
 #include <unistd.h>
 #include <sys/time.h>
-#include <poll.h>
 #include <init.h>
 
 int main(int argc, char *argv[]){

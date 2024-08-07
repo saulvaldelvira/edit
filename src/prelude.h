@@ -4,13 +4,13 @@
 #define _POSIX_C_SOURCE 200112L
 #define _XOPEN_SOURCE // wcwidth
 
-#include <termios.h>
 #include <wchar.h>
 #include <limits.h>
 #include "buffer.h"
 #include <util.h>
 #include "./lib/str/wstr.h"
 #include <state.h>
+#include <platform.h>
 
 #define SUCCESS 1
 #define FAILURE 0

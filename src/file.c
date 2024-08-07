@@ -1,21 +1,22 @@
 #include "prelude.h"
 
+#include "platform.h"
+
 #include "file.h"
 #include "line.h"
 #include "util.h"
 #include "io.h"
 #include "buffer.h"
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <wchar.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <signal.h>
 #include <assert.h>
+#include <termios.h>
 
 static LinkedList *history;
 
@@ -152,7 +153,7 @@ int _file_open(const wchar_t *filename) {
 	buffers.curr->dirty = 0;
 	fclose(f);
 
-        if (access(mbfilename, W_OK) != 0)
+        if (!file_writable(mbfilename))
                 editor_set_status_message(L"Warning! You have opened a READ ONLY file");
 
 	// Discard any key press made while loading the file
@@ -193,8 +194,8 @@ int file_save(bool only_tmp, bool ask_filename){
            could cause the original file to be replaced. If the
            file does not exist it is fine to create a new one.*/
         char *mbfilename = mb_filename(NULL, false);
-        if (access(mbfilename, F_OK) == 0    // file exists
-            && access(mbfilename, W_OK) != 0 // is NOT writable
+        if (file_exists(mbfilename)    // file exists
+            && !file_writable(mbfilename) // is NOT writable
         ){
                 editor_set_status_message(L"Can't save! You have no permissions");
                 return -1;
@@ -223,22 +224,19 @@ int file_save(bool only_tmp, bool ask_filename){
 	if (only_tmp) goto cleanup;
 
 	char *filename = mb_filename(NULL, false);
-	struct stat file_stat;
 	// if the file already exists, adjust the permissions
-	bool adjust_perms = access(filename, F_OK) == 0;
-	mode_t perms = 0;
+	bool adjust_perms = file_exists(filename);
+        long perms = 0;
 	if (adjust_perms){
-		stat(filename, &file_stat);
-		perms = file_stat.st_mode;
+		perms = get_file_mode(filename);
 	}
 
 	/* Since we write to a temporary file and then rename it to the actual
 	   one, saving a symlink would overwrite it. So in that case, we need to
 	   get the "real" filename before saving. */
-	lstat(filename, &file_stat);
-	if (S_ISLNK(file_stat.st_mode)){
+	if (is_link(filename)) {
 		char link[PATH_MAX];
-                if (readlink(filename, link, PATH_MAX-1) == -1) {
+                if (!read_link(filename, link, PATH_MAX-1)) {
                         status = -3;
                         goto cleanup;
                 }
@@ -254,7 +252,7 @@ int file_save(bool only_tmp, bool ask_filename){
 	}
 
 	if (rename(tmp_filename, filename) != 0
-	    || (adjust_perms && chmod(filename, perms) != 0)
+	    || (adjust_perms && !change_mod(filename, perms))
 		){
 		editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
                 status = -4;

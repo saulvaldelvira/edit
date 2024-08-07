@@ -132,7 +132,3 @@ long get_time_millis(void){
 	gettimeofday(&tv, NULL);
 	return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 }
-
-bool file_exists(char *filename) {
-        return access(filename, F_OK) == 0;
-}

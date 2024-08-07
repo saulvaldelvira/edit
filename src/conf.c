@@ -1,5 +1,5 @@
-#include <linux/limits.h>
 #include <prelude.h>
+#include <limits.h>
 #include "buffer.h"
 #include "util.h"
 #include <prelude.h>
