@@ -1,16 +1,17 @@
+#include <prelude.h>
 #include <platform.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-bool file_exists(char *filename) {
+INLINE bool file_exists(char *filename) {
         return access(filename, F_OK) == 0;
 }
 
-bool file_writable(char *filename) {
+INLINE bool file_writable(char *filename) {
         return access(filename, W_OK) == 0;
 }
 
-int read_link(const char *lname, char *out, unsigned len) {
+INLINE int read_link(const char *lname, char *out, unsigned len) {
         return readlink(lname, out, len) > 0;
 }
 
@@ -26,6 +27,6 @@ int get_file_mode(char *fname) {
         return file_stat.st_mode;
 }
 
-bool change_mod(char *fname, int mode) {
+INLINE bool change_mod(char *fname, int mode) {
         return chmod(fname, mode) == 0;
 }

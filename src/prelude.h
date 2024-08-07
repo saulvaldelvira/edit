@@ -20,4 +20,10 @@
 #define TMP_EXT ".tmp"
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
+#ifdef __GNUC__
+#define INLINE inline __attribute__((always_inline))
+#else
+#define INLINE inline
+#endif
+
 #endif

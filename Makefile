@@ -34,7 +34,8 @@ uninstall:
 	@ rm -f $(INSTALL_PATH)/bin/edit \
 			$(INSTALL_PATH)/share/man/man1/edit.1
 
-clangd:
+init:
+	@ git submodule update --init
 	@ echo -e \
 	"CompileFlags: \n" \
 	"Add: -I$(shell pwd)/src/" > .clangd

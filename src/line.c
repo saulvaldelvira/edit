@@ -1,5 +1,6 @@
 #include "line.h"
 #include "io/input.h"
+#include "prelude.h"
 #include "util.h"
 #include "cursor.h"
 #include "buffer/mode.h"
@@ -19,10 +20,12 @@ size_t line_at_len(int at){
 	return line ? wstr_length(line) : 0UL;
 }
 
+INLINE
 WString* current_line(void){
 	return line_at(buffers.curr->cy);
 }
 
+INLINE
 size_t current_line_length(void){
 	return line_at_len(buffers.curr->cy);
 }

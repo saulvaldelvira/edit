@@ -30,6 +30,7 @@ void init_state(void) {
         atexit(__cleanup_state);
 }
 
+INLINE
 long get_time_since_start_ms(void) {
         return get_time_millis() - start_time;
 }

@@ -12,7 +12,7 @@ static int pipefd[2];
 static struct pollfd pollfds[2];
 static const int poll_nfds = sizeof(pollfds) / sizeof(pollfds[0]);
 
-static inline void wake_up_poll(void) {
+static INLINE void wake_up_poll(void) {
         write(pipefd[1], " ", 1);
 }
 
