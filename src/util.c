@@ -40,13 +40,6 @@ size_t wstrnlen(const wchar_t *wstr, size_t n){
 	return len;
 }
 
-void debug(const char *fmt, ...) {
-        va_list ap;
-        va_start(ap, fmt);
-        vfprintf(stderr, fmt, ap);
-        va_end(ap);
-}
-
 static int get_cursor_position(int *row, int *col){
 	wprintf(L"\x1b[6n\r\n");
 	char buf[32];

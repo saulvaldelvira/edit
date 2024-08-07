@@ -1,11 +1,15 @@
 #include <prelude.h>
 #include <stdlib.h>
 #include "state.h"
+#include "util.h"
 #include <lib/json/src/json.h>
+#include <time.h>
 
 struct state state = {
 	.status_msg[0] = '\0',
 };
+
+static long start_time;
 
 static void __cleanup_state(void) {
 	vector_free(state.render);
@@ -21,5 +25,11 @@ void init_state(void) {
 		WString *wstr = wstr_empty();
 		vector_append(state.render, &wstr);
 	}
+        start_time = get_time_millis();
+
         atexit(__cleanup_state);
+}
+
+long get_time_since_start_ms(void) {
+        return get_time_millis() - start_time;
 }

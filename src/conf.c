@@ -13,6 +13,7 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <cmd.h>
+#include <log.h>
 
 struct conf conf = {
         .quit_times = 3,
@@ -72,7 +73,7 @@ static int parse_conf_file(char *filename) {
 
         if (json_conf.type != JSON_OBJECT) {
                 if (json_conf.type == JSON_ERROR)
-                        debug("Error parsing config file: %s\n", json_get_error_msg(json_conf.error_code));
+                        editor_log("Error parsing config file: %s\n", json_get_error_msg(json_conf.error_code));
                 json_free(json_conf);
                 must_free_conf = false;
                 return -1;
@@ -108,7 +109,7 @@ static int parse_conf_file(char *filename) {
 #undef CONF_STRUCT
         }
 
-        debug("Loaded configuration from file %s\n", filename);
+        editor_log("Loaded configuration from file %s\n", filename);
         return 1;
 }
 
@@ -149,13 +150,23 @@ void conf_parse(int argc, char *argv[]) {
 		}else if (strcmp("--", argv[i]) == 0){
 			i++;
 			break;
-                } else if (strcmp("--conf-file", argv[i]) == 0) {
+                }
+                else if (strcmp("--conf-file", argv[i]) == 0) {
 			if (i == argc - 1){
 				wprintf(L"\x1b[?1049l");
 				wprintf(L"Missing argument for \"--conf-file\" command\n\r");
 				exit(1);
 			}else{
 			        conf_file = argv[++i];
+			}
+                }
+                else if (strcmp("--log-file", argv[i]) == 0) {
+			if (i == argc - 1){
+				wprintf(L"\x1b[?1049l");
+				wprintf(L"Missing argument for \"--log-file\" command\n\r");
+				exit(1);
+			}else{
+                                set_log_file(argv[++i]);
 			}
                 }
 	}
@@ -166,7 +177,7 @@ void conf_parse(int argc, char *argv[]) {
         if (file_exists(conf_file))
                 parse_conf_file(conf_file);
         else
-                debug("Conf file %s doesn't exist\n", conf_file);
+                editor_log("Conf file %s doesn't exist\n", conf_file);
 
 	for (; i < argc; i++){
 		buffer_insert();

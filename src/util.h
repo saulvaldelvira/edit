@@ -3,11 +3,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-void debug(const char *fmt, ...);
+#include <log.h>
 
 #define CLEANUP_GUARD do { \
         static bool _flag = false; \
-        if (_flag) debug("Cleanup function \"%s\" reached twice\n", __func__); \
+        if (_flag) editor_log("Cleanup function \"%s\" reached twice\n", __func__); \
         _flag = true; } while (0)
 
 void die(char *msg);

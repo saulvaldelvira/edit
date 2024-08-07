@@ -1,6 +1,8 @@
 #include "io.h"
 #include "conf.h"
 #include "io/output.h"
+#include "io/poll.h"
+#include "log.h"
 #include "util.h"
 #include "conf.h"
 #include <unistd.h>

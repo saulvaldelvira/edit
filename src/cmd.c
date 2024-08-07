@@ -1,5 +1,6 @@
 #include "cmd.h"
 #include "cmd/prelude.h"
+#include "log.h"
 
 static LinkedList *history;
 
@@ -103,6 +104,9 @@ void editor_cmd(const wchar_t *command){
         }
         else if (wcscmp(cmd, L"help") == 0){
                 editor_help();
+        }
+        else if (wcscmp(cmd, L"log") == 0){
+                view_log_buffer();
         }
         else {
                 editor_set_status_message(L"Invalid command [%ls]", cmd);

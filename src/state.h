@@ -12,4 +12,6 @@ extern struct state {
 	time_t status_msg_time;
 } state;
 
+long get_time_since_start_ms(void);
+
 #endif // STATE_H
