@@ -17,8 +17,7 @@
 #include <wchar.h>
 #include <stdio.h>
 #include <wctype.h>
-
-static wchar_t alt_key;
+#include "keys.h"
 
 static void alt_key_process(void){
 	switch (alt_key){
@@ -52,130 +51,6 @@ static void alt_key_process(void){
 			return;
 		}
 	}
-}
-
-int editor_read_key(void){
-	static wchar_t c;
-        if (!try_read_char(&c))
-                return NO_KEY;
-	if (c == L'\x1b') {
-		wint_t seq[5];
-		if ((seq[0] = getwchar()) == WEOF)
-			return '\x1b';
-		if (seq[0] == L'[') {
-			if ((seq[1] = getwchar()) == WEOF)
-				return '\x1b';
-			if (iswdigit(seq[1])){
-				if ((seq[2] = getwchar()) == WEOF)
-					return '\x1b';
-				if (seq[2] == '~'){
-					switch (seq[1]){
-					case '1':
-					case '7':
-						return HOME_KEY;
-					case '3':
-						return DEL_KEY;
-					case '4':
-					case '8':
-						return END_KEY;
-					case '5': return PAGE_UP;
-					case '6': return PAGE_DOWN;
-
-					}
-
-				}
-				if ((seq[3] = getwchar()) == WEOF)
-					return '\x1b';
-				switch (seq[1]){
-				case L'1':
-					if (seq[2] == ';'){
-						if (seq[3] == '5'){
-							if ((seq[4] = getwchar()) == WEOF)
-								return '\x1b';
-							switch (seq[4]){
-							case 'C':
-								return CTRL_ARROW_RIGHT;
-							case 'D':
-								return CTRL_ARROW_LEFT;
-							default:
-								return '\x1b';
-							}
-						}else if (seq[3] == '3'){
-							if ((seq[4] = getwchar()) == WEOF)
-								return '\x1b';
-							alt_key = seq[4];
-							return ALT_KEY;
-						}
-					}else if (seq[3] == '~'){
-						switch (seq[2]){
-						case '1': return F1;
-						case '2': return F2;
-						case '3': return F3;
-						case '4': return F4;
-						case '5': return F5;
-						case '7': return F6;
-						case '8': return F7;
-						case '9': return F8;
-						default: return '\x1b';
-						}
-					}
-					else{
-						return '\x1b';
-					}
-					break;
-				case L'2':
-					if (seq[3] == '~'){
-						switch (seq[2]){
-						case '0': return F9;
-						case '1': return F10;
-						case '3': return F11;
-						case '4': return F12;
-						default: return '\x1b';
-						}
-					}else return '\x1b';
-				case L'3':
-					if (seq[2] == ';'){
-						if (seq[3] == '3'){
-							if ((seq[4] = getwchar()) == WEOF)
-								return '\x1b';
-							switch (seq[4]){
-							case '~':
-								alt_key = DEL_KEY;
-								return ALT_KEY;
-							default: return '\x1b';
-							}
-						}else return '\x1b';
-					}else return '\x1b';
-				default:
-					return '\x1b';
-
-				}
-			}else{
-				switch (seq[1]) {
-				case 'A': return ARROW_UP;
-				case 'B': return ARROW_DOWN;
-				case 'C': return ARROW_RIGHT;
-				case 'D': return ARROW_LEFT;
-				case 'H': return HOME_KEY;
-				case 'F': return END_KEY;
-				}
-			}
-		}else if (seq[0] == 'O'){
-			if ((seq[1] = getwchar()) == WEOF)
-				return '\x1b';
-			switch (seq[1]){
-			case 'H': return HOME_KEY;
-			case 'F': return END_KEY;
-			}
-		}else{
-			alt_key = seq[0];
-			return ALT_KEY;
-		}
-		return '\x1b';
-	} else {
-		return c;
-	}
-
 }
 
 void editor_process_key_press(int c){
@@ -224,7 +99,6 @@ void editor_process_key_press(int c){
 	case CTRL_KEY('o'):
 		confirm_action("Ctrl + O", { file_open(NULL); });
 		break;
-
 	case CTRL_KEY('f'):
 		line_format(buffers.curr->cy);
 		break;
@@ -254,11 +128,10 @@ void editor_process_key_press(int c){
 			confirm_action("F5", { file_reload(); });
 		}
 		break;
+        case NO_KEY:
+                return;
 	case '\x1b':
 		break;
-	case NO_KEY:
-		file_auto_save();
-		return;
 	default:
 		if (iswprint(c) || c == L'\t')
 			line_put_char(c);

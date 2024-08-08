@@ -2,9 +2,9 @@
 #define POLL_H
 
 #include <stdbool.h>
-#include <wchar.h>
+#include <wctype.h>
 
 bool wait_for_input(long ms);
-bool try_read_char(wchar_t *dst);
+bool try_read_char(wint_t *dst);
 
 #endif

@@ -39,7 +39,15 @@ void set_log_file(char *fname) {
         log_file = fopen(fname, "w");
 }
 
-void editor_log(const char *fmt, ...) {
+static enum log_level __log_level = LOG_INFO;
+
+void set_log_level(enum log_level log_level) {
+        __log_level = log_level;
+}
+
+void editor_log(enum log_level log_level, const char *fmt, ...) {
+        if (log_level > __log_level)
+                return;
         va_list ap;
         va_start(ap, fmt);
         size_t needed = vsnprintf(NULL, 0, fmt, ap) + 1;

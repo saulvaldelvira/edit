@@ -1,12 +1,12 @@
-#include "io.h"
+#include <prelude.h>
 #include "conf.h"
-#include "io/output.h"
-#include "io/poll.h"
-#include "log.h"
+#include "io.h"
+#include "state.h"
 #include "util.h"
 #include "conf.h"
 #include <unistd.h>
 #include <sys/time.h>
+#include <poll.h>
 #include <init.h>
 
 int main(int argc, char *argv[]){
@@ -35,6 +35,7 @@ int main(int argc, char *argv[]){
 		}
 
 		if (c == NO_KEY){
+                        editor_on_update();
 			// Wait for 30 seconds, or until input is available
 			if (wait_for_input(wait_timeout_ms))
 				editor_refresh_screen(true);

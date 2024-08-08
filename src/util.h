@@ -7,7 +7,7 @@
 
 #define CLEANUP_GUARD do { \
         static bool _flag = false; \
-        if (_flag) editor_log("Cleanup function \"%s\" reached twice\n", __func__); \
+        if (_flag) editor_log(LOG_WARN,"Cleanup function \"%s\" reached twice\n", __func__); \
         _flag = true; } while (0)
 
 void die(char *msg);

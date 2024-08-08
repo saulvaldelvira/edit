@@ -1,6 +1,7 @@
 #include <prelude.h>
 #include <stdlib.h>
 #include "state.h"
+#include "file.h"
 #include "util.h"
 #include <lib/json/src/json.h>
 #include <time.h>
@@ -33,4 +34,8 @@ void init_state(void) {
 INLINE
 long get_time_since_start_ms(void) {
         return get_time_millis() - start_time;
+}
+
+void editor_on_update(void) {
+        file_auto_save();
 }

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/poll.h>
 #include <unistd.h>
+#include <wctype.h>
 
 static int pipefd[2];
 
@@ -50,7 +51,7 @@ bool wait_for_input(long ms) {
         return false;
 }
 
-bool try_read_char(wchar_t *dst) {
+bool try_read_char(wint_t *dst) {
 	static struct pollfd fds[1] = {
 		{.fd = STDIN_FILENO, .events = POLLIN}
 	};

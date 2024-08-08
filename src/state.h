@@ -13,5 +13,6 @@ extern struct state {
 } state;
 
 long get_time_since_start_ms(void);
+void editor_on_update(void);
 
 #endif // STATE_H

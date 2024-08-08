@@ -73,7 +73,7 @@ static int parse_conf_file(char *filename) {
 
         if (json_conf.type != JSON_OBJECT) {
                 if (json_conf.type == JSON_ERROR)
-                        editor_log("Error parsing config file: %s\n", json_get_error_msg(json_conf.error_code));
+                        editor_log(LOG_ERROR, "Error parsing config file: %s\n", json_get_error_msg(json_conf.error_code));
                 json_free(json_conf);
                 must_free_conf = false;
                 return -1;
@@ -109,7 +109,7 @@ static int parse_conf_file(char *filename) {
 #undef CONF_STRUCT
         }
 
-        editor_log("Loaded configuration from file %s\n", filename);
+        editor_log(LOG_INFO, "Loaded configuration from file %s\n", filename);
         return 1;
 }
 
@@ -139,36 +139,30 @@ void conf_parse(int argc, char *argv[]) {
         char *conf_file = NULL;
 
 	for (i = 1; i < argc && argv[i][0] == '-'; i++){
-		if (strcmp("--exec", argv[i]) == 0){
-			if (i == argc - 1){
-				wprintf(L"\x1b[?1049l");
-				wprintf(L"Missing argument for \"--exec\" command\n\r");
-				exit(1);
-			}else{
-				args.exec_cmd = argv[++i];
-			}
-		}else if (strcmp("--", argv[i]) == 0){
-			i++;
-			break;
+#define ARG(arg,next,if_found) \
+                else if (strcmp(arg, argv[i]) == 0) {\
+			if (next && i == argc - 1){\
+				wprintf(L"\x1b[?1049l");\
+				wprintf(L"Missing argument for \"%s\" command\n\r", arg);\
+				exit(1);\
+			}else{\
+                                char *n = argv[++i];\
+                                (void)n; \
+                                if_found;\
+			}\
                 }
-                else if (strcmp("--conf-file", argv[i]) == 0) {
-			if (i == argc - 1){
-				wprintf(L"\x1b[?1049l");
-				wprintf(L"Missing argument for \"--conf-file\" command\n\r");
-				exit(1);
-			}else{
-			        conf_file = argv[++i];
-			}
-                }
-                else if (strcmp("--log-file", argv[i]) == 0) {
-			if (i == argc - 1){
-				wprintf(L"\x1b[?1049l");
-				wprintf(L"Missing argument for \"--log-file\" command\n\r");
-				exit(1);
-			}else{
-                                set_log_file(argv[++i]);
-			}
-                }
+                if (false);
+                ARG("--exec", true, {
+				args.exec_cmd = n;
+                                })
+                ARG("--", false, { i++; break; })
+
+                ARG("--conf-file", true, { conf_file = n;})
+                ARG("--log-file", true, { set_log_file(n); })
+                ARG("--log-level", true, {
+                                int l = atoi(n);
+                                set_log_level(l);
+                        });
 	}
 
         if (!conf_file)
@@ -177,7 +171,7 @@ void conf_parse(int argc, char *argv[]) {
         if (file_exists(conf_file))
                 parse_conf_file(conf_file);
         else
-                editor_log("Conf file %s doesn't exist\n", conf_file);
+                editor_log(LOG_WARN,"Conf file %s doesn't exist\n", conf_file);
 
 	for (; i < argc; i++){
 		buffer_insert();
