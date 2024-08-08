@@ -1,6 +1,7 @@
 #include "cmd.h"
 #include "cmd/prelude.h"
 #include "log.h"
+#include "prelude.h"
 
 static LinkedList *history;
 
@@ -20,8 +21,18 @@ void cmd_replace(wchar_t **args);
 void cmd_goto(wchar_t **args);
 void cmd_set(wchar_t **args, bool local);
 
+
+static wchar_t **args;
+static WString *cmdstr;
+
+static INLINE void __cmd_end(void) {
+        for (wchar_t **p = args; *p; p++)
+                free(*p);
+        free(args);
+        wstr_free(cmdstr);
+}
+
 void editor_cmd(const wchar_t *command){
-        WString *cmdstr = NULL;
         if (!command){
                 cmdstr = editor_prompt(L"Execute command", NULL, history);
                 if (!cmdstr || wstr_length(cmdstr) == 0){
@@ -33,11 +44,13 @@ void editor_cmd(const wchar_t *command){
                 cmdstr = wstr_from_cwstr(command, -1);
         }
 
-        wchar_t **args = wstr_split(cmdstr, L" ");
+        args = wstr_split(cmdstr, L" ");
         wchar_t *cmd = args[0];
         if (wcscmp(cmd, L"!quit") == 0){
-                if (editor_ask_confirmation())
+                if (editor_ask_confirmation()) {
+                        __cmd_end();
                         editor_end();
+                }
         }
         else if (wcscmp(cmd, L"pwd") == 0){
                 editor_set_status_message(L"%s", editor_cwd());
@@ -111,8 +124,5 @@ void editor_cmd(const wchar_t *command){
         else {
                 editor_set_status_message(L"Invalid command [%ls]", cmd);
         }
-        for (wchar_t **p = args; *p; p++)
-                free(*p);
-        free(args);
-        wstr_free(cmdstr);
+        __cmd_end();
 }

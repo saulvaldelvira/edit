@@ -1,5 +1,6 @@
 #ifndef UTIL_H
 #define UTIL_H
+#include "prelude.h"
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -10,9 +11,9 @@
         if (_flag) editor_log(LOG_WARN,"Cleanup function \"%s\" reached twice\n", __func__); \
         _flag = true; } while (0)
 
-void die(char *msg);
+void NORETURN die(char *msg);
+void NORETURN editor_end(void);
 void* xmalloc(size_t nbytes);
-void editor_end(void);
 void editor_scroll(void);
 size_t wstrnlen(const wchar_t *wstr, size_t n);
 int get_window_size(int *rows, int *cols);

@@ -20,7 +20,7 @@ void die(char *msg) {
 }                                                     \
 
 
-void editor_end(void){
+void editor_end(void) {
 	for (int i = 0; i < buffers.amount; i++)
 		buffer_drop();
 	exit(0);

@@ -7,7 +7,6 @@
 #include <wchar.h>
 #include <limits.h>
 #include "buffer.h"
-#include <util.h>
 #include "./lib/str/wstr.h"
 #include <state.h>
 #include <platform.h>
@@ -22,8 +21,10 @@
 
 #ifdef __GNUC__
 #define INLINE inline __attribute__((always_inline))
+#define NORETURN __attribute__((noreturn))
 #else
 #define INLINE inline
+#define NORETURN
 #endif
 
 #endif
