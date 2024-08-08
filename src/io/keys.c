@@ -85,14 +85,15 @@ int editor_read_key(void){
         if (!try_read_char(&c))
                 return NO_KEY;
         if (c != L'\x1b') {
-                editor_log(LOG_INPUT,"Received character: %lc\n", c);
+                editor_log(LOG_INPUT,"Received character: %d '%lc'", c, c);
                 return c;
         }
         for (int i = 0; i < 5; i++) {
                 if (!try_read_char(&seq[i]))
                         seq[i] = L' ';
         }
-        editor_log(LOG_INPUT,"Received key sequence: %c%c%c%c%c\n", seq[0], seq[1], seq[2], seq[3], seq[4]);
+        editor_log(LOG_INPUT,"Received key sequence: %c%c%c%c%c",
+                             seq[0], seq[1], seq[2], seq[3], seq[4]);
         if (seq[0] == L'[') {
                 return control_seq_introducer();
         }else if (seq[0] == 'O'){

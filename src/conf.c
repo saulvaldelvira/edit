@@ -73,7 +73,7 @@ static int parse_conf_file(char *filename) {
 
         if (json_conf.type != JSON_OBJECT) {
                 if (json_conf.type == JSON_ERROR)
-                        editor_log(LOG_ERROR, "Error parsing config file: %s\n", json_get_error_msg(json_conf.error_code));
+                        editor_log(LOG_ERROR, "Error parsing config file: %s", json_get_error_msg(json_conf.error_code));
                 json_free(json_conf);
                 must_free_conf = false;
                 return -1;
@@ -109,7 +109,7 @@ static int parse_conf_file(char *filename) {
 #undef CONF_STRUCT
         }
 
-        editor_log(LOG_INFO, "Loaded configuration from file %s\n", filename);
+        editor_log(LOG_INFO, "Loaded configuration from file %s", filename);
         return 1;
 }
 
@@ -171,7 +171,7 @@ void conf_parse(int argc, char *argv[]) {
         if (file_exists(conf_file))
                 parse_conf_file(conf_file);
         else
-                editor_log(LOG_WARN,"Conf file %s doesn't exist\n", conf_file);
+                editor_log(LOG_WARN,"Conf file %s doesn't exist", conf_file);
 
 	for (; i < argc; i++){
 		buffer_insert();

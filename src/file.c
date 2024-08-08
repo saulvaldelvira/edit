@@ -1,3 +1,4 @@
+#include "log.h"
 #include "prelude.h"
 
 #include "platform.h"
@@ -159,6 +160,7 @@ int _file_open(const wchar_t *filename) {
 	// Discard any key press made while loading the file
 	while (editor_read_key() != NO_KEY)
 		;
+        editor_log(LOG_INFO, "Opened file: %s", mbfilename);
 
 	return 1;
 }
@@ -266,12 +268,11 @@ int file_save(bool only_tmp, bool ask_filename){
 		value /= 1024;
 	}
 
-	if (magnitude > 0)
-		editor_set_status_message(L"%.1f %s written to disk [%s]",
-					  value, magnitudes[magnitude], filename);
-	else
-		editor_set_status_message(L"%.0f %s written to disk [%s]",
-					  value, magnitudes[magnitude], filename);
+        int n_decimal = magnitude > 0 ? 1 : 0;
+        editor_set_status_message(L"%.*f %s written to disk [%s]",
+                                  n_decimal, value, magnitudes[magnitude], filename);
+        editor_log(LOG_INFO, "%.*f %s written to disk [%s]",
+                             n_decimal, value, magnitudes[magnitude], filename);
 	buffers.curr->dirty = 0;
 
 cleanup:
