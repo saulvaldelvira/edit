@@ -1,3 +1,4 @@
+#include <prelude.h>
 #include "buffer.h"
 #include "conf.h"
 #include "file.h"

@@ -9,6 +9,7 @@
 #include <termios.h>
 #include <locale.h>
 #include <stdlib.h>
+#include "util.h"
 
 static struct termios original_term;
 

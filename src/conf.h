@@ -2,6 +2,7 @@
 #define CONF_H
 
 #include <stdbool.h>
+#include <time.h>
 
 struct conf {
         int quit_times;
@@ -11,7 +12,7 @@ struct buffer_conf {
         char *eol;
         int tab_size;
         bool substitute_tab_with_space;
-        bool auto_save;
+        time_t auto_save_interval;
         bool syntax_highlighting;
         bool line_number;
 };

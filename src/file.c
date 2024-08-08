@@ -181,6 +181,24 @@ int file_open(const wchar_t *filename) {
         return SUCCESS;
 }
 
+static void __print_filesave(double len, char *filename, bool auto_save) {
+	char *magnitudes[] = {"bytes", "KiB", "MiB", "GiB"};
+	double value = len;
+	size_t magnitude = 0;
+	while ((int)(value / 1024) > 0 && magnitude < sizeof(magnitudes)){
+		magnitude++;
+		value /= 1024;
+	}
+        int n_decimal = magnitude > 0 ? 1 : 0;
+        char *auto_save_msg = auto_save ? "AUTO SAVE: " : "";
+        if (!auto_save) {
+                editor_set_status_message(L"%s%.*f %s written to: %s", auto_save_msg,
+                                n_decimal, value, magnitudes[magnitude], filename);
+        }
+        editor_log(LOG_INFO, "%s%.*f %s written to: %s", auto_save_msg,
+                             n_decimal, value, magnitudes[magnitude], filename);
+}
+
 int file_save(bool only_tmp, bool ask_filename){
 	if (ask_filename){
 		WString *filename = editor_prompt(L"Save as", buffers.curr->filename, history);
@@ -223,7 +241,10 @@ int file_save(bool only_tmp, bool ask_filename){
 	fflush(f);
 	fclose(f);
 
-	if (only_tmp) goto cleanup;
+	if (only_tmp) {
+                __print_filesave(len, tmp_filename, true);
+                goto cleanup;
+        }
 
 	char *filename = mb_filename(NULL, false);
 	// if the file already exists, adjust the permissions
@@ -260,19 +281,8 @@ int file_save(bool only_tmp, bool ask_filename){
                 status = -4;
                 goto cleanup;
 	}
-	char *magnitudes[] = {"bytes", "KiB", "MiB", "GiB"};
-	double value = len;
-	size_t magnitude = 0;
-	while ((int)(value / 1024) > 0 && magnitude < sizeof(magnitudes)){
-		magnitude++;
-		value /= 1024;
-	}
 
-        int n_decimal = magnitude > 0 ? 1 : 0;
-        editor_set_status_message(L"%.*f %s written to disk [%s]",
-                                  n_decimal, value, magnitudes[magnitude], filename);
-        editor_log(LOG_INFO, "%.*f %s written to disk [%s]",
-                             n_decimal, value, magnitudes[magnitude], filename);
+        __print_filesave(len, filename, false);
 	buffers.curr->dirty = 0;
 
 cleanup:
@@ -303,11 +313,12 @@ void file_reload(void){
 }
 
 void file_auto_save(void){
-	if (!buffers.curr->conf.auto_save)
+        time_t t = buffers.curr->conf.auto_save_interval;
+	if (t == 0)
 		return;
 	int buf_i = buffers.curr_index;
 
-	if (buffers.curr->dirty && buffers.curr->filename && time(0) - buffers.curr->last_auto_save >= 60){
+	if (buffers.curr->dirty && buffers.curr->filename && time(0) - buffers.curr->last_auto_save >= t){
 		for (int i = 0; i < buffers.amount; i++){
 			buffer_switch(i);
 			file_save(true, false);

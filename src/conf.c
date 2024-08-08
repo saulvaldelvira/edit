@@ -23,7 +23,7 @@ struct buffer_conf buffer_conf = {
         .tab_size = 8,
         .substitute_tab_with_space = false,
         .syntax_highlighting = false,
-        .auto_save = true,
+        .auto_save_interval = 60,
         .line_number = false,
         .eol = "\n",
 };
@@ -100,7 +100,7 @@ static int parse_conf_file(char *filename) {
                 VAL(tab_size,JSON_NUMBER,number);
                 VAL_BOOL(substitute_tab_with_space);
                 VAL_BOOL(syntax_highlighting);
-                VAL_BOOL(auto_save);
+                VAL(auto_save_interval,JSON_NUMBER,number);
                 VAL_BOOL(line_number);
                 VAL(eol,JSON_STRING,string);
 #undef CONF_STRUCT
