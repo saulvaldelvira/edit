@@ -10,9 +10,9 @@
 #include <init.h>
 
 int main(int argc, char *argv[]){
+        parse_args(argc, argv);
 	init();
-
-        conf_parse(argc,argv);
+        parse_args_post_init();
 
         editor_refresh_screen(false);
 

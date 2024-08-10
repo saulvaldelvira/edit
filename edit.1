@@ -2,7 +2,8 @@
 .SH NAME
 \fBedit\fP - Terminal-based text editor
 .SH SYNOPSIS
-edit [--exec <command>] [filename1..filenameN]
+edit [--exec <command>] [--conf-file <file>] [--log-file <file>]
+     [--log-level <number>] [--help] [filename1..filenameN]
 
 .SH DESCRIPTION
 \fBedit\fP is a simple text editor for the terminal.
@@ -14,6 +15,19 @@ with a bunch of useful commands.
 .TP
 .B --exec <command>
 Executes <command> for every file given as a parameter.
+
+.TP
+.B --conf-file <file>
+Specify a config file
+
+.TP
+.B --log-file <file>
+Specify a log file
+
+.TP
+.B --log-level <number>
+Set the log level. ERROR (1), WARN (2), INFO (3), INPUT (4)
+
 .TP
 .B --
 Breaks the argument parsing. Treats the rest of the arguments as filenames.
@@ -168,6 +182,10 @@ Sets a configuration parameter for all new buffers
 Sets a configuration parameter for the current buffer
 
 .TP
+.B log
+Open a new buffer with the log of the session.
+
+.TP
 .B help
 Display the help buffer
 
@@ -187,6 +205,35 @@ Enable syntax highlighting
 .TP
 .B nohighlighting
 Disable syntax highlighting
+
+.SH CONFIGURATION
+To configure the behaviour of the editor, you can define a config file.
+
+The file uses the json format. Here's a table with the options.
+
+.TS
+allbox tab(|);
+cb cb cb
+c c c.
+Name | Json Type | Default Value
+tab_size | Number | 8
+substitute_tab_with_space | Bool | false
+syntax_highlighting | Bool | false
+auto_save_interval | Number | 60
+line_number | Bool | false
+eol | String | "\\n"
+.TE
+
+If not specified, with the --config-file argument, the program looks for it in the following places.
+
+\fI
+
+$XDG_CONFIG_HOME/edit/config.json
+
+$HOME/.config/edit/config.json
+
+\fP
+
 
 .SH AUTHOR
 Saúl Valdelvira

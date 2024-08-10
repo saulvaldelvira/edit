@@ -20,6 +20,7 @@ struct buffer_conf {
 extern struct conf conf;
 extern struct buffer_conf buffer_conf;
 
-void conf_parse(int argc, char *argv[]);
+void parse_args(int argc, char *argv[]);
+void parse_args_post_init(void);
 
 #endif

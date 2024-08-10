@@ -2,7 +2,7 @@
 
 void cmd_goto(wchar_t **args){
 	long y;
-	wchar_t *arg = args[1];
+	const wchar_t *arg = args[1];
 	bool buffer = false;
 	if (arg){
 		if (wcscmp(arg, L"buffer") == 0){
@@ -14,20 +14,15 @@ void cmd_goto(wchar_t **args){
 		}
 	}
 	if (!arg) {
-		WString *number;
 		if (buffer)
-    			number = editor_prompt(L"Buffer number", NULL, NULL);
+    			arg = editor_prompt(L"Buffer number", NULL, NULL);
 		else
-			number = editor_prompt(L"Line number", NULL, NULL);
-		if (!number || wstr_length(number) == 0){
-		 	wstr_free(number);
+			arg = editor_prompt(L"Line number", NULL, NULL);
+		if (!arg || wstrlen(arg) == 0){
 			return;
 		}
-		y = wcstol(wstr_get_buffer(number), NULL, 10);
-		wstr_free(number);
-	}else{
-		y = wcstol(arg, NULL, 10);
 	}
+        y = wcstol(arg, NULL, 10);
 	y--;
 	if (!buffer){
 		if (y < 0 || y >= buffers.curr->num_lines)

@@ -2,6 +2,7 @@
 #include "buffer.h"
 #include "conf.h"
 #include "file.h"
+#include "init.h"
 #include "lib/str/wstr.h"
 #include "util.h"
 #include <stdlib.h>
@@ -18,16 +19,17 @@ static void free_buffer(void *e){
 	free(buf);
 }
 
-static void cleanup_buffer(void){
+static void __cleanup_buffer(void){
+        CLEANUP_FUNC;
         vector_free(buffers_vec);
 }
 
 void init_buffer(void){
-        CLEANUP_GUARD;
+        INIT_FUNC;
 	buffers_vec = vector_init(sizeof(struct buffer*), compare_equal);
 	vector_set_destructor(buffers_vec, free_buffer);
 	buffers.curr_index = -1;
-        atexit(cleanup_buffer);
+        atexit(__cleanup_buffer);
 }
 
 void buffer_insert(void){

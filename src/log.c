@@ -13,12 +13,15 @@
 #include <time.h>
 #include <wchar.h>
 #include <cursor.h>
+#include <init.h>
 
 static Vector *log_history;
 
 static FILE *log_file;
 
 static void __cleanup_log(void) {
+        CLEANUP_FUNC;
+        editor_log(LOG_INFO, "Goodbye :)");
         vector_free(log_history);
         if (log_file) {
                 fclose(log_file);

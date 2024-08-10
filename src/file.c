@@ -1,10 +1,9 @@
-#include "log.h"
 #include "prelude.h"
 
 #include "platform.h"
-
 #include "file.h"
 #include "line.h"
+#include "state.h"
 #include "util.h"
 #include "io.h"
 #include "buffer.h"
@@ -18,18 +17,20 @@
 #include <signal.h>
 #include <assert.h>
 #include <termios.h>
+#include <init.h>
 
 static LinkedList *history;
 
-static void cleanup_file(void) {
+static void __cleanup_file(void) {
+        CLEANUP_FUNC;
         list_free(history);
 }
 
 void init_file(void) {
-        CLEANUP_GUARD;
+        INIT_FUNC;
         history = list_init(sizeof(wchar_t*), compare_pointer);
         list_set_destructor(history, destroy_ptr);
-        atexit(cleanup_file);
+        atexit(__cleanup_file);
 }
 
 static char* mb_filename(size_t *written, bool tmp){
@@ -168,16 +169,14 @@ int _file_open(const wchar_t *filename) {
 int file_open(const wchar_t *filename) {
         if (filename)
                 return _file_open(filename);
-        WString *filename_wstr = editor_prompt(L"Open file", buffers.curr->filename, history);
-        if (filename_wstr && wstr_length(filename_wstr) > 0){
+        filename = editor_prompt(L"Open file", buffers.curr->filename, history);
+        if (filename && wstrlen(filename) > 0){
                 buffer_clear();
-                filename = wstr_get_buffer(filename_wstr);
                 if (_file_open(filename) != 1) {
                         buffer_drop();
                         return FAILURE;
                 }
         }
-        wstr_free(filename_wstr);
         return SUCCESS;
 }
 
@@ -201,12 +200,10 @@ static void __print_filesave(double len, char *filename, bool auto_save) {
 
 int file_save(bool only_tmp, bool ask_filename){
 	if (ask_filename){
-		WString *filename = editor_prompt(L"Save as", buffers.curr->filename, history);
-		if (!filename || wstr_length(filename) == 0)
+		const wchar_t *filename = editor_prompt(L"Save as", buffers.curr->filename, history);
+		if (!filename || wstrlen(filename) == 0)
 			return -1;
-		free(buffers.curr->filename);
-		buffers.curr->filename = wstr_to_cwstr(filename);
-		wstr_free(filename);
+                change_current_buffer_filename(wstrdup(filename));
 	}
 
         /* Check if the file is writable. This is because we

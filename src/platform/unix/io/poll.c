@@ -1,4 +1,6 @@
 #include "prelude.h"
+#include "init.h"
+#include "log.h"
 #include <fcntl.h>
 #include <prelude.h>
 #include <poll.h>
@@ -24,6 +26,7 @@ static void signal_handler(int sig){
 }
 
 void init_poll(void) {
+        INIT_FUNC;
         struct pollfd _initializer[2] = {
                 {.fd = STDIN_FILENO, .events = POLLIN},
                 {.fd = pipefd[0], .events = POLLIN},

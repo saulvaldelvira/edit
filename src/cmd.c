@@ -1,16 +1,20 @@
 #include "cmd.h"
 #include "cmd/prelude.h"
+#include "init.h"
+#include "lib/str/wstr.h"
 #include "log.h"
 #include "prelude.h"
+#include "util.h"
 
 static LinkedList *history;
 
 static void __cleanup_cmd(void) {
+        CLEANUP_FUNC;
         list_free(history);
 }
 
 void init_cmd(void) {
-        CLEANUP_GUARD;
+        INIT_FUNC;
         history = list_init(sizeof(wchar_t*), compare_pointer);
         list_set_destructor(history, destroy_ptr);
         atexit(__cleanup_cmd);
@@ -26,6 +30,7 @@ static wchar_t **args;
 static WString *cmdstr;
 
 static INLINE void __cmd_end(void) {
+        editor_log(LOG_INFO, "CMD: %ls", wstr_get_buffer(cmdstr));
         for (wchar_t **p = args; *p; p++)
                 free(*p);
         free(args);
@@ -34,15 +39,14 @@ static INLINE void __cmd_end(void) {
 
 void editor_cmd(const wchar_t *command){
         if (!command){
-                cmdstr = editor_prompt(L"Execute command", NULL, history);
-                if (!cmdstr || wstr_length(cmdstr) == 0){
+                command = editor_prompt(L"Execute command", NULL, history);
+                if (!command || wstrlen(command) == 0){
                         editor_set_status_message(L"");
                         wstr_free(cmdstr);
                         return;
                 }
-        }else {
-                cmdstr = wstr_from_cwstr(command, -1);
         }
+        cmdstr = wstr_from_cwstr(command, -1);
 
         args = wstr_split(cmdstr, L" ");
         wchar_t *cmd = args[0];

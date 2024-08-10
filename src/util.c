@@ -1,5 +1,6 @@
 #include "prelude.h"
 #include "state.h"
+#include <string.h>
 #include <sys/stat.h>
 #include <wchar.h>
 #include "util.h"
@@ -12,20 +13,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-void die(char *msg) {
-        fprintf(stderr, "ERROR: %s. "
-                        "In %s, line %d (%s)n",
-                        msg, __FILE__, __LINE__, __func__);
-        exit(1);
-}                                                     \
-
-
-void editor_end(void) {
-	for (int i = 0; i < buffers.amount; i++)
-		buffer_drop();
-	exit(0);
-}
-
 void* xmalloc(size_t nbytes){
         void *ptr = malloc(nbytes);
         if (!ptr)
@@ -36,6 +23,13 @@ void* xmalloc(size_t nbytes){
 size_t wstrnlen(const wchar_t *wstr, size_t n){
 	size_t len = 0;
 	while (*wstr++ != '\0' && n-- > 0)
+		len++;
+	return len;
+}
+
+size_t wstrlen(const wchar_t *wstr){
+	size_t len = 0;
+	while (*wstr++ != '\0')
 		len++;
 	return len;
 }
@@ -131,4 +125,12 @@ long get_time_millis(void){
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+}
+
+wchar_t* wstrdup(const wchar_t *wstr) {
+        size_t len = wstrlen(wstr) + 1;
+        wchar_t *dup = xmalloc(len * sizeof(wchar_t));
+        memcpy(dup, wstr, len * sizeof(wchar_t));
+        dup[len-1] = L'\0';
+        return dup;
 }

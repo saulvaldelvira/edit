@@ -1,7 +1,7 @@
 #include <prelude.h>
 #include <limits.h>
 #include "buffer.h"
-#include "util.h"
+#include "state.h"
 #include <prelude.h>
 #include <conf.h>
 #include <lib/json/src/json.h>
@@ -49,33 +49,16 @@ static char* read_file(char *filename) {
         return buf;
 }
 
-static json json_conf;
-static bool must_free_conf = false;
-
-static void __cleanup_conf(void) {
-        if (must_free_conf)
-                json_free(json_conf);
-        must_free_conf = false;
-}
-
 static int parse_conf_file(char *filename) {
-        static bool is_init = false;
-        if (!is_init) {
-                is_init = true;
-                atexit(__cleanup_conf);
-        }
-        __cleanup_conf();
-
+        static json json_conf;
         char *text = read_file(filename);
         json_conf = json_deserialize(text);
-        must_free_conf = true;
         free(text);
 
         if (json_conf.type != JSON_OBJECT) {
                 if (json_conf.type == JSON_ERROR)
                         editor_log(LOG_ERROR, "Error parsing config file: %s", json_get_error_msg(json_conf.error_code));
                 json_free(json_conf);
-                must_free_conf = false;
                 return -1;
         }
 
@@ -128,15 +111,44 @@ static char* default_conf_file(void) {
         return conf_file;
 }
 
-void conf_parse(int argc, char *argv[]) {
-        struct args {
-                char *exec_cmd;
-        } args = {0};
+static NORETURN void help(void) {
+        fprintf(stderr,
+"edit - Terminal-based text editor\n"
+"USAGE: edit [--exec <command>] [--conf-file <file>] [--log-file <file>]\n"
+"            [--log-level <number>] [--help] [filename1..filenameN]\n"
+"\n"
+"OPTIONS\n"
+"--exec <command>, Executes <command> for every file given as a parameter.\n"
+"\n"
+"--conf-file <file>, Specify a config file\n"
+"\n"
+"--log-file <file>, Specify a log file\n"
+"\n"
+"--log-level <number>, Set the log level. ERROR (1), WARN (2), INFO (3), INPUT (4)\n"
+"\n"
+"--, Breaks the argument parsing. Treats the rest of the arguments as filenames.\n"
+"\n"
+"EXAMPLES\n"
+"Open files for editing: edit my-file.txt another-file.c\n"
+"\n"
+"Strip trailing spaces from files: edit --exec \"strip buffer\" *.txt\n");
+        exit(1);
+}
 
-	wchar_t filename[NAME_MAX];
-	int i;
 
-        char *conf_file = NULL;
+static char *conf_file = NULL;
+static int i;
+static int __argc;
+static char **__argv;
+
+static struct args {
+        char *exec_cmd;
+} args = {0};
+
+void parse_args(int argc, char *argv[]) {
+        __argc = argc;
+        __argv = argv;
+
 
 	for (i = 1; i < argc && argv[i][0] == '-'; i++){
 #define ARG(arg,next,if_found) \
@@ -162,20 +174,28 @@ void conf_parse(int argc, char *argv[]) {
                 ARG("--log-level", true, {
                                 int l = atoi(n);
                                 set_log_level(l);
-                        });
+                        })
+                ARG("--help", false, { help(); });
 	}
 
+}
+
+void parse_args_post_init(void) {
         if (!conf_file)
                 conf_file = default_conf_file();
 
-        if (file_exists(conf_file))
-                parse_conf_file(conf_file);
-        else
+        if (file_exists(conf_file)) {
+                if (!parse_conf_file(conf_file))
+                        exit(1);
+        } else {
                 editor_log(LOG_WARN,"Conf file %s doesn't exist", conf_file);
+        }
 
-	for (; i < argc; i++){
+        wchar_t filename[NAME_MAX];
+
+	for (; i < __argc; i++){
 		buffer_insert();
-		mbstowcs(filename, argv[i], NAME_MAX);
+		mbstowcs(filename, __argv[i], NAME_MAX);
 		filename[NAME_MAX-1] = '\0';
 		if (file_open(filename) != 1)
 			editor_end();

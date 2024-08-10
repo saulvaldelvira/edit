@@ -1,21 +1,15 @@
 #include "prelude.h"
+#include "util.h"
 
 void cmd_search(bool forward, wchar_t **args){
-	static wchar_t *search;
+	const wchar_t *search = args[1];
 
-	WString *search_wstr;
-	if (!args[1]){
-		search_wstr = editor_prompt(L"Search text", search, NULL);
-		if (!search_wstr || wstr_length(search_wstr) == 0){
-			wstr_free(search_wstr);
+	if (!search){
+		search = editor_prompt(L"Search text", search, NULL);
+		if (!search || wstrlen(search) == 0){
 			return;
 		}
-	}else{
-		search_wstr = wstr_from_cwstr(args[1], -1);
 	}
-	free(search);
-	search = wstr_to_cwstr(search_wstr);
-	wstr_free(search_wstr);
 
 	bool found = false;
 	if (forward){

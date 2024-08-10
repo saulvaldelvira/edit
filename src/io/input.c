@@ -1,6 +1,7 @@
 #include "prelude.h"
 
 #include "input.h"
+#include "init.h"
 #include "lib/GDS/src/LinkedList.h"
 #include "lib/str/wstr.h"
 #include "output.h"
@@ -18,6 +19,19 @@
 #include <stdio.h>
 #include <wctype.h>
 #include "keys.h"
+
+static WString *response = NULL;
+
+static void __cleanup_input(void) {
+        CLEANUP_FUNC;
+        wstr_free(response);
+}
+
+void init_input(void) {
+        INIT_FUNC;
+        response = wstr_empty();
+        atexit(__cleanup_input);
+}
 
 static void alt_key_process(void){
 	switch (alt_key){
@@ -148,17 +162,18 @@ static inline int __replace_with(WString *wstr, wchar_t *new) {
         return wstr_length(wstr);
 }
 
-WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, LinkedList *history){
+const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, LinkedList *history){
+        wstr_clear(response);
+
         LinkedListIterator it = {0};
         if (history)
                 it = list_iterator_from_back(history);
 
-	WString *response = wstr_empty();
 	if (default_response)
 		wstr_concat_cwstr(response, default_response, FILENAME_MAX);
 
 	size_t x = wstr_length(response);
-	size_t base_x = wstrnlen(prompt, -1) + 2;
+	size_t base_x = wstrlen(prompt) + 2;
 	int c = 'C';
         bool end = false;
         enum { UP, DOWN } direction = UP;
@@ -252,16 +267,15 @@ WString* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, L
                         list_append(history, &entry);
                 }
         }
-        return response;
+        return wstr_get_buffer(response);
 }
 
 bool editor_ask_confirmation(void){
-	WString *response = editor_prompt(L"Are you sure? Y/n", L"Y", NULL);
+	const wchar_t*response = editor_prompt(L"Are you sure? Y/n", L"Y", NULL);
 	bool result =
 		response != NULL
-		&& wstr_length(response) == 1
-		&& (wstr_get_at(response, 0) == L'Y'
-		    || wstr_get_at(response, 0) == L'y');
-	wstr_free(response);
+		&& wstrlen(response) == 1
+		&& (response[0] == L'Y'
+		    || response[0] == L'y');
 	return result;
 }
