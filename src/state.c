@@ -44,7 +44,10 @@ static INLINE void __exit_alternative_buffer(void) {
 	wprintf(L"\x1b[?1049l");
 }
 
-void editor_shutdown(void) {
+void editor_start_shutdown(void) {
+        static bool is_shutdown = false;
+        if (is_shutdown) return;
+        is_shutdown = true;
         editor_log(LOG_INFO, "Shutting down editor");
         tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_term); // restore termios
         __exit_alternative_buffer();
@@ -94,11 +97,11 @@ void change_current_buffer_filename(wchar_t *filename) {
         buffers.curr->filename = filename;
 }
 
-
-void die(char *msg) {
-        fprintf(stderr, "ERROR: %s. "
-                        "In %s, line %d (%s)n",
-                        msg, __FILE__, __LINE__, __func__);
+void (die)(const char *msg, const char *fname, int line, const char *func) {
+        editor_start_shutdown();
+        fprintf(stderr, "ERROR: %s\n"
+                        "In %s, line %d (%s)\n",
+                        msg, fname, line, func);
         exit(1);
 }
 

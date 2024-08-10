@@ -17,8 +17,10 @@ extern struct state {
 long get_time_since_start_ms(void);
 void editor_on_update(void);
 void change_current_buffer_filename(wchar_t *filename);
-void NORETURN die(char *msg);
+void NORETURN die(const char *msg, const char *fname, int line, const char *func);
 void NORETURN editor_end(void);
-void editor_shutdown(void);
+void editor_start_shutdown(void);
+
+#define die(msg) die(msg, __FILE__, __LINE__, __func__)
 
 #endif // STATE_H

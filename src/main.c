@@ -1,7 +1,6 @@
 #include <prelude.h>
 #include "conf.h"
 #include "io.h"
-#include "state.h"
 #include "util.h"
 #include "conf.h"
 #include <unistd.h>
