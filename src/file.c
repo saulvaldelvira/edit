@@ -1,3 +1,4 @@
+#include "log.h"
 #include "prelude.h"
 
 #include "platform.h"
@@ -204,7 +205,12 @@ int file_save(bool only_tmp, bool ask_filename){
 		if (!filename || wstrlen(filename) == 0)
 			return -1;
                 change_current_buffer_filename(wstrdup(filename));
-	}
+        }
+
+        if (!buffers.curr->filename) {
+                editor_log(LOG_WARN, "FILE: Attempted to save to a buffer without a filename");
+                return -2;
+        }
 
         /* Check if the file is writable. This is because we
            write to a temporary file and then rename it, which

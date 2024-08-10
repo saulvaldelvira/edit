@@ -68,7 +68,6 @@ void editor_log(enum log_level log_level, const char *fmt, ...) {
 
         WString *wstr = wstr_from_cstr(timestamp, 1024);
         wstr_concat_cstr(wstr, buf, needed);
-        wstr_push_char(wstr, L'\n');
 
         wstr_replace(wstr, L"\n", L"");
         vector_append(log_history, &wstr);

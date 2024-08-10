@@ -1,6 +1,8 @@
 #include <prelude.h>
 #include <limits.h>
 #include "buffer.h"
+#include "init.h"
+#include "lib/str/wstr.h"
 #include "state.h"
 #include <prelude.h>
 #include <conf.h>
@@ -14,6 +16,7 @@
 #include <sys/stat.h>
 #include <cmd.h>
 #include <log.h>
+#include <wchar.h>
 
 struct conf conf = {
         .quit_times = 3,
@@ -55,19 +58,23 @@ static int parse_conf_file(char *filename) {
         json_conf = json_deserialize(text);
         free(text);
 
+        int ret = 1;
+
+#define ERR do { ret = -1; goto cleanup; } while (0)
+
         if (json_conf.type != JSON_OBJECT) {
                 if (json_conf.type == JSON_ERROR)
                         editor_log(LOG_ERROR, "Error parsing config file: %s", json_get_error_msg(json_conf.error_code));
                 json_free(json_conf);
-                return -1;
+                ERR;
         }
-        editor_log(LOG_INFO, "Parsing configuration from file %s", filename);
+        editor_log(LOG_INFO, "CONFIG: Parsing file %s", filename);
 
         #define VAL(field,_t,name,_fmt, ...) \
         if (strcmp(p.key, # field) == 0) {\
-                if (p.val->type != _t) return -1; \
+                if (p.val->type != _t) ERR; \
                 CONF_STRUCT. field = p.val->name; \
-                editor_log(LOG_INFO, "CONFIG: Override %s = " _fmt  "\n", #field, p.val->name); \
+                editor_log(LOG_INFO, "CONFIG: %s = " _fmt, #field, p.val->name); \
                 found = true; \
                 __VA_ARGS__ \
         }
@@ -81,8 +88,8 @@ static int parse_conf_file(char *filename) {
                         CONF_STRUCT. field = true; \
                 else if (p.val->type == JSON_FALSE) \
                         CONF_STRUCT. field = false; \
-                else return -1; \
-                editor_log(LOG_INFO, "Override %s = %s\n", #field, p.val->type ? "true" : "false"); \
+                else ERR; \
+                editor_log(LOG_INFO, "CONFIG: %s = %s", #field, p.val->type ? "true" : "false"); \
                 found = true; \
         }
 
@@ -106,7 +113,10 @@ static int parse_conf_file(char *filename) {
                 }
         }
 
-        return 1;
+
+cleanup:
+        json_free(json_conf);
+        return ret;
 }
 
 static char* default_conf_file(void) {
@@ -120,7 +130,6 @@ static char* default_conf_file(void) {
         } else {
                 sprintf(conf_file, "%s/edit/config.json", dir);
         }
-
         return conf_file;
 }
 
@@ -193,7 +202,25 @@ void parse_args(int argc, char *argv[]) {
 
 }
 
+/*
+ * This is kind of an obsession of mine.
+ * I dont like valgrind telling me I leak memory.
+ * And if the cmd is "!quit", the program exits
+ * without freeing the pointer allocated in the
+ * function bellow.
+ */
+static wchar_t *cmd;
+static void __cleanup_conf(void) {
+        free(cmd);
+}
+
 void parse_args_post_init(void) {
+        static bool init = false;
+        if (!init) {
+                atexit(__cleanup_conf);
+                init = true;
+        }
+
         if (!conf_file)
                 conf_file = default_conf_file();
 
@@ -218,14 +245,19 @@ void parse_args_post_init(void) {
                 buffer_insert();
 
         if (args.exec_cmd != NULL){
-		WString *tmp = wstr_empty();
-		wstr_concat_cstr(tmp, args.exec_cmd, -1);
-		for (int i = 0; i < buffers.amount; i++){
-			buffer_switch(i);
-			editor_cmd(wstr_get_buffer(tmp));
-			file_save(false, false);
-		}
-		wstr_free(tmp);
+                size_t len = strlen(args.exec_cmd) + 1;
+                cmd = malloc(len * sizeof(wchar_t));
+                mbstowcs(cmd, args.exec_cmd, len);
+
+		foreach_buffer (
+			editor_cmd(cmd);
+                        if (buffers.curr->filename)
+                                file_save(false, false);
+                );
+                free(cmd);
+                 /* Make sure cmd is set to NULL, so it
+                  * doesn't get freed twice */
+                cmd = NULL;
 		exit(0);
 	}
 }

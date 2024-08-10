@@ -28,5 +28,11 @@ void buffer_insert(void);
 void buffer_clear(void);
 void buffer_drop(void);
 void buffer_switch(int index);
+struct buffer* buffer_at(int index);
+
+#define foreach_buffer(op) do { \
+        int __index = buffers.curr_index; \
+        for (int __i = 0; __i < buffers.amount; __i++) { buffer_switch(__i); op; } \
+        buffer_switch(__index); } while (0)
 
 #endif
