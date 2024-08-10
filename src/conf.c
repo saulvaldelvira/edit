@@ -61,12 +61,19 @@ static int parse_conf_file(char *filename) {
                 json_free(json_conf);
                 return -1;
         }
+        editor_log(LOG_INFO, "Parsing configuration from file %s", filename);
 
-        #define VAL(field,_t,name) \
+        #define VAL(field,_t,name,_fmt, ...) \
         if (strcmp(p.key, # field) == 0) {\
                 if (p.val->type != _t) return -1; \
                 CONF_STRUCT. field = p.val->name; \
+                editor_log(LOG_INFO, "CONFIG: Override %s = " _fmt  "\n", #field, p.val->name); \
+                found = true; \
+                __VA_ARGS__ \
         }
+
+        #define VAL_STR(field, ...) VAL(field,JSON_STRING,string,"%s", __VA_ARGS__)
+        #define VAL_NUM(field, ...) VAL(field,JSON_NUMBER,number,"%f", __VA_ARGS__)
 
         #define VAL_BOOL(field) \
         if (strcmp(p.key, # field) == 0) {\
@@ -75,24 +82,30 @@ static int parse_conf_file(char *filename) {
                 else if (p.val->type == JSON_FALSE) \
                         CONF_STRUCT. field = false; \
                 else return -1; \
+                editor_log(LOG_INFO, "Override %s = %s\n", #field, p.val->type ? "true" : "false"); \
+                found = true; \
         }
 
         for (size_t i = 0; i < json_conf.object.elems_len; i++) {
                 struct pair p = json_conf.object.elems[i];
+                bool found = false;
 #define CONF_STRUCT buffer_conf
-                VAL(tab_size,JSON_NUMBER,number);
+                VAL_NUM(tab_size);
                 VAL_BOOL(substitute_tab_with_space);
                 VAL_BOOL(syntax_highlighting);
-                VAL(auto_save_interval,JSON_NUMBER,number);
+                VAL_NUM(auto_save_interval);
                 VAL_BOOL(line_number);
-                VAL(eol,JSON_STRING,string);
+                VAL_STR(eol);
 #undef CONF_STRUCT
 #define CONF_STRUCT conf
-                VAL(quit_times,JSON_NUMBER,number);
+                VAL_NUM(quit_times);
 #undef CONF_STRUCT
+
+                if (!found) {
+                        editor_log(LOG_WARN, "Unknown config key: %s", p.key);
+                }
         }
 
-        editor_log(LOG_INFO, "Loaded configuration from file %s", filename);
         return 1;
 }
 
