@@ -1,5 +1,7 @@
-#include "log.h"
 #include "prelude.h"
+#include "definitions.h"
+#include "lib/str/wstr.h"
+#include "log.h"
 
 #include "platform.h"
 #include "file.h"
@@ -64,18 +66,6 @@ static char* mb_filename(size_t *written, bool tmp){
 	if (written)
 		*written = wrt;
 	return full_filename;
-}
-
-static WString* editor_lines_to_string(void){
-	size_t n_lines = vector_size(buffers.curr->lines);
-	WString *str = wstr_empty();
-	for (size_t i = 0; i < n_lines; i++){
-		WString *line;
-		vector_at(buffers.curr->lines, i, &line);
-		wstr_concat_wstr(str, line);
-		wstr_concat_cstr(str, buffers.curr->conf.eol, -1);
-	}
-	return str;
 }
 
 char* get_tmp_filename(void){
@@ -199,6 +189,28 @@ static void __print_filesave(double len, char *filename, bool auto_save) {
                              n_decimal, value, magnitudes[magnitude], filename);
 }
 
+static int __save_to(char *fname, size_t *len) {
+	FILE *f = fopen(fname, "w");
+	if (!f){
+		editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
+		return -2;
+	}
+	size_t n_lines = vector_size(buffers.curr->lines);
+        size_t __len = n_lines * strlen(buffers.curr->conf.eol);
+	for (size_t i = 0; i < n_lines; i++){
+		WString *line = NULL;
+		vector_at(buffers.curr->lines, i, &line);
+                __len += wstr_length(line);
+                assert(line);
+                fprintf(f, "%ls%s", wstr_get_buffer(line), buffers.curr->conf.eol);
+	}
+        if (len)
+	        *len = __len;
+	fflush(f);
+	fclose(f);
+        return SUCCESS;
+}
+
 int file_save(bool only_tmp, bool ask_filename){
 	if (ask_filename){
 		const wchar_t *filename = editor_prompt(L"Save as", buffers.curr->filename, history);
@@ -230,19 +242,23 @@ int file_save(bool only_tmp, bool ask_filename){
 	}
 
 	char *tmp_filename = get_tmp_filename();
-	FILE *f = fopen(tmp_filename, "w");
-	if (!f){
-		editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
-		free(tmp_filename);
-		return -2;
-	}
+	/* FILE *f = fopen(tmp_filename, "w"); */
+	/* if (!f){ */
+	/* 	editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno)); */
+	/* 	free(tmp_filename); */
+	/* 	return -2; */
+	/* } */
+        size_t len = 0;
+        int status = __save_to(tmp_filename, &len);
+        if (status != SUCCESS)
+                goto cleanup;
 
-        int status = SUCCESS;
-	WString *buf = editor_lines_to_string();
-	size_t len = wstr_length(buf);
-	fwprintf(f, L"%ls", wstr_get_buffer(buf));
-	fflush(f);
-	fclose(f);
+	/* WString *buf = editor_lines_to_string(); */
+	/* size_t len = wstr_length(buf); */
+	/* fwprintf(f, L"%ls", wstr_get_buffer(buf)); */
+	/* fflush(f); */
+	/* fclose(f); */
+
 
 	if (only_tmp) {
                 __print_filesave(len, tmp_filename, true);
@@ -289,7 +305,6 @@ int file_save(bool only_tmp, bool ask_filename){
 	buffers.curr->dirty = 0;
 
 cleanup:
-	wstr_free(buf);
 	free(tmp_filename);
 	return status;
 }

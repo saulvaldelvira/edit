@@ -1,6 +1,7 @@
 #include <prelude.h>
 #include <limits.h>
 #include "buffer.h"
+#include "definitions.h"
 #include "init.h"
 #include "lib/str/wstr.h"
 #include "state.h"
@@ -17,6 +18,7 @@
 #include <cmd.h>
 #include <log.h>
 #include <wchar.h>
+#include <fs.h>
 
 struct conf conf = {
         .quit_times = 3,
@@ -30,6 +32,15 @@ struct buffer_conf buffer_conf = {
         .line_number = false,
         .eol = "\n",
 };
+
+static json json_conf;
+static bool must_free_json_conf = false;
+static void __free_json(void) {
+        if (must_free_json_conf) {
+                json_free(json_conf);
+                must_free_json_conf = false;
+        }
+}
 
 static char* read_file(char *filename) {
         FILE *f = fopen(filename, "r");
@@ -53,26 +64,24 @@ static char* read_file(char *filename) {
 }
 
 static int parse_conf_file(char *filename) {
-        static json json_conf;
+        ONLY_ONCE( atexit(__free_json) );
+        __free_json();
         char *text = read_file(filename);
         json_conf = json_deserialize(text);
+        must_free_json_conf = true;
         free(text);
-
-        int ret = 1;
-
-#define ERR do { ret = -1; goto cleanup; } while (0)
 
         if (json_conf.type != JSON_OBJECT) {
                 if (json_conf.type == JSON_ERROR)
                         editor_log(LOG_ERROR, "Error parsing config file: %s", json_get_error_msg(json_conf.error_code));
                 json_free(json_conf);
-                ERR;
+                return -1;
         }
         editor_log(LOG_INFO, "CONFIG: Parsing file %s", filename);
 
         #define VAL(field,_t,name,_fmt, ...) \
         if (strcmp(p.key, # field) == 0) {\
-                if (p.val->type != _t) ERR; \
+                if (p.val->type != _t) return -1; \
                 CONF_STRUCT. field = p.val->name; \
                 editor_log(LOG_INFO, "CONFIG: %s = " _fmt, #field, p.val->name); \
                 found = true; \
@@ -88,7 +97,7 @@ static int parse_conf_file(char *filename) {
                         CONF_STRUCT. field = true; \
                 else if (p.val->type == JSON_FALSE) \
                         CONF_STRUCT. field = false; \
-                else ERR; \
+                else return -1; \
                 editor_log(LOG_INFO, "CONFIG: %s = %s", #field, p.val->type ? "true" : "false"); \
                 found = true; \
         }
@@ -113,23 +122,12 @@ static int parse_conf_file(char *filename) {
                 }
         }
 
-
-cleanup:
-        json_free(json_conf);
-        return ret;
+        return SUCCESS;
 }
 
 static char* default_conf_file(void) {
         static char conf_file[NAME_MAX];
-
-        char *dir = getenv("XDG_CONFIG_HOME");
-        if (!dir) {
-                dir = getenv("HOME");
-                if (!dir) return NULL;
-                sprintf(conf_file, "%s/.config/edit/config.json", dir);
-        } else {
-                sprintf(conf_file, "%s/edit/config.json", dir);
-        }
+        snprintf(conf_file, NAME_MAX, "%s/config.json", get_config_directory());
         return conf_file;
 }
 
@@ -210,16 +208,12 @@ void parse_args(int argc, char *argv[]) {
  * function bellow.
  */
 static wchar_t *cmd;
-static void __cleanup_conf(void) {
+static void __free_args(void) {
         free(cmd);
 }
 
 void parse_args_post_init(void) {
-        static bool init = false;
-        if (!init) {
-                atexit(__cleanup_conf);
-                init = true;
-        }
+        ONLY_ONCE( atexit(__free_args) );
 
         if (!conf_file)
                 conf_file = default_conf_file();

@@ -3,7 +3,18 @@
 TARGET_PLATFORM := unix
 
 CC := cc
-CFLAGS+= -Wall -Wextra -pedantic -O3 -g -Wstrict-prototypes -I./src
+CFLAGS += -Wall -Wextra -pedantic -Wstrict-prototypes -I./src
+
+PROFILE := debug
+
+ifeq ($(PROFILE),debug)
+	CFLAGS += -ggdb
+else ifeq ($(PROFILE),release)
+	CFLAGS += -O3
+else
+	_ = $(error Unknown profile: $(PROFILE))
+endif
+
 CFILES=  $(shell find src -name '*.c' -not -path "src/lib/*" -not -path "src/platform/*") \
 		./src/lib/GDS/src/Vector.c ./src/lib/GDS/src/LinkedList.c \
 		./src/lib/GDS/src/util/compare.c ./src/lib/str/wstr.c \
@@ -38,7 +49,7 @@ init:
 	@ git submodule update --init
 	@ echo -e \
 	"CompileFlags: \n" \
-	"Add: -I$(shell pwd)/src/" > .clangd
+	"Add: [ -I$(shell pwd)/src/ , -xc ]" > .clangd
 
 clean:
 	@ rm -f edit $(OFILES)

@@ -2,6 +2,7 @@
 #include <locale.h>
 #include <stdlib.h>
 #include "state.h"
+#include "definitions.h"
 #include "file.h"
 #include "init.h"
 #include "log.h"
@@ -45,12 +46,11 @@ static INLINE void __exit_alternative_buffer(void) {
 }
 
 void editor_start_shutdown(void) {
-        static bool is_shutdown = false;
-        if (is_shutdown) return;
-        is_shutdown = true;
-        editor_log(LOG_INFO, "Shutting down editor");
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_term); // restore termios
-        __exit_alternative_buffer();
+        ONLY_ONCE(
+                editor_log(LOG_INFO, "Shutting down editor");
+                tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_term); // restore termios
+                __exit_alternative_buffer();
+        )
 }
 
 
@@ -107,7 +107,10 @@ void (die)(const char *msg, const char *fname, int line, const char *func) {
 
 
 void editor_end(void) {
-	for (int i = 0; i < buffers.amount; i++)
-		buffer_drop();
-	exit(0);
+        ONLY_ONCE_AND_WARN ({
+                for (int i = 0; i < buffers.amount; i++)
+                        buffer_drop();
+        });
+        exit(0);
 }
+

@@ -17,4 +17,18 @@
 #define NORETURN
 #endif
 
+#define ONLY_ONCE(body) { \
+        static bool __flag = false; \
+        if (!__flag) { \
+                __flag = true; \
+                { body; } \
+        } }
+
+#define ONLY_ONCE_AND_WARN(body) { \
+        static bool __flag = false; \
+        if (!__flag) { \
+                __flag = true; \
+                { body; } \
+        } else { editor_log(LOG_WARN, "Reached region marked as ONLY ONCE. At %s", __func__);  } }
+
 #endif

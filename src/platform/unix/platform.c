@@ -16,7 +16,7 @@ INLINE int read_link(const char *lname, char *out, unsigned len) {
 }
 
 bool is_link(char *filename) {
-        struct stat file_stat;
+        struct stat file_stat = {0};
 	lstat(filename, &file_stat);
 	return S_ISLNK(file_stat.st_mode);
 }

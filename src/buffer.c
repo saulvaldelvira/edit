@@ -4,6 +4,7 @@
 #include "file.h"
 #include "init.h"
 #include "lib/str/wstr.h"
+#include "state.h"
 #include "util.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -62,16 +63,13 @@ void buffer_drop(void){
 	if (tmp)
 		remove(tmp);
 	free(tmp);
-	if (buffers.amount == 1){
-		wprintf(L"\x1b[2J\x1b[H");
-		exit(0);
-	}else{
-		vector_remove_at(buffers_vec, buffers.curr_index);
-		if (buffers.curr_index == buffers.amount - 1)
-			buffers.curr_index--;
-		buffers.amount--;
-                vector_at(buffers_vec, buffers.curr_index, &buffers.curr);
-	}
+        vector_remove_at(buffers_vec, buffers.curr_index);
+        if (buffers.curr_index == buffers.amount - 1)
+                buffers.curr_index--;
+        buffers.amount--;
+        vector_at(buffers_vec, buffers.curr_index, &buffers.curr);
+        if (buffers.amount == 0)
+                editor_end();
 }
 
 void buffer_switch(int index){
