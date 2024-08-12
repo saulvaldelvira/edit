@@ -98,7 +98,3 @@ void enable_raw_mode(void){
 INLINE void restore_termios(void) {
         tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_term); // restore termios
 }
-
-INLINE char* get_default_eol(void) {
-        return "\n";
-}

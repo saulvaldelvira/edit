@@ -7,11 +7,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-#ifdef _WIN32
-#define SEP '\\'
-#else
-#define SEP '/'
-#endif
+#define SEP PLATFORM_PATH_SEPARATOR
 
 void  mkdir_recursive(char *file_path, mode_t mode) {
         if (!strchr(file_path, SEP))

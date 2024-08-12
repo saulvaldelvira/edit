@@ -100,12 +100,7 @@ int get_character_width(wchar_t c, int accumulated_rx){
 	if (c == L'\t')
 		return buffers.curr->conf.tab_size - (accumulated_rx % buffers.curr->conf.tab_size);
 	else
-#ifdef __WIN32
-                return 1;
-#else
 		return wcwidth(c);
-#endif
-
 }
 
 void free_wstr(void *e){

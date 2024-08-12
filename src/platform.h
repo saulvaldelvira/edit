@@ -22,6 +22,19 @@ int get_window_size(int *rows, int *cols);
 void enable_raw_mode(void);
 void restore_termios(void);
 
-char* get_default_eol(void);
+#ifdef __WIN32
+
+#define PLATFORM_PATH_SEPARATOR '\\'
+#define PLATFORM_DEFAULT_EOL "\r\n"
+
+#include <wchar.h>
+int wcwidth(wchar_t);
+
+#else
+
+#define PLATFORM_PATH_SEPARATOR '/'
+#define PLATFORM_DEFAULT_EOL "\n"
+
+#endif
 
 #endif
