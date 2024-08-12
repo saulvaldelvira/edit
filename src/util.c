@@ -6,7 +6,6 @@
 #include "util.h"
 #include "buffer.h"
 #include "buffer/highlight.h"
-#include <sys/ioctl.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -34,7 +33,7 @@ size_t wstrlen(const wchar_t *wstr){
 	return len;
 }
 
-static int get_cursor_position(int *row, int *col){
+int get_cursor_position(int *row, int *col){
 	wprintf(L"\x1b[6n\r\n");
 	char buf[32];
 	size_t i;
@@ -51,18 +50,6 @@ static int get_cursor_position(int *row, int *col){
 	if (sscanf(&buf[2], "%d;%d", row, col) != 2)
 		return -1;
 	return 0;
-}
-
-int get_window_size(int *rows, int *cols){
-	struct winsize ws;
-	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0){
-		wprintf(L"\x1b[999C\x1b[999B");
-		return get_cursor_position(rows, cols);
-	}else{
-		*rows = ws.ws_row;
-		*cols = ws.ws_col;
-		return 0;
-	}
 }
 
 char* editor_cwd(void){
@@ -113,7 +100,11 @@ int get_character_width(wchar_t c, int accumulated_rx){
 	if (c == L'\t')
 		return buffers.curr->conf.tab_size - (accumulated_rx % buffers.curr->conf.tab_size);
 	else
+#ifdef __WIN32
+                return 1;
+#else
 		return wcwidth(c);
+#endif
 
 }
 

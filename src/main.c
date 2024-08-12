@@ -1,11 +1,8 @@
 #include <prelude.h>
 #include "conf.h"
-#include "io.h"
-#include "util.h"
+#include "console/io.h"
+#include "state.h"
 #include "conf.h"
-#include <unistd.h>
-#include <sys/time.h>
-#include <poll.h>
 #include <init.h>
 
 int main(int argc, char *argv[]){
@@ -17,20 +14,15 @@ int main(int argc, char *argv[]){
 
 	const int wait_timeout_ms = 30000;
 
-	int c = NO_KEY, last_c;
-	long last_status_update = 0;
-
 	for (;;){
-		last_c = c;
-		c = editor_read_key();
+		int c = editor_read_key();
+                received_key(c);
 	       	editor_process_key_press(c);
-		long curr = get_time_millis();
 
-		if (c == NO_KEY && last_c != NO_KEY){
+		if (must_render_buffer()){
 			editor_refresh_screen(false);
-		}else if (curr - last_status_update > 500){
+		}else if (must_render_stateline()){
 			editor_refresh_screen(true);
-			last_status_update = curr;
 		}
 
 		if (c == NO_KEY){

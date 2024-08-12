@@ -2,14 +2,14 @@
 #include <locale.h>
 #include <stdlib.h>
 #include "state.h"
+#include "console/io/keys.h"
 #include "definitions.h"
 #include "file.h"
 #include "init.h"
 #include "log.h"
+#include "platform.h"
 #include "util.h"
 #include <lib/json/src/json.h>
-#include <time.h>
-#include <termios.h>
 #include <unistd.h>
 
 struct state state = {
@@ -17,25 +17,6 @@ struct state state = {
 };
 
 static long start_time;
-
-static struct termios original_term;
-
-static void enable_raw_mode(void){
-	struct termios term;
-	if (tcgetattr(STDIN_FILENO, &term) == -1)
-		die("tcgetattr failed");
-	original_term = term;
-	term.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-	term.c_oflag &= ~(OPOST);
-	term.c_cflag |= (CS8);
-	term.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
-	term.c_cc[VMIN] = 1;
-	term.c_cc[VTIME] = 0;
-	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) == -1)
-		die("tcsetattr failed");
-	setvbuf(stdin, NULL, _IONBF, 0);
-	setvbuf(stdout, NULL, _IONBF, 0);
-}
 
 static INLINE void __enter_alternative_buffer(void) {
 	wprintf(L"\x1b[?1049h");
@@ -48,7 +29,7 @@ static INLINE void __exit_alternative_buffer(void) {
 void editor_start_shutdown(void) {
         ONLY_ONCE(
                 editor_log(LOG_INFO, "Shutting down editor");
-                tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_term); // restore termios
+                restore_termios();
                 __exit_alternative_buffer();
         )
 }
@@ -114,3 +95,21 @@ void editor_end(void) {
         exit(0);
 }
 
+static int last_c = NO_KEY, c = NO_KEY;
+INLINE void received_key(int _c) {
+        last_c = c;
+        c = _c;
+}
+
+static long last_status_update;
+INLINE void updated_status_line(void) {
+        last_status_update = get_time_millis();
+}
+
+INLINE bool must_render_buffer(void) {
+        return c == NO_KEY && last_c != NO_KEY;
+}
+
+INLINE bool must_render_stateline(void) {
+        return get_time_millis() - last_status_update > 500;
+}

@@ -5,13 +5,13 @@
 #include "lib/GDS/src/LinkedList.h"
 #include "lib/str/wstr.h"
 #include "output.h"
-#include "line.h"
 #include "file.h"
 #include "util.h"
 #include "state.h"
 #include "buffer.h"
 #include "cmd.h"
-#include "cursor.h"
+#include <console.h>
+#include <buffer/line.h>
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>

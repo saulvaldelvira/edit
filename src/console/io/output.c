@@ -1,10 +1,10 @@
 #include "output.h"
 #include "buffer.h"
 #include "lib/str/wstr.h"
-#include "line.h"
+#include <buffer/line.h>
 #include "util.h"
 #include "state.h"
-#include "cursor.h"
+#include <console/cursor.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,13 +64,14 @@ void editor_refresh_screen(bool only_status_bar){
 
 	wstr_concat_cwstr(buf, L"\x1b[?25l", 6);
 
-	if (!only_status_bar){
-		editor_update_render();
-		wstr_concat_cwstr(buf, L"\x1b[H", 3);
-		editor_draw_rows(buf);
-	}else{
-		// Move to the last two lines (status and message)
+	if (only_status_bar){
+                // Move to the last two lines (status and message)
                 move_cursor(0, state.screen_rows + 1, false);
+                updated_status_line();
+	}else{
+                editor_update_render();
+                wstr_concat_cwstr(buf, L"\x1b[H", 3);
+                editor_draw_rows(buf);
 	}
 
 	editor_draw_status_bar(buf);

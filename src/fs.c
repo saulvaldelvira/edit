@@ -1,5 +1,6 @@
-#include "limits.h"
 #include <prelude.h>
+#include "limits.h"
+#include "platform.h"
 #include <fs.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,7 @@ void  mkdir_recursive(char *file_path, mode_t mode) {
         char *next_sep = strchr(dir_path, SEP);
         while (next_sep != NULL) {
                 *next_sep = '\0';
-                mkdir(dir_path, mode);
+                makedir(dir_path, mode);
                 *next_sep = SEP;
                 next_sep = strchr(next_sep + 1, SEP);
         }

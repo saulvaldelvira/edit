@@ -1,8 +1,8 @@
 #include "line.h"
-#include "io/input.h"
+#include <console/io.h>
 #include "prelude.h"
 #include "util.h"
-#include "cursor.h"
+#include <console/cursor.h>
 #include "buffer/mode.h"
 #include <stdlib.h>
 #include <wchar.h>

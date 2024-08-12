@@ -2,8 +2,15 @@
 
 TARGET_PLATFORM := unix
 
-CC := cc
-CFLAGS += -Wall -Wextra -pedantic -Wstrict-prototypes -I./src
+ifeq ($(TARGET_PLATFORM),win32)
+	CC := x86_64-w64-mingw32-gcc
+	CLANGD_PLATFORM =  , --target=x86_64-w64-mingw32
+	CFLAGS = -lws2_32 -lshlwapi
+else
+	CC := cc
+endif
+
+CFLAGS += -Wall -Wextra -pedantic -Wstrict-prototypes -I./src $(FLAGS)
 
 PROFILE := debug
 
@@ -48,8 +55,8 @@ uninstall:
 init:
 	@ git submodule update --init
 	@ echo -e \
-	"CompileFlags: \n" \
-	"Add: [ -I$(shell pwd)/src/ , -xc ]" > .clangd
+		"CompileFlags: \n" \
+		"Add: [ -I$(shell pwd)/src/ , -xc $(CLANGD_PLATFORM) ]" > .clangd
 
 clean:
 	@ rm -f edit $(OFILES)

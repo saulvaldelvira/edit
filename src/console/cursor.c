@@ -2,7 +2,7 @@
 #include "cursor.h"
 #include "state.h"
 #include "io/input.h"
-#include "line.h"
+#include <buffer/line.h>
 
 void cursor_adjust(void){
         size_t line_len = current_line_length();

@@ -2,3 +2,4 @@
 *.d
 edit
 .clangd
+*.exe

@@ -2,7 +2,7 @@
 #include "buffer.h"
 #include "lib/GDS/src/Vector.h"
 #include "lib/str/wstr.h"
-#include "line.h"
+#include <buffer/line.h>
 #include "state.h"
 #include "util.h"
 #include <prelude.h>
@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <wchar.h>
-#include <cursor.h>
+#include <console.h>
 #include <init.h>
 
 static Vector *log_history;

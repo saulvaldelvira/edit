@@ -30,7 +30,6 @@ struct buffer_conf buffer_conf = {
         .syntax_highlighting = false,
         .auto_save_interval = 60,
         .line_number = false,
-        .eol = "\n",
 };
 
 static json json_conf;
@@ -64,7 +63,10 @@ static char* read_file(char *filename) {
 }
 
 static int parse_conf_file(char *filename) {
-        ONLY_ONCE( atexit(__free_json) );
+        ONLY_ONCE(
+                atexit(__free_json);
+                buffer_conf.eol = get_default_eol();
+        );
         __free_json();
         char *text = read_file(filename);
         json_conf = json_deserialize(text);
@@ -158,17 +160,16 @@ static NORETURN void help(void) {
 
 static char *conf_file = NULL;
 static int i;
-static int __argc;
-static char **__argv;
+static int argcount;
+static char **argvec;
 
 static struct args {
         char *exec_cmd;
 } args = {0};
 
 void parse_args(int argc, char *argv[]) {
-        __argc = argc;
-        __argv = argv;
-
+        argcount = argc;
+        argvec = argv;
 
 	for (i = 1; i < argc && argv[i][0] == '-'; i++){
 #define ARG(arg,next,if_found) \
@@ -227,9 +228,9 @@ void parse_args_post_init(void) {
 
         wchar_t filename[NAME_MAX];
 
-	for (; i < __argc; i++){
+	for (; i < argcount; i++){
 		buffer_insert();
-		mbstowcs(filename, __argv[i], NAME_MAX);
+		mbstowcs(filename, argvec[i], NAME_MAX);
 		filename[NAME_MAX-1] = '\0';
 		if (file_open(filename) != 1)
 			editor_end();

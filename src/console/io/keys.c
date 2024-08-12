@@ -2,7 +2,7 @@
 #include "keys.h"
 #include "log.h"
 #include <wctype.h>
-#include <io/poll.h>
+#include "poll.h"
 
 wint_t seq[5];
 wchar_t alt_key;

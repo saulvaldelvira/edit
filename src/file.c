@@ -5,10 +5,10 @@
 
 #include "platform.h"
 #include "file.h"
-#include "line.h"
+#include "buffer/line.h"
 #include "state.h"
 #include "util.h"
-#include "io.h"
+#include "console/io.h"
 #include "buffer.h"
 #include <errno.h>
 #include <limits.h>
@@ -19,8 +19,8 @@
 #include <wchar.h>
 #include <signal.h>
 #include <assert.h>
-#include <termios.h>
 #include <init.h>
+#include <platform.h>
 
 static LinkedList *history;
 
@@ -79,28 +79,6 @@ char* get_tmp_filename(void){
 	return tmp_filename;
 }
 
-static volatile int ctrl_c_pressed = 0;
-
-static void ctrl_c_handler(int signal){
-	if (signal == SIGINT)
-		ctrl_c_pressed = 1;
-}
-
-static void switch_ctrl_c(bool allow){
-	static struct termios old, new;
-	if (allow){
-		tcgetattr(0, &old);
-		new = old;
-		new.c_lflag |= (ISIG);
-		tcsetattr(0, TCSANOW, &new);
-		signal(SIGINT, ctrl_c_handler);
-		ctrl_c_pressed = 0;
-	}else{
-		tcsetattr(0, TCSANOW, &old);
-		signal(SIGINT, SIG_DFL);
-	}
-}
-
 // TODO: if .tmp version exists (i.e. failed save in a previous session), restore it.
 int _file_open(const wchar_t *filename) {
 	if (!buffers.curr->filename || !filename || buffers.curr->filename != filename){
@@ -136,7 +114,7 @@ int _file_open(const wchar_t *filename) {
 		}else{
 			wstr_push_char(buf, c);
 		}
-		if (ctrl_c_pressed){
+		if (is_ctrl_c_pressed()){
 			switch_ctrl_c(false);
 			return -1;
 		}
