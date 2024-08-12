@@ -1,76 +1,23 @@
 Edit: Terminal-based text editor
 ================================
 This is a simple command-line text editor.
-You can read files, edit them and save them to disk.
 
 Building and installing
 =======================
 1) clone the repo
-   $ git clone --recurse-submodules https://git.saulv.es/edit.git
+   $ git clone https://git.saulv.es/edit.git
+   $ git submodule update --init
    $ cd edit
 2) Run make
+   $ make TARGET_PLATFORM=[unix|win32]
    $ make install
 3) Edit
    $ edit my-file.txt another-file.c
 
-Keybindings
-===========
-- Ctrl + E : Execute command
-- Ctrl + F : Format line
-- Ctrl + K : Cut line
-- Ctrl + N : Add buffer
-- Ctrl + O : Open file
-- Ctrl + Q : Kill buffer
-- Ctrl + S : Save buffer
-- Ctrl + Left Arrow : Move to the buffer on the left
-- Ctrl + Right Arrow : Move to the buffer on the right
-- F5 : Reload file
-- Alt + H : Display the help buffer
-- Alt + C : Toggle comment in the current line
-- Alt + S : Search in the buffer
-- Alt + R : Replace command
-- Alt + K : Cut the line from the cursor to the end.
-- Alt + Up Arrow:   Moves the current line up.
-- Alt + Down Arrow: Moves the current line down.
-- Alt + [1-9] : Go to buffer number [1-9]
-- Alt + Left Arrow: Jumps to the previous word
-- Alt + Righ Arrow: Jumps to the next word
-- Alt + Backspace: Deletes a word backwards
-- Alt + Supr Key: Deletes a word forward
+Note: To compile for a win32 target on a linux system,
+you need to install the mingw32 toolkit.
 
-Commands
-========
-- !quit : Exit the editor
-- pwd : prints the current working directory
-- wq : Write the buffer and close it
-- fwq : Same as wq, but it formats the buffer first
-- strip [line|all]: Strips triling whitespaces
-    strip line: same as "strip". Strips current line.
-    strip buffer: strips all lines in the current buffer.
-- goto [line|buffer] <line-number>: jumps to a certain line
-    goto line: jump to the given line
-    goto buffer: jump to the given buffer
-    goto: same as "goto line"
-- search <string>: jumps to the next occurence of the given
-		   string of text
-- search-backwards: same as search, but backwards.
-- replace <text> <replacement> : Replaces all instances of <text> with <replacement>
-- format [line|buffer]: The same as Ctrl + F.
-    format line: format the current line.
-    format buffer: format the current buffer.
-- set <key> <value>: set a configuration parameter for all new buffers
-- setlocal <key> <value>: set a configuration parameter for the current buffer
-- help: Display the help buffer
-
-Arguments
-=========
---exec <command>:
-    Executes <command> for all the specified files.
-    Example: edit --exec "strip buffer" file.c file2.c
-             Will strip all trailing whitespaces from the files.
---:
-    breaks the argument parsing. Treats the rest of the
-    arguments as filenames.
-    Example: edit -- -myfile.txt
-             Treats "-myfile.txt" as a file to edit, instead
-             of as an argument to parse.
+Manual
+======
+You can read the edit(1) man page to learn about the keybindings
+and configuration options of the editor.
