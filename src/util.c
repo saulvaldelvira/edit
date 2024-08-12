@@ -101,12 +101,7 @@ int get_character_width(wchar_t c, int accumulated_rx){
 	if (c == L'\t')
 		return buffers.curr->conf.tab_size - (accumulated_rx % buffers.curr->conf.tab_size);
 	else
-#ifdef __WIN32
-                return 1;
-#else
 		return wcwidth(c);
-#endif
-
 }
 
 void free_wstr(void *e){
@@ -169,6 +164,24 @@ static wchar_t* strtowstr(char *str) {
         return wstr;
 }
 
+static int __get_line(char **dst, size_t *cap, FILE *stream) {
+        if (!*dst) {
+                *cap = 64;
+                *dst = malloc((*cap + 1) * sizeof(char));
+        }
+        size_t i = 0;
+        int c;
+        while ((c = fgetc(stream)) != '\n' && c != EOF) {
+                if (i >= *cap) {
+                        *cap *= 2;
+                        *dst = realloc(*dst, (*cap + 1) * sizeof(char));
+                }
+                (*dst)[i++] = c;
+        }
+        (*dst)[i] = '\0';
+        return i;
+}
+
 vector_t* load_history_from_file(char *sub_path) {
         vector_t *vec = vector_init(sizeof(wchar_t*), compare_pointer);
         vector_set_destructor(vec, destroy_ptr);
@@ -181,7 +194,7 @@ vector_t* load_history_from_file(char *sub_path) {
         size_t len = 0;
         ssize_t read;
 
-        while ( ( read = getline(&line, &len, f) ) != -1) {
+        while ( ( read = __get_line(&line, &len, f) ) != -1) {
                 line[read - 1] = '\0';
                 wchar_t *wstrline = strtowstr(line);
                 vector_append(vec, &wstrline);

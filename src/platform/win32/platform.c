@@ -75,34 +75,47 @@ int get_window_size(int *rows, int *cols) {
         return SUCCESS;
 }
 
-static DWORD original_mode;
+static DWORD orig_in, orig_out;
 
 void enable_raw_mode(void) {
-        HANDLE hh = GetStdHandle(STD_OUTPUT_HANDLE);
-        DWORD mode;
-        SetConsoleOutputCP(CP_UTF8);
-        GetConsoleMode(hh, &mode);
-        mode = 0;
-        mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        mode |= ENABLE_PROCESSED_OUTPUT;
-        mode |= ENABLE_WRAP_AT_EOL_OUTPUT;
-        mode |= DISABLE_NEWLINE_AUTO_RETURN;
-        SetConsoleMode(hh, mode);
+#define set(mode) ( (mode & (~disable)) | enable )
 
-        hh = GetStdHandle(STD_INPUT_HANDLE);
         SetConsoleOutputCP(CP_UTF8);
-        GetConsoleMode(hh, &mode);
-        mode = 0;
-        mode &= ~ENABLE_ECHO_INPUT;
-        mode &= ~ENABLE_LINE_INPUT;
-        /* mode |= ENABLE_WINDOW_INPUT; */
-        mode |= ENABLE_VIRTUAL_TERMINAL_INPUT;
-        SetConsoleMode(hh,mode);
+        SetConsoleCP(CP_UTF8);
+
+        HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
+        DWORD enable, disable;
+
+        GetConsoleMode(h, &orig_in);
+        enable = disable = 0;
+        enable = ENABLE_VIRTUAL_TERMINAL_INPUT
+               | ENABLE_INSERT_MODE
+               ;
+        disable = ENABLE_ECHO_INPUT
+                | ENABLE_LINE_INPUT
+                | ENABLE_PROCESSED_INPUT
+                ;
+        SetConsoleMode(h, set(orig_in));
+
+        h = GetStdHandle(STD_OUTPUT_HANDLE);
+        GetConsoleMode(h, &orig_out);
+        enable = disable = 0;
+        enable = ENABLE_VIRTUAL_TERMINAL_PROCESSING
+               | ENABLE_PROCESSED_OUTPUT
+                /* | DISABLE_NEWLINE_AUTO_RETURN */
+                ;
+        disable = ENABLE_WRAP_AT_EOL_OUTPUT
+                | DISABLE_NEWLINE_AUTO_RETURN
+                ;
+        SetConsoleMode(h, set(orig_out));
+
 }
 
 void restore_termios(void) {
-        /* HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE); */
-        /* SetConsoleMode(h, original_mode); */
+        HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+        SetConsoleMode(h, orig_out);
+        h = GetStdHandle(STD_INPUT_HANDLE);
+        SetConsoleMode(h, orig_in);
 }
 
 void switch_ctrl_c(bool allow) {
@@ -113,6 +126,7 @@ bool is_ctrl_c_pressed(void) {
         return false;
 }
 
-INLINE char* get_default_eol(void) {
-        return "\r\n";
+int wcwidth(wchar_t c) {
+        (void)c;
+        return 1;
 }

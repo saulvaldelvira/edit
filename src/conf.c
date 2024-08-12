@@ -32,7 +32,7 @@ struct buffer_conf buffer_conf = {
         .syntax_highlighting = false,
         .auto_save_interval = 60,
         .line_number = false,
-        .eol = "\n",
+        .eol = PLATFORM_DEFAULT_EOL,
 };
 
 static json_t json_conf;
@@ -66,10 +66,7 @@ static char* read_file(char *filename) {
 }
 
 static int parse_conf_file(char *filename) {
-        ONLY_ONCE(
-                atexit(__free_json);
-                buffer_conf.eol = get_default_eol();
-        );
+        ONLY_ONCE( atexit(__free_json) );
         __free_json();
         char *text = read_file(filename);
         json_conf = json_deserialize(text);
