@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-static WString *buf = NULL;
+static wstring_t *buf = NULL;
 
 static void cleanup(void){
 	wstr_free(buf);
@@ -22,7 +22,7 @@ static int check_window_size(void){
 	rows -= 2;
 	if (rows != state.screen_rows || cols != state.screen_cols){
 		for (int i = state.screen_rows; i < rows; i++){
-			WString *wstr = wstr_empty();
+			wstring_t *wstr = wstr_empty();
 			vector_append(state.render, &wstr);
 		}
 		state.screen_rows = rows;
@@ -86,7 +86,7 @@ void editor_refresh_screen(bool only_status_bar){
 	wstr_clear(buf);
 }
 
-static void print_welcome_msg(WString *buf){
+static void print_welcome_msg(wstring_t *buf){
 	static wchar_t* welcome_messages[] = {
 		L"Edit -- Terminal-based text editor",
 		L"Press Alt + H to display the help buffer",
@@ -117,7 +117,7 @@ static void print_welcome_msg(WString *buf){
 		wstr_concat_cwstr(buf, L"~\x1b[K\r\n", 7);
 }
 
-void editor_draw_rows(WString *buf){
+void editor_draw_rows(wstring_t *buf){
 	if (buffers.curr->num_lines == 0
 	 && buffers.curr->filename == NULL
 	 && buffers.curr->dirty == 0
@@ -141,7 +141,7 @@ void editor_draw_rows(WString *buf){
                                          L"%d%*s", file_line + 1, padding, "");
                                 wstr_concat_cwstr(buf, lnr_buf, sizeof(lnr_buf));
                         }
-                        WString *line;
+                        wstring_t *line;
                         vector_at(state.render, y, &line);
                         size_t len = wstr_length(line);
 			if ((size_t)buffers.curr->col_offset < len){
@@ -158,7 +158,7 @@ void editor_draw_rows(WString *buf){
 	}
 }
 
-void editor_draw_status_bar(WString *buf){
+void editor_draw_status_bar(wstring_t *buf){
 	wstr_concat_cwstr(buf, L"\x1b[7m", 4);
 
 	wchar_t status[256], rstatus[256], sep[256];
@@ -187,7 +187,7 @@ void editor_draw_status_bar(WString *buf){
 	wstr_concat_cwstr(buf, L"\r\n", 2);
 }
 
-void editor_draw_message_bar(WString *buf){
+void editor_draw_message_bar(wstring_t *buf){
 	size_t len = ARRAY_SIZE(state.status_msg);
 	if (len > (size_t)state.screen_cols)
 		len = (size_t)state.screen_cols;

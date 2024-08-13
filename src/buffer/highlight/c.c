@@ -4,7 +4,7 @@
 #include "color.h"
 
 void highlight_c(void){
-	WString *line;
+	wstring_t *line;
 	for (int i = 0; i < state.screen_rows; i++){
 		vector_at(state.render, i, &line);
 		int match = wstr_find_substring(line, L"//", 0);

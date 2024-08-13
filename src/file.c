@@ -22,7 +22,7 @@
 #include <init.h>
 #include <platform.h>
 
-static LinkedList *history;
+static linked_list_t *history;
 
 static void __cleanup_file(void) {
         CLEANUP_FUNC;
@@ -94,7 +94,7 @@ int _file_open(const wchar_t *filename) {
 	if (!f)
 		return 1;
 
-	WString *buf = wstr_empty();
+	wstring_t *buf = wstr_empty();
 	wint_t c = 1;
 	switch_ctrl_c(true);
 	while (c != WEOF){
@@ -176,7 +176,7 @@ static int __save_to(char *fname, size_t *len) {
 	size_t n_lines = vector_size(buffers.curr->lines);
         size_t __len = n_lines * strlen(buffers.curr->conf.eol);
 	for (size_t i = 0; i < n_lines; i++){
-		WString *line = NULL;
+		wstring_t *line = NULL;
 		vector_at(buffers.curr->lines, i, &line);
                 __len += wstr_length(line);
                 assert(line);
@@ -231,7 +231,7 @@ int file_save(bool only_tmp, bool ask_filename){
         if (status != SUCCESS)
                 goto cleanup;
 
-	/* WString *buf = editor_lines_to_string(); */
+	/* wstring_t *buf = editor_lines_to_string(); */
 	/* size_t len = wstr_length(buf); */
 	/* fwprintf(f, L"%ls", wstr_get_buffer(buf)); */
 	/* fflush(f); */
@@ -297,7 +297,7 @@ void file_reload(void){
 	if (cy + row_offset <= buffers.curr->num_lines){
 		buffers.curr->cy = cy;
 		buffers.curr->row_offset = row_offset;
-		WString *line;
+		wstring_t *line;
 		vector_at(buffers.curr->lines, cy, &line);
 		size_t len = wstr_length(line);
 		if ((size_t)(cx + col_offset) <= len){

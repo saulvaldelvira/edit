@@ -19,7 +19,7 @@ void cmd_replace(wchar_t **args){
         if (!text || !replacement) return;
 
 	for (int i = 0; i < buffers.curr->num_lines; i++){
-		WString *line = line_at(i);
+		wstring_t *line = line_at(i);
 		int ret = wstr_replace(line,text,replacement);
 		if (ret > 0) buffers.curr->dirty++;
 	}

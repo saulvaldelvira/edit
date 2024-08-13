@@ -32,7 +32,7 @@ struct buffer_conf buffer_conf = {
         .line_number = false,
 };
 
-static json json_conf;
+static json_t json_conf;
 static bool must_free_json_conf = false;
 static void __free_json(void) {
         if (must_free_json_conf) {

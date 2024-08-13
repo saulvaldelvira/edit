@@ -2,7 +2,7 @@
 
 #include "input.h"
 #include "init.h"
-#include "lib/GDS/src/LinkedList.h"
+#include "linked_list.h"
 #include "lib/str/wstr.h"
 #include "output.h"
 #include "file.h"
@@ -20,7 +20,7 @@
 #include <wctype.h>
 #include "keys.h"
 
-static WString *response = NULL;
+static wstring_t *response = NULL;
 
 static void __cleanup_input(void) {
         CLEANUP_FUNC;
@@ -155,17 +155,17 @@ void editor_process_key_press(int c){
 	cursor_adjust();
 }
 
-static inline int __replace_with(WString *wstr, wchar_t *new) {
+static inline int __replace_with(wstring_t *wstr, wchar_t *new) {
         wstr_clear(wstr);
         if (new)
                 wstr_concat_cwstr(wstr, new, -1);
         return wstr_length(wstr);
 }
 
-const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, LinkedList *history){
+const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, linked_list_t *history){
         wstr_clear(response);
 
-        LinkedListIterator it = {0};
+        list_iterator_t it = {0};
         if (history)
                 it = list_iterator_from_back(history);
 

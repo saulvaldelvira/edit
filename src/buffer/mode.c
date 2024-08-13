@@ -11,7 +11,7 @@ wchar_t * mode_comments[][2] = {
 };
 
 static wchar_t* get_filename_ext(void){
-	WString *tmp_filename_wstr = wstr_from_cwstr(buffers.curr->filename, -1);
+	wstring_t *tmp_filename_wstr = wstr_from_cwstr(buffers.curr->filename, -1);
 	int i = wstr_find_substring(tmp_filename_wstr, L".", 1);
 	int prev_i = -1;
 	while (i >= 0){

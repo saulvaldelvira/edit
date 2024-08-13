@@ -14,7 +14,7 @@ void cmd_search(bool forward, wchar_t **args){
 	bool found = false;
 	if (forward){
 		for (int i = buffers.curr->cy; i < buffers.curr->num_lines; i++){
-			WString *line;
+			wstring_t *line;
 			vector_at(buffers.curr->lines, i, &line);
 			int x = i == buffers.curr->cy ? buffers.curr->cx + 1 : 0;
 			int substring_index = wstr_find_substring(line, search, x);
@@ -26,7 +26,7 @@ void cmd_search(bool forward, wchar_t **args){
 		}
 	}else{
 		for (int i = buffers.curr->cy; i >= 0; i--){
-			WString *line;
+			wstring_t *line;
 			vector_at(buffers.curr->lines, i, &line);
 
 			unsigned int x = i == buffers.curr->cy ? (unsigned)buffers.curr->cx : wstr_length(line);

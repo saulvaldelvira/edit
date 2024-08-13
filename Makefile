@@ -6,31 +6,34 @@ ifeq ($(TARGET_PLATFORM),win32)
 	CC := x86_64-w64-mingw32-gcc
 	CLANGD_PLATFORM =  , --target=x86_64-w64-mingw32
 	CFLAGS = -lws2_32 -lshlwapi
+	EXECUTABLE = edit.exe
 else
 	CC := cc
+	EXECUTABLE = edit
 endif
 
-CFLAGS += -Wall -Wextra -pedantic -Wstrict-prototypes -I./src $(FLAGS)
+INCLUDE_DIRS = -I./src -I./src/lib/GDS/include
+CFLAGS += -Wall -Wextra -pedantic -Wstrict-prototypes -ggdb \
+		  $(INCLUDE_DIRS) $(FLAGS)
 
 PROFILE := debug
 
-ifeq ($(PROFILE),debug)
-	CFLAGS += -ggdb
-else ifeq ($(PROFILE),release)
+ifeq ($(PROFILE),release)
 	CFLAGS += -O3
-else
-	_ = $(error Unknown profile: $(PROFILE))
 endif
 
+GDS_FILES= ./src/lib/GDS/src/vector.c \
+			./src/lib/GDS/src/linked_list.c \
+			./src/lib/GDS/src/gdsmalloc.c  \
+			./src/lib/GDS/src/error.c ./src/lib/GDS/src/compare.c
+LIBFILES= $(GDS_FILES) ./src/lib/str/wstr.c $(wildcard src/lib/json/src/*.c)
 CFILES=  $(shell find src -name '*.c' -not -path "src/lib/*" -not -path "src/platform/*") \
-		./src/lib/GDS/src/Vector.c ./src/lib/GDS/src/LinkedList.c \
-		./src/lib/GDS/src/util/compare.c ./src/lib/str/wstr.c \
-		$(wildcard src/lib/json/src/*.c) \
-		$(shell find src/platform/$(TARGET_PLATFORM) -name '*.c')
+		 $(LIBFILES) \
+		 $(shell find src/platform/$(TARGET_PLATFORM) -name '*.c')
 OFILES= $(patsubst %.c,%.o,$(CFILES))
 
 edit: $(OFILES)
-	@ $(CC) -o edit $(OFILES) $(CFLAGS)
+	@ $(CC) -o $(EXECUTABLE) $(OFILES) $(CFLAGS)
 
 .c.o:
 	@ echo " CC $@"
@@ -56,7 +59,9 @@ init:
 	@ git submodule update --init
 	@ echo -e \
 		"CompileFlags: \n" \
-		"Add: [ -I$(shell pwd)/src/ , -xc $(CLANGD_PLATFORM) ]" > .clangd
+		"Add: [ -I$(shell pwd)/src/, " \
+		"-I$(shell pwd)/src/lib/GDS/include/ , " \
+		" -xc $(CLANGD_PLATFORM) ]" > .clangd
 
 clean:
-	@ rm -f edit $(OFILES)
+	@ rm -f $(EXECUTABLE) $(OFILES)

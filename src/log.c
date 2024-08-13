@@ -1,6 +1,6 @@
 #include <prelude.h>
 #include "buffer.h"
-#include "lib/GDS/src/Vector.h"
+#include "vector.h"
 #include "lib/str/wstr.h"
 #include <buffer/line.h>
 #include "state.h"
@@ -15,7 +15,7 @@
 #include <console.h>
 #include <init.h>
 
-static Vector *log_history;
+static vector_t *log_history;
 
 static FILE *log_file;
 
@@ -30,7 +30,7 @@ static void __cleanup_log(void) {
 }
 
 void init_log(void) {
-        log_history = vector_init(sizeof(WString*), compare_equal);
+        log_history = vector_init(sizeof(wstring_t*), compare_equal);
         vector_set_destructor(log_history, free_wstr);
         atexit(__cleanup_log);
 }
@@ -66,7 +66,7 @@ void editor_log(enum log_level log_level, const char *fmt, ...) {
         vsprintf(buf, fmt, ap);
         va_end(ap);
 
-        WString *wstr = wstr_from_cstr(timestamp, 1024);
+        wstring_t *wstr = wstr_from_cstr(timestamp, 1024);
         wstr_concat_cstr(wstr, buf, needed);
 
         wstr_replace(wstr, L"\n", L"");
@@ -84,7 +84,7 @@ void view_log_buffer(void) {
         buffer_insert();
         size_t len = vector_size(log_history);
         for (size_t i = 0; i < len; i++) {
-                WString *str;
+                wstring_t *str;
                 vector_at(log_history, i, &str);
                 size_t str_len = wstr_length(str);
                 const wchar_t *buf = wstr_get_buffer(str);

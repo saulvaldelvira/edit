@@ -3,8 +3,7 @@
 
 #include <prelude.h>
 #include <stdlib.h>
-#include <lib/GDS/src/Vector.h>
-#include <lib/GDS/src/util/compare.h>
+#include <vector.h>
 #include <lib/str/wstr.h>
 #include <console/io.h>
 #include <buffer/line.h>
@@ -13,7 +12,7 @@
 #include <buffer.h>
 #include <console/cursor.h>
 #include <unistd.h>
-#include <lib/GDS/src/LinkedList.h>
+#include <linked_list.h>
 #include <util.h>
 
 #endif

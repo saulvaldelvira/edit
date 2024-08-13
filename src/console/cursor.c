@@ -10,7 +10,7 @@ void cursor_adjust(void){
                 buffers.curr->cx = line_len;
         buffers.curr->rx = 0;
         if (buffers.curr->cy < buffers.curr->num_lines){
-                WString *line;
+                wstring_t *line;
                 vector_at(buffers.curr->lines, buffers.curr->cy, &line);
                 buffers.curr->rx = line_cx_to_rx(line, buffers.curr->cx);
         }
@@ -27,7 +27,7 @@ void cursor_adjust(void){
 
 
 int cursor_move(int key){
-	WString *row = current_line();
+	wstring_t *row = current_line();
 
 	switch (key){
         case CTRL_KEY('h'):

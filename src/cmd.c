@@ -6,7 +6,7 @@
 #include "prelude.h"
 #include "util.h"
 
-static LinkedList *history;
+static linked_list_t *history;
 
 static void __cleanup_cmd(void) {
         CLEANUP_FUNC;
@@ -27,7 +27,7 @@ void cmd_set(wchar_t **args, bool local);
 
 
 static wchar_t **args;
-static WString *cmdstr;
+static wstring_t *cmdstr;
 
 static INLINE void __cmd_end(void) {
         editor_log(LOG_INFO, "CMD: %ls", wstr_get_buffer(cmdstr));

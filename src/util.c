@@ -61,10 +61,10 @@ char* editor_cwd(void){
 
 static void update_line(int cy){
 	int i = cy - buffers.curr->row_offset;
-	WString *render;
+	wstring_t *render;
 	vector_at(state.render, i, &render);
 	wstr_clear(render);
-	WString *row;
+	wstring_t *row;
 	vector_at(buffers.curr->lines, cy, &row);
 	int rx = 0;
 	for (size_t j = 0; j < wstr_length(row); j++){
@@ -88,7 +88,7 @@ void editor_update_render(void){
 		update_line(cy);
 	}
 	for (; i < state.screen_rows; i++){
-		WString *render;
+		wstring_t *render;
 		vector_at(state.render, i, &render);
 		wstr_clear(render);
 	}
@@ -109,7 +109,7 @@ int get_character_width(wchar_t c, int accumulated_rx){
 }
 
 void free_wstr(void *e){
-	wstr_free(*(WString**)e);
+	wstr_free(*(wstring_t**)e);
 }
 
 long get_time_millis(void){

@@ -11,7 +11,7 @@
 
 struct buffers_data buffers = {0};
 
-static Vector *buffers_vec;
+static vector_t *buffers_vec;
 
 static void free_buffer(void *e){
 	struct buffer *buf = * (struct buffer**) e;
@@ -34,7 +34,7 @@ void init_buffer(void){
 }
 
 void buffer_insert(void){
-	Vector *lines = vector_init(sizeof(WString*), compare_equal);
+	vector_t *lines = vector_init(sizeof(wstring_t*), compare_equal);
 	vector_set_destructor(lines, free_wstr);
 
         buffers.curr = xmalloc(sizeof(struct buffer));

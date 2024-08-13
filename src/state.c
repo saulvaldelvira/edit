@@ -48,10 +48,10 @@ void init_state(void) {
 	if (get_window_size(&state.screen_rows, &state.screen_cols) == -1)
 		die("get_window_size failed");
 	state.screen_rows -= BOTTOM_MENU_HEIGHT;
-	state.render = vector_init(sizeof(WString*), compare_equal);
+	state.render = vector_init(sizeof(wstring_t*), compare_equal);
 	vector_set_destructor(state.render, free_wstr);
 	for (int i = 0; i < state.screen_rows; i++){
-		WString *wstr = wstr_empty();
+		wstring_t *wstr = wstr_empty();
 		vector_append(state.render, &wstr);
 	}
 

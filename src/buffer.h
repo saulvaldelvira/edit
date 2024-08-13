@@ -1,18 +1,18 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
-#include "./lib/GDS/src/Vector.h"
 #include "conf.h"
 #include <stddef.h>
 #include <time.h>
+#include "vector.h"
 
 struct buffer {
 	int cx, cy;
 	int rx;
 	int row_offset, col_offset;
 	int num_lines;
-	wchar_t *filename;
-	Vector *lines;
+	wchar_t  *filename;
+	vector_t *lines;
 	int dirty;
         struct buffer_conf conf;
         time_t last_auto_save;
