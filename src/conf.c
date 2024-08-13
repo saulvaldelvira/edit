@@ -91,7 +91,7 @@ static int parse_conf_file(char *filename) {
         }
 
         #define VAL_STR(field, ...) VAL(field,JSON_STRING,string,"%s", __VA_ARGS__)
-        #define VAL_NUM(field, ...) VAL(field,JSON_NUMBER,number,"%f", __VA_ARGS__)
+        #define VAL_NUM(field, ...) VAL(field,JSON_NUMBER,number,"%.2f", __VA_ARGS__)
 
         #define VAL_BOOL(field) \
         if (strcmp(p.key, # field) == 0) {\
@@ -100,7 +100,7 @@ static int parse_conf_file(char *filename) {
                 else if (p.val->type == JSON_FALSE) \
                         CONF_STRUCT. field = false; \
                 else return -1; \
-                editor_log(LOG_INFO, "CONFIG: %s = %s", #field, p.val->type ? "true" : "false"); \
+                editor_log(LOG_INFO, "CONFIG: %s = %s", #field, p.val->type == JSON_TRUE ? "true" : "false"); \
                 found = true; \
         }
 

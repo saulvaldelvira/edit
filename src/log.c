@@ -69,7 +69,9 @@ void editor_log(enum log_level log_level, const char *fmt, ...) {
         wstring_t *wstr = wstr_from_cstr(timestamp, 1024);
         wstr_concat_cstr(wstr, buf, needed);
 
-        wstr_replace(wstr, L"\n", L"");
+        /* TODO: Replace more escape characters  */
+        wstr_replace(wstr, L"\n", L"\\n");
+        wstr_replace(wstr, L"\r", L"\\r");
         vector_append(log_history, &wstr);
 
         if (log_file) {
