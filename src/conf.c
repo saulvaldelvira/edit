@@ -30,6 +30,7 @@ struct buffer_conf buffer_conf = {
         .syntax_highlighting = false,
         .auto_save_interval = 60,
         .line_number = false,
+        .eol = "\n",
 };
 
 static json_t json_conf;
