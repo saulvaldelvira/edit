@@ -12,6 +12,10 @@
 
 static wstring_t *buf = NULL;
 
+static void editor_draw_rows(wstring_t *buf);
+static void editor_draw_status_bar(wstring_t *buf);
+static void editor_draw_message_bar(wstring_t *buf);
+
 static void cleanup(void){
 	wstr_free(buf);
 }

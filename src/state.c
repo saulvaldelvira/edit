@@ -16,7 +16,7 @@ struct state state = {
 	.status_msg[0] = '\0',
 };
 
-static long start_time;
+long start_time;
 
 static INLINE void __enter_alternative_buffer(void) {
 	wprintf(L"\x1b[?1049h");
@@ -95,13 +95,15 @@ void editor_end(void) {
         exit(0);
 }
 
-static int last_c = NO_KEY, c = NO_KEY;
+int last_c = NO_KEY, c = NO_KEY;
+
 INLINE void received_key(int _c) {
         last_c = c;
         c = _c;
 }
 
-static long last_status_update;
+long last_status_update;
+
 INLINE void updated_status_line(void) {
         last_status_update = get_time_millis();
 }
