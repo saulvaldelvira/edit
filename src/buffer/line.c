@@ -57,14 +57,14 @@ int line_cx_to_rx(wstring_t *line, int cx){
 	return rx;
 }
 
-void line_move_up(){
+void line_move_up(void){
 	if (buffers.curr->cy == 0) return;
 	vector_swap(buffers.curr->lines, buffers.curr->cy, buffers.curr->cy - 1);
 	buffers.curr->cy--;
 	buffers.curr->dirty++;
 }
 
-void line_move_down(){
+void line_move_down(void){
 	if (buffers.curr->cy == buffers.curr->num_lines - 1) return;
 	vector_swap(buffers.curr->lines, buffers.curr->cy, buffers.curr->cy + 1);
 	buffers.curr->cy++;

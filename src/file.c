@@ -94,33 +94,33 @@ int _file_open(const wchar_t *filename) {
 	if (!f)
 		return 1;
 
-	wstring_t *buf = wstr_empty();
 	wint_t c = 1;
 	switch_ctrl_c(true);
-	while (c != WEOF){
-		c = getwc(f);
-		if (c == L'\n' || c == L'\r' || c == WEOF){
-			if (c == L'\r'){
-				buffers.curr->conf.eol = "\r\n";
-				c = getwc(f); // consume the \n
-			}else if (c == L'\n'){
-				buffers.curr->conf.eol = "\n";
-			}
+        bool newline = false;
+        while ((c = getwc(f)) != WEOF){
+                if (newline) {
+                        line_insert_newline();
+                        newline = false;
+                }
 
-			size_t len = wstr_length(buf);
-			if (len != 0 || c == L'\n' || c == L'\r')
-				line_insert(buffers.curr->num_lines, wstr_get_buffer(buf), len);
-			wstr_clear(buf);
-		}else{
-			wstr_push_char(buf, c);
-		}
-		if (is_ctrl_c_pressed()){
-			switch_ctrl_c(false);
-			return -1;
-		}
-	}
+                if (c == L'\n' || c == L'\r') {
+                        if (c == L'\r'){
+                                buffers.curr->conf.eol = "\r\n";
+                                c = getwc(f); // consume the \n
+                        }else if (c == L'\n'){
+                                buffers.curr->conf.eol = "\n";
+                        }
+                        newline = true;
+                } else {
+                        line_put_char(c);
+                }
+
+                if (is_ctrl_c_pressed()) {
+                        switch_ctrl_c(false);
+                        return -1;
+                }
+        }
 	switch_ctrl_c(false);
-	wstr_free(buf);
 	buffers.curr->dirty = 0;
 	fclose(f);
 
