@@ -209,7 +209,6 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
 			break;
 		case CTRL_KEY(L'c'):
 			editor_set_status_message(L"");
-			wstr_free(response);
 			return NULL;
 		case '\r':
                         end = true;
