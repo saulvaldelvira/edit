@@ -227,13 +227,9 @@ void parse_args_post_init(void) {
                 editor_log(LOG_WARN,"Conf file %s doesn't exist", conf_file);
         }
 
-        wchar_t filename[NAME_MAX];
-
 	for (; i < argcount; i++){
 		buffer_insert();
-		mbstowcs(filename, argvec[i], NAME_MAX);
-		filename[NAME_MAX-1] = '\0';
-		if (file_open(filename) != 1)
+		if (file_open(argvec[i]) != 1)
 			editor_end();
 	}
 
@@ -241,12 +237,8 @@ void parse_args_post_init(void) {
                 buffer_insert();
 
         if (args.exec_cmd != NULL){
-                size_t len = strlen(args.exec_cmd) + 1;
-                cmd = malloc(len * sizeof(wchar_t));
-                mbstowcs(cmd, args.exec_cmd, len);
-
 		foreach_buffer (
-			editor_cmd(cmd);
+			editor_cmd(args.exec_cmd);
                         if (buffers.curr->filename)
                                 file_save(false, false);
                 );

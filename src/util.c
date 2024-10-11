@@ -61,19 +61,19 @@ char* editor_cwd(void){
 
 static void update_line(int cy){
 	int i = cy - buffers.curr->row_offset;
-	wstring_t *render;
+	string_t *render;
 	vector_at(state.render, i, &render);
-	wstr_clear(render);
-	wstring_t *row;
+	str_clear(render);
+	string_t *row;
 	vector_at(buffers.curr->lines, cy, &row);
 	int rx = 0;
-	for (size_t j = 0; j < wstr_length(row); j++){
-		wchar_t c = wstr_get_at(row, j);
+	for (size_t j = 0; j < str_length_utf8(row); j++){
+		wchar_t c = str_get_at(row, j);
 		if (c == L'\t'){
 			for (int i = 0; i < get_character_width(L'\t', rx); i++)
-				wstr_push_char(render, ' ');
+				str_push_char(render, ' ');
 		}else{
-			wstr_push_char(render, c);
+			str_push_char(render, c);
 		}
 		rx += get_character_width(c, rx);
 	}
@@ -88,9 +88,9 @@ void editor_update_render(void){
 		update_line(cy);
 	}
 	for (; i < state.screen_rows; i++){
-		wstring_t *render;
+		string_t *render;
 		vector_at(state.render, i, &render);
-		wstr_clear(render);
+		str_clear(render);
 	}
 	if (buffers.curr->conf.syntax_highlighting)
 		editor_highlight();
@@ -108,14 +108,22 @@ int get_character_width(wchar_t c, int accumulated_rx){
 
 }
 
-void free_wstr(void *e){
-	wstr_free(*(wstring_t**)e);
+void free_str(void *e){
+	str_free(*(string_t**)e);
 }
 
 long get_time_millis(void){
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+}
+
+char* dup_string(const char *str) {
+        size_t len = strlen(str) + 1;
+        char *new = xmalloc(len);
+        strncpy(new, str, len);
+        new[len - 1] = '\0';
+        return new;
 }
 
 wchar_t* wstrdup(const wchar_t *wstr) {

@@ -3,6 +3,7 @@
 
 #include <prelude.h>
 #include <stdlib.h>
+#include <string.h>
 #include <vector.h>
 #include <lib/str/wstr.h>
 #include <console/io.h>

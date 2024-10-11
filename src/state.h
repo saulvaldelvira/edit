@@ -10,13 +10,13 @@ extern struct state {
 	int screen_rows;
 	int screen_cols;
 	vector_t *render;
-	wchar_t status_msg[160];
+	char status_msg[160];
 	time_t status_msg_time;
 } state;
 
 long get_time_since_start_ms(void);
 void editor_on_update(void);
-void change_current_buffer_filename(wchar_t *filename);
+void change_current_buffer_filename(char *filename);
 void NORETURN die(const char *msg, const char *fname, int line, const char *func);
 void NORETURN editor_end(void);
 void editor_start_shutdown(void);

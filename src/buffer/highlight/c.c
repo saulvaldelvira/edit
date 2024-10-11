@@ -4,33 +4,33 @@
 #include "color.h"
 
 void highlight_c(void){
-	wstring_t *line;
+	string_t *line;
 	for (int i = 0; i < state.screen_rows; i++){
 		vector_at(state.render, i, &line);
-		int match = wstr_find_substring(line, L"//", 0);
+		int match = str_find_substring(line, "//", 0);
 		if (match >= 0){
-			wstr_insert_cwstr(line, Color_IGreen, -1, match);
-			wstr_concat_cwstr(line, Color_Reset, -1);
+			str_insert_cstr(line, Color_IGreen, -1, match);
+			str_concat_cstr(line, Color_Reset, -1);
 			continue;
 		}
 
-		wstr_replace(line, L"#include ", Color_Purple L"#include " Color_IYellow);
-		wstr_replace(line, L"#define ", Color_Purple L"#define " Color_IBlue);
-		wstr_replace(line, L"#ifdef ", Color_Purple L"#ifdef " Color_IBlue);
-		wstr_replace(line, L"#ifndef ", Color_Purple L"#ifndef " Color_IBlue);
-		wstr_replace(line, L"#endif", Color_Purple L"#endif ");
+		str_replace(line, "#include ", Color_Purple "#include " Color_IYellow);
+		str_replace(line, "#define ", Color_Purple "#define " Color_IBlue);
+		str_replace(line, "#ifdef ", Color_Purple "#ifdef " Color_IBlue);
+		str_replace(line, "#ifndef ", Color_Purple "#ifndef " Color_IBlue);
+		str_replace(line, "#endif", Color_Purple "#endif ");
 
-		wstr_replace(line, L"return", Color_Purple L"return" Color_Reset);
-		wstr_replace(line, L"if", Color_Purple L"if" Color_Reset);
-		wstr_replace(line, L"while", Color_Purple L"while" Color_Reset);
-		wstr_replace(line, L"else", Color_Purple L"else" Color_Reset);
-		wstr_replace(line, L"switch", Color_Purple L"switch" Color_Reset);
-		wstr_replace(line, L"case", Color_Purple L"case" Color_Reset);
-		wstr_replace(line, L"default", Color_Purple L"default" Color_Reset);
-		wstr_replace(line, L"break", Color_Purple L"break" Color_Reset);
-		wstr_replace(line, L"continue", Color_Purple L"continue" Color_Reset);
-		wstr_replace(line, L"goto", Color_Purple L"goto" Color_Reset);
-		wstr_concat_cwstr(line, Color_Reset, -1);
+		str_replace(line, "return", Color_Purple "return" Color_Reset);
+		str_replace(line, "if", Color_Purple "if" Color_Reset);
+		str_replace(line, "while", Color_Purple "while" Color_Reset);
+		str_replace(line, "else", Color_Purple "else" Color_Reset);
+		str_replace(line, "switch", Color_Purple "switch" Color_Reset);
+		str_replace(line, "case", Color_Purple "case" Color_Reset);
+		str_replace(line, "default", Color_Purple "default" Color_Reset);
+		str_replace(line, "break", Color_Purple "break" Color_Reset);
+		str_replace(line, "continue", Color_Purple "continue" Color_Reset);
+		str_replace(line, "goto", Color_Purple "goto" Color_Reset);
+		str_concat_cstr(line, Color_Reset, -1);
 	}
 }
 

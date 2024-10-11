@@ -1,9 +1,7 @@
-#include "cmd.h"
 #include "cmd/prelude.h"
+#include "cmd.h"
 #include "init.h"
-#include "lib/str/wstr.h"
 #include "log.h"
-#include "prelude.h"
 #include "util.h"
 
 static linked_list_t *history;
@@ -20,53 +18,53 @@ void init_cmd(void) {
         atexit(__cleanup_cmd);
 }
 
-void cmd_search(bool forward, wchar_t **args);
-void cmd_replace(wchar_t **args);
-void cmd_goto(wchar_t **args);
-void cmd_set(wchar_t **args, bool local);
+void cmd_search(bool forward, char **args);
+void cmd_replace(char **args);
+void cmd_goto(char **args);
+void cmd_set(char **args, bool local);
 
 
-static wchar_t **args;
-static wstring_t *cmdstr;
+static char **args;
+static string_t *cmdstr;
 
 static INLINE void __cmd_end(void) {
-        editor_log(LOG_INFO, "CMD: %ls", wstr_get_buffer(cmdstr));
-        for (wchar_t **p = args; *p; p++)
+        editor_log(LOG_INFO, "CMD: %ls", str_get_buffer(cmdstr));
+        for (char **p = args; *p; p++)
                 free(*p);
         free(args);
-        wstr_free(cmdstr);
+        str_free(cmdstr);
 }
 
-void editor_cmd(const wchar_t *command){
+void editor_cmd(const char *command){
         if (!command){
-                command = editor_prompt(L"Execute command", NULL, history);
-                if (!command || wstrlen(command) == 0){
-                        editor_set_status_message(L"");
-                        wstr_free(cmdstr);
+                command = editor_prompt("Execute command", NULL, history);
+                if (!command || strlen(command) == 0){
+                        editor_set_status_message("");
+                        str_free(cmdstr);
                         return;
                 }
         }
-        cmdstr = wstr_from_cwstr(command, -1);
+        cmdstr = str_from_cstr(command, -1);
 
-        args = wstr_split(cmdstr, L" ");
-        wchar_t *cmd = args[0];
-        if (wcscmp(cmd, L"!quit") == 0){
+        args = str_split(cmdstr, " ");
+        char *cmd = args[0];
+        if (strcmp(cmd, "!quit") == 0){
                 if (editor_ask_confirmation()) {
                         __cmd_end();
                         editor_end();
                 }
         }
-        else if (wcscmp(cmd, L"pwd") == 0){
-                editor_set_status_message(L"%s", editor_cwd());
+        else if (strcmp(cmd, "pwd") == 0){
+                editor_set_status_message("%s", editor_cwd());
         }
-        else if (wcscmp(cmd, L"wq") == 0){
+        else if (strcmp(cmd, "wq") == 0){
                 bool ask_filename = buffers.curr->filename == NULL;
                 int ret = file_save(false, ask_filename);
                 if (ret > 0){
                         buffer_drop();
                 }
         }
-        else if (wcscmp(cmd, L"fwq") == 0){
+        else if (strcmp(cmd, "fwq") == 0){
                 bool ask_filename = buffers.curr->filename == NULL;
                 for (int i = 0; i < buffers.curr->num_lines; i++)
                         line_format(i);
@@ -75,58 +73,58 @@ void editor_cmd(const wchar_t *command){
                         buffer_drop();
                 }
         }
-        else if (wcscmp(cmd, L"strip") == 0){
-                if (!args[1] || wcscmp(args[1], L"line") == 0){
+        else if (strcmp(cmd, "strip") == 0){
+                if (!args[1] || strcmp(args[1], "line") == 0){
                         line_strip_trailing_spaces(buffers.curr->cy);
                 }
-                else if (args[1] && wcscmp(args[1], L"buffer") == 0){
+                else if (args[1] && strcmp(args[1], "buffer") == 0){
                         for (int i = 0; i < buffers.curr->num_lines; i++)
                                 line_strip_trailing_spaces(i);
                 }else{
                         // TODO: help menu
-                        editor_set_status_message(L"Invalid argument for command \"strip\": %ls", args[1]);
+                        editor_set_status_message("Invalid argument for command \"strip\": %ls", args[1]);
                 }
         }
-        else if (wcscmp(cmd, L"goto") == 0){
+        else if (strcmp(cmd, "goto") == 0){
                 cmd_goto(args);
         }
-        else if (wcscmp(cmd, L"search") == 0
-                        || wcscmp(cmd, L"search-forward") == 0
+        else if (strcmp(cmd, "search") == 0
+                        || strcmp(cmd, "search-forward") == 0
                 ){
                 cmd_search(true, args);
         }
-        else if (wcscmp(cmd, L"replace") == 0){
+        else if (strcmp(cmd, "replace") == 0){
                 cmd_replace(args);
         }
-        else if (wcscmp(cmd, L"search-backwards") == 0){
+        else if (strcmp(cmd, "search-backwards") == 0){
                 cmd_search(false, args);
         }
-        else if (wcscmp(cmd, L"format") == 0){
-                if (!args[1] || wcscmp(args[1], L"line") == 0){
+        else if (strcmp(cmd, "format") == 0){
+                if (!args[1] || strcmp(args[1], "line") == 0){
                         line_format(buffers.curr->cy);
                 }
-                else if (args[1] && wcscmp(args[1], L"buffer") == 0){
+                else if (args[1] && strcmp(args[1], "buffer") == 0){
                         for (int i = 0; i < buffers.curr->num_lines; i++)
                                 line_format(i);
                 }else{
                         // TODO: help menu
-                        editor_set_status_message(L"Invalid argument for command \"format\": %ls", args[1]);
+                        editor_set_status_message("Invalid argument for command \"format\": %ls", args[1]);
                 }
         }
-        else if (wcscmp(cmd, L"set") == 0){
+        else if (strcmp(cmd, "set") == 0){
                 cmd_set(args,false);
         }
-        else if (wcscmp(cmd, L"setlocal") == 0){
+        else if (strcmp(cmd, "setlocal") == 0){
                 cmd_set(args,true);
         }
-        else if (wcscmp(cmd, L"help") == 0){
+        else if (strcmp(cmd, "help") == 0){
                 editor_help();
         }
-        else if (wcscmp(cmd, L"log") == 0){
+        else if (strcmp(cmd, "log") == 0){
                 view_log_buffer();
         }
         else {
-                editor_set_status_message(L"Invalid command [%ls]", cmd);
+                editor_set_status_message("Invalid command [%ls]", cmd);
         }
         __cmd_end();
 }

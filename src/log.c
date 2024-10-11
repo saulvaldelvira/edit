@@ -30,11 +30,10 @@ static void __cleanup_log(void) {
 }
 
 void init_log(void) {
-        log_history = vector_init(sizeof(wstring_t*), compare_equal);
-        vector_set_destructor(log_history, free_wstr);
+        log_history = vector_init(sizeof(string_t*), compare_equal);
+        vector_set_destructor(log_history, free_str);
         atexit(__cleanup_log);
 }
-
 
 void set_log_file(char *fname) {
         if (log_file)
@@ -66,13 +65,13 @@ void editor_log(enum log_level log_level, const char *fmt, ...) {
         vsprintf(buf, fmt, ap);
         va_end(ap);
 
-        wstring_t *wstr = wstr_from_cstr(timestamp, 1024);
-        wstr_concat_cstr(wstr, buf, needed);
+        string_t *str = str_from_cstr(timestamp, 1024);
+        str_concat_cstr(str, buf, needed);
 
         /* TODO: Replace more escape characters  */
-        wstr_replace(wstr, L"\n", L"\\n");
-        wstr_replace(wstr, L"\r", L"\\r");
-        vector_append(log_history, &wstr);
+        str_replace(str, "\n", "\\n");
+        str_replace(str, "\r", "\\r");
+        vector_append(log_history, &str);
 
         if (log_file) {
                 fprintf(log_file, "%s", timestamp);
@@ -86,10 +85,10 @@ void view_log_buffer(void) {
         buffer_insert();
         size_t len = vector_size(log_history);
         for (size_t i = 0; i < len; i++) {
-                wstring_t *str;
+                string_t *str;
                 vector_at(log_history, i, &str);
-                size_t str_len = wstr_length(str);
-                const wchar_t *buf = wstr_get_buffer(str);
+                size_t str_len = str_length_utf8(str);
+                const char *buf = str_get_buffer(str);
                 line_append(buf, str_len);
         }
 }

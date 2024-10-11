@@ -36,31 +36,31 @@ void init_file(void) {
         atexit(__cleanup_file);
 }
 
-static char* mb_filename(size_t *written, bool tmp){
-	static char mbfilename[NAME_MAX];
-	static char full_filename[PATH_MAX];
-	size_t wrt = wcstombs(mbfilename, buffers.curr->filename, NAME_MAX);
-	mbfilename[NAME_MAX - 1] = '\0';
+static char* __get_filename(size_t *written, bool tmp){
+        char *fn = buffers.curr->filename;
 
-	char *last_slash = strrchr(mbfilename, '/');
+	static char full_filename[PATH_MAX];
+	size_t wrt = strlen(fn);
+
+	char *last_slash = strrchr(fn, '/');
 	if (last_slash)
 		*last_slash = '\0';
 
-	if (mbfilename[0] == '/'){
+	if (fn[0] == '/'){
 		wrt += snprintf(full_filename, PATH_MAX,
 				"%s%s%s%s",
-				last_slash ? mbfilename : "",
+				last_slash ? fn : "",
 				last_slash ? "/" : "",
 				tmp ? "." : "",
-				last_slash ? last_slash + 1 : mbfilename);
+				last_slash ? last_slash + 1 : fn);
 
 	}else{
 		wrt += snprintf(full_filename, PATH_MAX,
 				"%s/%s%s%s%s", editor_cwd(),
-				last_slash ? mbfilename : "",
+				last_slash ? fn : "",
 				last_slash ? "/" : "",
 				tmp ? "." : "",
-				last_slash ? last_slash + 1 : mbfilename);
+				last_slash ? last_slash + 1 : fn);
 	}
 
 	if (written)
@@ -72,7 +72,7 @@ char* get_tmp_filename(void){
 	if (!buffers.curr->filename)
 		return NULL;
 	size_t written;
-	char *filename = mb_filename(&written, true);
+	char *filename = __get_filename(&written, true);
 	size_t tmp_filename_len = written + sizeof(TMP_EXT) + 1;
 	char *tmp_filename = xmalloc(tmp_filename_len * sizeof(char));
 	snprintf(tmp_filename, tmp_filename_len, "%s%s", filename, TMP_EXT);
@@ -80,17 +80,17 @@ char* get_tmp_filename(void){
 }
 
 // TODO: if .tmp version exists (i.e. failed save in a previous session), restore it.
-int _file_open(const wchar_t *filename) {
+int _file_open(const char *filename) {
 	if (!buffers.curr->filename || !filename || buffers.curr->filename != filename){
-		size_t len = (wstrnlen(filename, FILENAME_MAX) + 1) * sizeof(wchar_t);
+		size_t len = (strlen(filename) + 1) * sizeof(wchar_t);
 		free(buffers.curr->filename);
 		buffers.curr->filename = xmalloc(len);
 		assert(buffers.curr->filename);
 		memcpy(buffers.curr->filename, filename, len);
 	}
 
-        char *mbfilename = mb_filename(NULL, false);
-	FILE *f = fopen(mbfilename, "r");
+        char *fname = __get_filename(NULL, false);
+	FILE *f = fopen(fname, "r");
 	if (!f)
 		return 1;
 
@@ -103,11 +103,11 @@ int _file_open(const wchar_t *filename) {
                         newline = false;
                 }
 
-                if (c == L'\n' || c == L'\r') {
-                        if (c == L'\r'){
+                if (c == '\n' || c == '\r') {
+                        if (c == '\r'){
                                 buffers.curr->conf.eol = "\r\n";
                                 c = getwc(f); // consume the \n
-                        }else if (c == L'\n'){
+                        }else if (c == '\n'){
                                 buffers.curr->conf.eol = "\n";
                         }
                         newline = true;
@@ -124,22 +124,22 @@ int _file_open(const wchar_t *filename) {
 	buffers.curr->dirty = 0;
 	fclose(f);
 
-        if (!file_writable(mbfilename))
-                editor_set_status_message(L"Warning! You have opened a READ ONLY file");
+        if (!file_writable(fname))
+                editor_set_status_message("Warning! You have opened a READ ONLY file");
 
 	// Discard any key press made while loading the file
 	while (editor_read_key() != NO_KEY)
 		;
-        editor_log(LOG_INFO, "Opened file: %s", mbfilename);
+        editor_log(LOG_INFO, "Opened file: %s", fname);
 
 	return 1;
 }
 
-int file_open(const wchar_t *filename) {
+int file_open(const char *filename) {
         if (filename)
                 return _file_open(filename);
-        filename = editor_prompt(L"Open file", buffers.curr->filename, history);
-        if (filename && wstrlen(filename) > 0){
+        filename = editor_prompt("Open file", buffers.curr->filename, history);
+        if (filename && strlen(filename) > 0){
                 buffer_clear();
                 if (_file_open(filename) != 1) {
                         buffer_drop();
@@ -160,7 +160,7 @@ static void __print_filesave(double len, char *filename, bool auto_save) {
         int n_decimal = magnitude > 0 ? 1 : 0;
         char *auto_save_msg = auto_save ? "AUTO SAVE: " : "";
         if (!auto_save) {
-                editor_set_status_message(L"%s%.*f %s written to: %s", auto_save_msg,
+                editor_set_status_message("%s%.*f %s written to: %s", auto_save_msg,
                                 n_decimal, value, magnitudes[magnitude], filename);
         }
         editor_log(LOG_INFO, "%s%.*f %s written to: %s", auto_save_msg,
@@ -170,17 +170,17 @@ static void __print_filesave(double len, char *filename, bool auto_save) {
 static int __save_to(char *fname, size_t *len) {
 	FILE *f = fopen(fname, "w");
 	if (!f){
-		editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
+		editor_set_status_message("Can't save! I/O error: %s", strerror(errno));
 		return -2;
 	}
 	size_t n_lines = vector_size(buffers.curr->lines);
         size_t __len = n_lines * strlen(buffers.curr->conf.eol);
 	for (size_t i = 0; i < n_lines; i++){
-		wstring_t *line = NULL;
+		string_t *line = NULL;
 		vector_at(buffers.curr->lines, i, &line);
-                __len += wstr_length(line);
+                __len += str_length_utf8(line);
                 assert(line);
-                fprintf(f, "%ls%s", wstr_get_buffer(line), buffers.curr->conf.eol);
+                fprintf(f, "%s%s", str_get_buffer(line), buffers.curr->conf.eol);
 	}
         if (len)
 	        *len = __len;
@@ -191,10 +191,10 @@ static int __save_to(char *fname, size_t *len) {
 
 int file_save(bool only_tmp, bool ask_filename){
 	if (ask_filename){
-		const wchar_t *filename = editor_prompt(L"Save as", buffers.curr->filename, history);
-		if (!filename || wstrlen(filename) == 0)
+		const char *filename = editor_prompt("Save as", buffers.curr->filename, history);
+		if (!filename)
 			return -1;
-                change_current_buffer_filename(wstrdup(filename));
+                change_current_buffer_filename(dup_string(filename));
         }
 
         if (!buffers.curr->filename) {
@@ -206,16 +206,16 @@ int file_save(bool only_tmp, bool ask_filename){
            write to a temporary file and then rename it, which
            could cause the original file to be replaced. If the
            file does not exist it is fine to create a new one.*/
-        char *mbfilename = mb_filename(NULL, false);
-        if (file_exists(mbfilename)    // file exists
-            && !file_writable(mbfilename) // is NOT writable
+        char *fname = __get_filename(NULL, false);
+        if (file_exists(fname)    // file exists
+            && !file_writable(fname) // is NOT writable
         ){
-                editor_set_status_message(L"Can't save! You have no permissions");
+                editor_set_status_message("Can't save! You have no permissions");
                 return -1;
         }
 
 	if (!only_tmp){
-		editor_set_status_message(L"Saving...");
+		editor_set_status_message("Saving...");
 		editor_refresh_screen(true);
 	}
 
@@ -243,7 +243,7 @@ int file_save(bool only_tmp, bool ask_filename){
                 goto cleanup;
         }
 
-	char *filename = mb_filename(NULL, false);
+	char *filename = __get_filename(NULL, false);
 	// if the file already exists, adjust the permissions
 	bool adjust_perms = file_exists(filename);
         long perms = 0;
@@ -274,7 +274,7 @@ int file_save(bool only_tmp, bool ask_filename){
 	if (rename(tmp_filename, filename) != 0
 	    || (adjust_perms && !change_mod(filename, perms))
 		){
-		editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
+		editor_set_status_message("Can't save! I/O error: %s", strerror(errno));
                 status = -4;
                 goto cleanup;
 	}
@@ -297,9 +297,9 @@ void file_reload(void){
 	if (cy + row_offset <= buffers.curr->num_lines){
 		buffers.curr->cy = cy;
 		buffers.curr->row_offset = row_offset;
-		wstring_t *line;
+		string_t *line;
 		vector_at(buffers.curr->lines, cy, &line);
-		size_t len = wstr_length(line);
+		size_t len = str_length_utf8(line);
 		if ((size_t)(cx + col_offset) <= len){
 			buffers.curr->cx = cx;
 			buffers.curr->col_offset = col_offset;

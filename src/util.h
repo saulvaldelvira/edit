@@ -14,7 +14,8 @@ wchar_t* wstrdup(const wchar_t *wstr);
 char* editor_cwd(void);
 void editor_update_render(void);
 int get_character_width(wchar_t c, int accumulated_rx);
-void free_wstr(void *e);
+char* dup_string(const char *str);
+void free_str(void *e);
 long get_time_millis(void);
 int get_cursor_position(int *row, int *col);
 

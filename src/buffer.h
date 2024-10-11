@@ -11,7 +11,7 @@ struct buffer {
 	int rx;
 	int row_offset, col_offset;
 	int num_lines;
-	wchar_t  *filename;
+	char *filename;
 	vector_t *lines;
 	int dirty;
         struct buffer_conf conf;

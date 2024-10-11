@@ -26,7 +26,7 @@ GDS_FILES= ./src/lib/GDS/src/vector.c \
 			./src/lib/GDS/src/linked_list.c \
 			./src/lib/GDS/src/gdsmalloc.c  \
 			./src/lib/GDS/src/error.c ./src/lib/GDS/src/compare.c
-LIBFILES= $(GDS_FILES) ./src/lib/str/wstr.c $(wildcard src/lib/json/src/*.c)
+LIBFILES= $(GDS_FILES) ./src/lib/str/str.c $(wildcard src/lib/json/src/*.c)
 CFILES=  $(shell find src -name '*.c' -not -path "src/lib/*" -not -path "src/platform/*") \
 		 $(LIBFILES) \
 		 $(shell find src/platform/$(TARGET_PLATFORM) -name '*.c')

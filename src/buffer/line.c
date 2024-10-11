@@ -4,24 +4,25 @@
 #include "util.h"
 #include <console/cursor.h>
 #include "buffer/mode.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
 #include <assert.h>
 
-wstring_t* line_at(int at){
-	wstring_t *line = NULL;
+string_t* line_at(int at){
+	string_t *line = NULL;
 	if (at < buffers.curr->num_lines)
 		vector_at(buffers.curr->lines, at, &line);
 	return line;
 }
 
 size_t line_at_len(int at){
-	wstring_t *line = line_at(at);
-	return line ? wstr_length(line) : 0UL;
+	string_t *line = line_at(at);
+	return line ? str_length_utf8(line) : 0UL;
 }
 
 INLINE
-wstring_t* current_line(void){
+string_t* current_line(void){
 	return line_at(buffers.curr->cy);
 }
 
@@ -31,27 +32,27 @@ size_t current_line_length(void){
 }
 
 wchar_t line_curr_char(void){
-	wstring_t *line = current_line();
+	string_t *line = current_line();
 	if (!line) return '\0';
-	return wstr_get_at(line, buffers.curr->cx);
+	return str_get_at(line, buffers.curr->cx);
 }
 
-void line_insert(int at, const wchar_t *str, size_t len){
-	wstring_t *line = wstr_from_cwstr(str, len);
+void line_insert(int at, const char *str, size_t len){
+	string_t *line = str_from_cstr(str, len);
 	vector_insert_at(buffers.curr->lines, at, &line);
 	buffers.curr->num_lines++;
 }
 
-void line_append(const wchar_t *str, size_t len){
-	wstring_t *line = wstr_from_cwstr(str, len);
+void line_append(const char *str, size_t len){
+	string_t *line = str_from_cstr(str, len);
 	vector_append(buffers.curr->lines, &line);
 	buffers.curr->num_lines++;
 }
 
-int line_cx_to_rx(wstring_t *line, int cx){
+int line_cx_to_rx(string_t *line, int cx){
 	int rx = 0;
 	for (int i = 0; i < cx; i++){
-		wchar_t c = wstr_get_at(line, i);
+		wchar_t c = str_get_at(line, i);
 		rx += get_character_width(c, rx);
 	}
 	return rx;
@@ -73,16 +74,16 @@ void line_move_down(void){
 
 void line_put_char(int c){
 	if (buffers.curr->cy == buffers.curr->num_lines)
-		line_insert(buffers.curr->num_lines, L"", 0);
-	wstring_t *line;
+		line_insert(buffers.curr->num_lines, "", 0);
+	string_t *line;
 	vector_at(buffers.curr->lines, buffers.curr->cy, &line);
 	int n = 1;
 	if (c == L'\t' && buffers.curr->conf.substitute_tab_with_space){
-		n = get_character_width(L'\t', buffers.curr->cx);
+		n = get_character_width('\t', buffers.curr->cx);
 		for (int i = 0; i < n; i++)
-			wstr_insert(line, ' ', buffers.curr->cx);
+			str_insert(line, ' ', buffers.curr->cx);
 	}else {
-		wstr_insert(line, c, buffers.curr->cx);
+		str_insert(line, c, buffers.curr->cx);
 	}
 	buffers.curr->cx += n;
 	buffers.curr->dirty += n;
@@ -105,22 +106,22 @@ void line_delete_char_backwards(void){
 		cursor_move(ARROW_LEFT);
 		return;
 	}
-	wstring_t *line;
+	string_t *line;
 	vector_at(buffers.curr->lines, buffers.curr->cy, &line);
 	if (buffers.curr->cx == 0){
 		if (buffers.curr->cy == 0)
 			return;
-		wstring_t *up;
+		string_t *up;
 		vector_at(buffers.curr->lines, buffers.curr->cy - 1, &up);
-		size_t new_x = wstr_length(up);
-		wstr_concat_wstr(up, line);
+		size_t new_x = str_length_utf8(up);
+		str_concat_str(up, line);
 		vector_remove_at(buffers.curr->lines, buffers.curr->cy);
 		buffers.curr->num_lines--;
 		cursor_move(ARROW_LEFT);
 		buffers.curr->cx = new_x;
 	}
-	else if (buffers.curr->cx > 0 && (size_t)(buffers.curr->cx - 1) < wstr_length(line)){
-		wstr_remove_at(line, buffers.curr->cx - 1);
+	else if (buffers.curr->cx > 0 && (size_t)(buffers.curr->cx - 1) < str_length_utf8(line)){
+		str_remove_at(line, buffers.curr->cx - 1);
 		cursor_move(ARROW_LEFT);
 	}
 	buffers.curr->dirty++;
@@ -152,13 +153,13 @@ void line_delete_word_backwards(void){
 
 void line_insert_newline(void){
 	if (buffers.curr->cx == 0){
-		line_insert(buffers.curr->cy, L"", 0);
+		line_insert(buffers.curr->cy, "", 0);
 	}else{
-		wstring_t *current;
+		string_t *current;
 		vector_at(buffers.curr->lines, buffers.curr->cy, &current);
-		wchar_t *split = wstr_substring(current, buffers.curr->cx, wstr_length(current));
-		size_t split_len = wstr_length(current) - buffers.curr->cx;
-		wstr_remove_range(current, buffers.curr->cx, wstr_length(current));
+		char *split = str_substring(current, buffers.curr->cx, str_length_utf8(current));
+		size_t split_len = str_length_utf8(current) - buffers.curr->cx;
+		str_remove_range(current, buffers.curr->cx, str_length_utf8(current));
 		line_insert(buffers.curr->cy + 1, split, split_len);
 		free(split);
 	}
@@ -175,8 +176,8 @@ void line_cut(bool whole){
 		buffers.curr->num_lines--;
 		cursor_adjust();
 	}else {
-		wstring_t *line = current_line();
-		wstr_remove_range(line, buffers.curr->cx, -1);
+		string_t *line = current_line();
+		str_remove_range(line, buffers.curr->cx, -1);
 	}
 	buffers.curr->dirty++;
 }
@@ -184,48 +185,48 @@ void line_cut(bool whole){
 void line_toggle_comment(void){
 	int mode = mode_get_current();
 	if (mode == NO_MODE) return;
-	const wchar_t *comment_start = mode_comments[mode][0];
-	const wchar_t *comment_end = mode_comments[mode][1];
+	const char *comment_start = mode_comments[mode][0];
+	const char *comment_end = mode_comments[mode][1];
 
-	wstring_t *line = current_line();
-	int match = wstr_find_substring(line, comment_start, 0);
+	string_t *line = current_line();
+	int match = str_find_substring(line, comment_start, 0);
 	// TODO: Replace only the outermost comment
 	if (match == 0)
-		wstr_replace(line, comment_start, L"");
+		str_replace(line, comment_start, "");
 	else
-		wstr_insert_cwstr(line, comment_start, -1, 0);
+		str_insert_cstr(line, comment_start, -1, 0);
 
 	if (comment_end == NULL) return;
 	if (match != 0){
-		wstr_concat_cwstr(line, comment_end, -1);
+		str_concat_cstr(line, comment_end, -1);
 		return;
 	}
-	match = wstr_find_substring(line, comment_end, 0);
+	match = str_find_substring(line, comment_end, 0);
 	if (match >= 0)
-		wstr_replace(line, comment_end, L"");
+		str_replace(line, comment_end, "");
 }
 
 void line_strip_trailing_spaces(int cy){
 	if (cy >= buffers.curr->num_lines)
 		return;
 	assert(cy >= 0);
-	wstring_t *line;
+	string_t *line;
 	vector_at(buffers.curr->lines, cy, &line);
-	size_t len = wstr_length(line);
+	size_t len = str_length_utf8(line);
 	size_t last_char_index = 0;
 	for (size_t i = 0; i < len; i++){
-		wchar_t c = wstr_get_at(line, i);
+		wchar_t c = str_get_at(line, i);
 		if (c != L' ' && c != L'\t')
 			last_char_index = i;
 	}
 	if (last_char_index < len){
 		size_t removed;
-		wchar_t c = wstr_get_at(line, 0);
+		wchar_t c = str_get_at(line, 0);
 		if (last_char_index == 0 && (c == L' ' || c == L'\t')){
-			wstr_remove_range(line, 0, len);
+			str_remove_range(line, 0, len);
 			removed = len;
 		}else{
-			wstr_remove_range(line, last_char_index + 1, len);
+			str_remove_range(line, last_char_index + 1, len);
 			removed = len - last_char_index - 1;
 		}
 		if (cy == buffers.curr->cy){
@@ -244,14 +245,14 @@ void line_strip_trailing_spaces(int cy){
 
 void line_format(int cy){
 	line_strip_trailing_spaces(cy);
-	wchar_t tab_buffer[80];
-	swprintf(tab_buffer, 80, L"%*c", buffers.curr->conf.tab_size, ' ');
-	wstring_t *line = line_at(cy);
+	char tab_buffer[80];
+	snprintf(tab_buffer, 80, "%*c", buffers.curr->conf.tab_size, ' ');
+	string_t *line = line_at(cy);
 	if (buffers.curr->conf.substitute_tab_with_space){
-		int n = wstr_replace(line, L"\t", tab_buffer);
+		int n = str_replace(line, "\t", tab_buffer);
                 buffers.curr->cx += n * (buffers.curr->conf.tab_size + 1);
 	}else{
-		int n = wstr_replace(line, tab_buffer, L"\t");
+		int n = str_replace(line, tab_buffer, "\t");
                 buffers.curr->cx -= n * (buffers.curr->conf.tab_size - 1);
 	}
 }

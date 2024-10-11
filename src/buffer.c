@@ -3,7 +3,6 @@
 #include "conf.h"
 #include "file.h"
 #include "init.h"
-#include "lib/str/wstr.h"
 #include "state.h"
 #include "util.h"
 #include <stdlib.h>
@@ -34,8 +33,8 @@ void init_buffer(void){
 }
 
 void buffer_insert(void){
-	vector_t *lines = vector_init(sizeof(wstring_t*), compare_equal);
-	vector_set_destructor(lines, free_wstr);
+	vector_t *lines = vector_init(sizeof(string_t*), compare_equal);
+	vector_set_destructor(lines, free_str);
 
         buffers.curr = xmalloc(sizeof(struct buffer));
 

@@ -3,8 +3,7 @@
 
 #include <stddef.h>
 
-void editor_cmd(const wchar_t *command);
-
+void editor_cmd(const char *command);
 void init_cmd(void);
 
 #endif

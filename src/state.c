@@ -48,10 +48,10 @@ void init_state(void) {
 	if (get_window_size(&state.screen_rows, &state.screen_cols) == -1)
 		die("get_window_size failed");
 	state.screen_rows -= BOTTOM_MENU_HEIGHT;
-	state.render = vector_init(sizeof(wstring_t*), compare_equal);
-	vector_set_destructor(state.render, free_wstr);
+	state.render = vector_init(sizeof(string_t*), compare_equal);
+	vector_set_destructor(state.render, free_str);
 	for (int i = 0; i < state.screen_rows; i++){
-		wstring_t *wstr = wstr_empty();
+		string_t *wstr = str_empty();
 		vector_append(state.render, &wstr);
 	}
 
@@ -69,11 +69,12 @@ long get_time_since_start_ms(void) {
 }
 
 void editor_on_update(void) {
+        editor_log(LOG_INFO, "Update cycle");
         file_auto_save();
 }
 
 INLINE
-void change_current_buffer_filename(wchar_t *filename) {
+void change_current_buffer_filename(char *filename) {
         free(buffers.curr->filename);
         buffers.curr->filename = filename;
 }
