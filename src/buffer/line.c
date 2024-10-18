@@ -57,18 +57,30 @@ int line_cx_to_rx(wstring_t *line, int cx){
 	return rx;
 }
 
-void line_move_up(void){
+static void line_move_up(void){
 	if (buffers.curr->cy == 0) return;
 	vector_swap(buffers.curr->lines, buffers.curr->cy, buffers.curr->cy - 1);
 	buffers.curr->cy--;
 	buffers.curr->dirty++;
 }
 
-void line_move_down(void){
+static void line_move_down(void){
 	if (buffers.curr->cy == buffers.curr->num_lines - 1) return;
 	vector_swap(buffers.curr->lines, buffers.curr->cy, buffers.curr->cy + 1);
 	buffers.curr->cy++;
 	buffers.curr->dirty++;
+}
+
+int line_move(cursor_direction_t dir) {
+        switch (dir) {
+        case CURSOR_DIRECTION_UP:
+                line_move_up(); break;
+        case CURSOR_DIRECTION_DOWN:
+                line_move_down(); break;
+        default:
+                return -1;
+        }
+        return 1;
 }
 
 void line_put_char(int c){
@@ -88,21 +100,9 @@ void line_put_char(int c){
 	buffers.curr->dirty += n;
 }
 
-void line_delete_char_forward(void){
-	if (buffers.curr->cy == buffers.curr->num_lines)
-		return;
-	if (buffers.curr->cx == 0 && current_line_length() == 0){
-		vector_remove_at(buffers.curr->lines, buffers.curr->cy);
-		buffers.curr->num_lines--;
-	}else{
-		cursor_move(ARROW_RIGHT);
-		line_delete_char_backwards();
-	}
-}
-
-void line_delete_char_backwards(void){
+static void line_delete_char_backwards(void){
 	if (buffers.curr->cy == buffers.curr->num_lines){
-		cursor_move(ARROW_LEFT);
+		cursor_move(CURSOR_DIRECTION_LEFT);
 		return;
 	}
 	wstring_t *line;
@@ -116,38 +116,74 @@ void line_delete_char_backwards(void){
 		wstr_concat_wstr(up, line);
 		vector_remove_at(buffers.curr->lines, buffers.curr->cy);
 		buffers.curr->num_lines--;
-		cursor_move(ARROW_LEFT);
+		cursor_move(CURSOR_DIRECTION_LEFT);
 		buffers.curr->cx = new_x;
 	}
 	else if (buffers.curr->cx > 0 && (size_t)(buffers.curr->cx - 1) < wstr_length(line)){
 		wstr_remove_at(line, buffers.curr->cx - 1);
-		cursor_move(ARROW_LEFT);
+		cursor_move(CURSOR_DIRECTION_LEFT);
 	}
 	buffers.curr->dirty++;
 }
 
-void line_delete_word_forward(void){
+static void line_delete_char_forward(void){
+	if (buffers.curr->cy == buffers.curr->num_lines)
+		return;
+	if (buffers.curr->cx == 0 && current_line_length() == 0){
+		vector_remove_at(buffers.curr->lines, buffers.curr->cy);
+		buffers.curr->num_lines--;
+	}else{
+		cursor_move(CURSOR_DIRECTION_RIGHT);
+		line_delete_char_backwards();
+	}
+}
+
+int line_delete_char(cursor_direction_t dir) {
+        switch (dir) {
+        case CURSOR_DIRECTION_LEFT:
+                line_delete_char_backwards(); break;
+        case CURSOR_DIRECTION_RIGHT:
+                line_delete_char_forward(); break;
+        default:
+                return -1;
+        }
+        return 1;
+}
+
+static void line_delete_word_forward(void){
 	if ((size_t)buffers.curr->cx == current_line_length()){
 		line_delete_char_forward();
 		return;
 	}
 	int x = buffers.curr->cx;
-	cursor_jump_word(ARROW_RIGHT);
+	cursor_jump_word(CURSOR_DIRECTION_RIGHT);
 	int diff = buffers.curr->cx - x;
 	while (diff-- > 0)
 		line_delete_char_backwards();
 }
 
-void line_delete_word_backwards(void){
+static void line_delete_word_backwards(void){
 	if (buffers.curr->cx == 0){
 		line_delete_char_backwards();
 		return;
 	}
 	int x = buffers.curr->cx;
-	cursor_jump_word(ARROW_LEFT);
+	cursor_jump_word(CURSOR_DIRECTION_LEFT);
 	int diff = x - buffers.curr->cx;
 	while (diff-- > 0)
 		line_delete_char_forward();
+}
+
+int line_delete_word(cursor_direction_t dir) {
+        switch (dir) {
+        case CURSOR_DIRECTION_RIGHT:
+                line_delete_word_forward(); break;
+        case CURSOR_DIRECTION_LEFT:
+                line_delete_word_backwards(); break;
+        default:
+                return -1;
+        }
+        return 1;
 }
 
 void line_insert_newline(void){
@@ -254,4 +290,14 @@ void line_format(int cy){
 		int n = wstr_replace(line, tab_buffer, L"\t");
                 buffers.curr->cx -= n * (buffers.curr->conf.tab_size - 1);
 	}
+}
+
+INLINE
+void line_format_current(void) {
+        line_format(current_line_row());
+}
+
+INLINE
+int current_line_row(void) {
+        return buffers.curr->cy;
 }

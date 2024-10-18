@@ -9,6 +9,7 @@ void init_cmd(void);
 void init_file(void);
 void init_io(void);
 void init_log(void);
+void init_command(void);
 
 void init(void) {
         init_log();
@@ -18,6 +19,7 @@ void init(void) {
         init_buffer();
         init_cmd();
         init_file();
+        init_command();
 
         /* The atexit functions are executed in
          * reverse order. So if we want this to

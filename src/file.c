@@ -26,7 +26,9 @@ static linked_list_t *history;
 
 static void __cleanup_file(void) {
         CLEANUP_FUNC;
-        list_free(history);
+        IGNORE_ON_FAST_CLEANUP(
+                list_free(history);
+        )
 }
 
 void init_file(void) {
@@ -128,7 +130,7 @@ int _file_open(const wchar_t *filename) {
                 editor_set_status_message(L"Warning! You have opened a READ ONLY file");
 
 	// Discard any key press made while loading the file
-	while (editor_read_key() != NO_KEY)
+	while (editor_read_key().k != NO_KEY)
 		;
         editor_log(LOG_INFO, "Opened file: %s", mbfilename);
 

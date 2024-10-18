@@ -18,6 +18,8 @@ struct state state = {
 
 long start_time;
 
+key_ty last_c, c;
+
 static INLINE void __enter_alternative_buffer(void) {
 	wprintf(L"\x1b[?1049h");
 }
@@ -37,13 +39,17 @@ void editor_start_shutdown(void) {
 
 static void __cleanup_state(void) {
         CLEANUP_FUNC;
-	vector_free(state.render);
+        IGNORE_ON_FAST_CLEANUP (
+                vector_free(state.render);
+        )
 }
 
 void init_state(void) {
         start_time = get_time_millis();
 
         INIT_FUNC;
+
+        c = last_c = (key_ty) { .k = NO_KEY };
 
 	if (get_window_size(&state.screen_rows, &state.screen_cols) == -1)
 		die("get_window_size failed");
@@ -95,9 +101,7 @@ void editor_end(void) {
         exit(0);
 }
 
-int last_c = NO_KEY, c = NO_KEY;
-
-INLINE void received_key(int _c) {
+INLINE void received_key(key_ty _c) {
         last_c = c;
         c = _c;
 }
@@ -109,7 +113,7 @@ INLINE void updated_status_line(void) {
 }
 
 INLINE bool must_render_buffer(void) {
-        return c == NO_KEY && last_c != NO_KEY;
+        return c.k == NO_KEY && last_c.k != NO_KEY;
 }
 
 INLINE bool must_render_stateline(void) {

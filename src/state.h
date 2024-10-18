@@ -4,6 +4,7 @@
 #include <definitions.h>
 #include <time.h>
 #include <wchar.h>
+#include "console/io/keys.h"
 #include "vector.h"
 
 extern struct state {
@@ -21,7 +22,7 @@ void NORETURN die(const char *msg, const char *fname, int line, const char *func
 void NORETURN editor_end(void);
 void editor_start_shutdown(void);
 
-void received_key(int c);
+void received_key(key_ty c);
 void updated_status_line(void);
 bool must_render_buffer(void);
 bool must_render_stateline(void);

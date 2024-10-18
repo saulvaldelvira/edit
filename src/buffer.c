@@ -22,7 +22,9 @@ static void free_buffer(void *e){
 
 static void __cleanup_buffer(void){
         CLEANUP_FUNC;
-        vector_free(buffers_vec);
+        IGNORE_ON_FAST_CLEANUP(
+                vector_free(buffers_vec);
+        );
 }
 
 void init_buffer(void){
@@ -77,4 +79,9 @@ void buffer_switch(int index){
 		return;
 	buffers.curr_index = index;
         vector_at(buffers_vec, buffers.curr_index, &buffers.curr);
+}
+
+INLINE
+int buffer_current_index(void) {
+        return buffers.curr_index;
 }

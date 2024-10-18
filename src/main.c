@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
 	const int wait_timeout_ms = 30000;
 
 	for (;;){
-		int c = editor_read_key();
+		key_ty c = editor_read_key();
                 received_key(c);
 	       	editor_process_key_press(c);
 
@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
 			editor_refresh_screen(true);
 		}
 
-		if (c == NO_KEY){
+		if (c.k == NO_KEY){
                         editor_on_update();
 			// Wait for 30 seconds, or until input is available
 			if (wait_for_input(wait_timeout_ms))

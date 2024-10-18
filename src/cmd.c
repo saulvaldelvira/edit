@@ -10,7 +10,9 @@ static linked_list_t *history;
 
 static void __cleanup_cmd(void) {
         CLEANUP_FUNC;
-        list_free(history);
+        IGNORE_ON_FAST_CLEANUP(
+                list_free(history);
+        )
 }
 
 void init_cmd(void) {
