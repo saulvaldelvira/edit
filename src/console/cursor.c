@@ -25,13 +25,11 @@ void cursor_adjust(void){
                 buffers.curr->col_offset = buffers.curr->rx - state.screen_cols + 1;
 }
 
-
-int cursor_move(int key){
+int cursor_move(int direction){
 	wstring_t *row = current_line();
 
-	switch (key){
-        case CTRL_KEY('h'):
-	case ARROW_LEFT:
+	switch (direction){
+        case DIRECTION_LEFT:
 		if (buffers.curr->cx > 0){
 			buffers.curr->cx--;
 		}else if (buffers.curr->cy > 0){
@@ -39,8 +37,7 @@ int cursor_move(int key){
 			buffers.curr->cx = current_line_length();
 		}
 		break;
-        case CTRL_KEY('l'):
-	case ARROW_RIGHT:
+	case DIRECTION_RIGHT:
 		if (row && (size_t)buffers.curr->cx < wstr_length(row)){
 			buffers.curr->cx++;
 		}else if (row && (size_t)buffers.curr->cx == wstr_length(row)){
@@ -50,52 +47,53 @@ int cursor_move(int key){
 			buffers.curr->cx = 0;
 		}
 		break;
-        case CTRL_KEY('k'):
-	case ARROW_UP:
+	case DIRECTION_UP:
 		if (buffers.curr->cy > 0)
 			buffers.curr->cy--;
 		break;
-        case CTRL_KEY('j'):
-	case ARROW_DOWN:
+	case DIRECTION_DOWN:
 		if (buffers.curr->cy < buffers.curr->num_lines)
 			buffers.curr->cy++;
 		break;
-	case PAGE_UP:
-		if (buffers.curr->cy > buffers.curr->row_offset){
-			buffers.curr->cy = buffers.curr->row_offset;
-		}else{
-			buffers.curr->cy -= state.screen_rows;
-			buffers.curr->row_offset -= state.screen_rows;
-			if (buffers.curr->cy < 0)
-				buffers.curr->cy = 0;
-			if (buffers.curr->row_offset < 0)
-				buffers.curr->row_offset = 0;
-		}
-		break;
-	case PAGE_DOWN:
-		if (buffers.curr->cy < buffers.curr->row_offset + state.screen_rows - 1){
-			buffers.curr->cy = buffers.curr->row_offset + state.screen_rows - 1;
-			if (buffers.curr->cy >= buffers.curr->num_lines)
-				buffers.curr->cy = buffers.curr->num_lines - 1;
-		}else{
-			buffers.curr->cy += state.screen_rows;
-			buffers.curr->row_offset += state.screen_rows;
-			if (buffers.curr->cy >= buffers.curr->num_lines)
-				buffers.curr->cy = buffers.curr->num_lines - 1;
-			if (buffers.curr->row_offset >= buffers.curr->num_lines)
-				buffers.curr->row_offset = buffers.curr->num_lines - 1;
-
-		}
-		break;
-	case HOME_KEY:
+	case DIRECTION_START:
 		buffers.curr->cx = 0;
 		break;
-	case END_KEY:
+	case DIRECTION_END:
 		buffers.curr->cx = current_line_length();
 		break;
 	}
 	cursor_adjust();
 	return 1;
+}
+
+void cursor_page_up(void) {
+        if (buffers.curr->cy > buffers.curr->row_offset){
+                buffers.curr->cy = buffers.curr->row_offset;
+        }else{
+                buffers.curr->cy -= state.screen_rows;
+                buffers.curr->row_offset -= state.screen_rows;
+                if (buffers.curr->cy < 0)
+                        buffers.curr->cy = 0;
+                if (buffers.curr->row_offset < 0)
+                        buffers.curr->row_offset = 0;
+        }
+        cursor_adjust();
+}
+
+void cursor_page_down(void) {
+        if (buffers.curr->cy < buffers.curr->row_offset + state.screen_rows - 1){
+                buffers.curr->cy = buffers.curr->row_offset + state.screen_rows - 1;
+                if (buffers.curr->cy >= buffers.curr->num_lines)
+                        buffers.curr->cy = buffers.curr->num_lines - 1;
+        }else{
+                buffers.curr->cy += state.screen_rows;
+                buffers.curr->row_offset += state.screen_rows;
+                if (buffers.curr->cy >= buffers.curr->num_lines)
+                        buffers.curr->cy = buffers.curr->num_lines - 1;
+                if (buffers.curr->row_offset >= buffers.curr->num_lines)
+                        buffers.curr->row_offset = buffers.curr->num_lines - 1;
+        }
+        cursor_adjust();
 }
 
 void cursor_goto(int x, int y){

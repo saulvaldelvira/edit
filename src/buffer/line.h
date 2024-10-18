@@ -22,5 +22,7 @@ void line_cut(bool whole);
 void line_toggle_comment(void);
 void line_strip_trailing_spaces(int cy);
 void line_format(int cy);
+void line_format_current(void);
+int current_line_row(void);
 
 #endif

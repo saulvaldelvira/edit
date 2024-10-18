@@ -255,3 +255,13 @@ void line_format(int cy){
                 buffers.curr->cx -= n * (buffers.curr->conf.tab_size - 1);
 	}
 }
+
+INLINE
+void line_format_current(void) {
+        line_format(current_line_row());
+}
+
+INLINE
+int current_line_row(void) {
+        return buffers.curr->cy;
+}

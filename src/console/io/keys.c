@@ -106,3 +106,14 @@ int editor_read_key(void){
         return c;
 }
 
+const char* editor_get_key_repr(int key) {
+        switch (key) {
+        case CTRL_KEY('q'):
+                return "Ctrl + Q";
+        case CTRL_KEY('o'):
+                return "Ctrl + O";
+        case F5:
+                return "F5";
+        }
+        return "";
+}

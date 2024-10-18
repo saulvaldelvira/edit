@@ -17,6 +17,15 @@
 #define NORETURN
 #endif
 
+enum {
+        DIRECTION_UP = 1,
+        DIRECTION_RIGHT,
+        DIRECTION_DOWN,
+        DIRECTION_LEFT,
+        DIRECTION_START,
+        DIRECTION_END,
+};
+
 #define ONLY_ONCE(body) { \
         static bool __flag = false; \
         if (!__flag) { \

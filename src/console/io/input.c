@@ -1,3 +1,4 @@
+#include "command.h"
 #include "prelude.h"
 
 #include "input.h"
@@ -84,49 +85,11 @@ void editor_process_key_press(int c){
         }while(0)
 
 	switch (c){
-	case '\r':
-		line_insert_newline();
-		break;
-	case CTRL_KEY('q'):
-                confirm_action("Ctrl + Q", { buffer_drop(); } );
-		break;
-        case CTRL_KEY('k'):
-	case ARROW_UP:
-        case CTRL_KEY('j'):
-	case ARROW_DOWN:
-        case CTRL_KEY('h'):
-	case ARROW_LEFT:
-        case CTRL_KEY('l'):
-	case ARROW_RIGHT:
-	case PAGE_UP:
-	case PAGE_DOWN:
-	case HOME_KEY:
-	case END_KEY:
-		cursor_move(c);
-		break;
-	case CTRL_KEY('x'):
-		line_cut(true);
-		break;
 	case CTRL_KEY('s'):
 		file_save(false, true);
 		break;
-	case CTRL_KEY('o'):
-		confirm_action("Ctrl + O", { file_open(NULL); });
-		break;
-	case CTRL_KEY('f'):
-		line_format(buffers.curr->cy);
-		break;
-	case CTRL_KEY('n'):
-		buffer_insert();
-		break;
 	case ALT_KEY:
 		alt_key_process();
-		break;
-	case CTRL_ARROW_LEFT:
-		buffer_switch(buffers.curr_index - 1);
-		break;
-	case CTRL_ARROW_RIGHT:
-		buffer_switch(buffers.curr_index + 1);
 		break;
 	case CTRL_KEY('e'):
 		editor_cmd(NULL);
@@ -147,6 +110,9 @@ void editor_process_key_press(int c){
 	case '\x1b':
 		break;
 	default:
+                if (try_execute_action(c)) {
+                        break;
+                }
 		if (iswprint(c) || c == L'\t')
 			line_put_char(c);
 		break;
