@@ -61,7 +61,8 @@ init:
 		"CompileFlags: \n" \
 		"Add: [ -I$(shell pwd)/src/, " \
 		"-I$(shell pwd)/src/lib/GDS/include/ , " \
-		" -xc $(CLANGD_PLATFORM) ]" > .clangd
+		" -xc $(CLANGD_PLATFORM), " \
+		"-std=c23 ]" > .clangd
 
 clean:
 	@ rm -f $(EXECUTABLE) $(OFILES)

@@ -31,4 +31,10 @@
                 { body; } \
         } else { editor_log(LOG_WARN, "Reached region marked as ONLY ONCE. At %s", __func__);  } }
 
+#ifdef FAST_CLEANUP
+#define IGNORE_ON_FAST_CLEANUP(body)
+#else
+#define IGNORE_ON_FAST_CLEANUP(body)  body
+#endif
+
 #endif

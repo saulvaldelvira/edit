@@ -26,7 +26,9 @@ static linked_list_t *history;
 
 static void __cleanup_file(void) {
         CLEANUP_FUNC;
-        list_free(history);
+        IGNORE_ON_FAST_CLEANUP(
+                list_free(history);
+        )
 }
 
 void init_file(void) {
@@ -99,7 +101,7 @@ int _file_open(const wchar_t *filename) {
         bool newline = false;
         while ((c = getwc(f)) != WEOF){
                 if (newline) {
-                        line_insert_newline();
+                        line_put_char('\n');
                         newline = false;
                 }
 
@@ -128,7 +130,7 @@ int _file_open(const wchar_t *filename) {
                 editor_set_status_message(L"Warning! You have opened a READ ONLY file");
 
 	// Discard any key press made while loading the file
-	while (editor_read_key() != NO_KEY)
+	while (editor_read_key().k != NO_KEY)
 		;
         editor_log(LOG_INFO, "Opened file: %s", mbfilename);
 
@@ -149,7 +151,7 @@ int file_open(const wchar_t *filename) {
         return SUCCESS;
 }
 
-static void __print_filesave(double len, char *filename, bool auto_save) {
+static void __print_filesave(double len, char *filename, unsigned long n_lines, bool auto_save) {
 	char *magnitudes[] = {"bytes", "KiB", "MiB", "GiB"};
 	double value = len;
 	size_t magnitude = 0;
@@ -160,10 +162,10 @@ static void __print_filesave(double len, char *filename, bool auto_save) {
         int n_decimal = magnitude > 0 ? 1 : 0;
         char *auto_save_msg = auto_save ? "AUTO SAVE: " : "";
         if (!auto_save) {
-                editor_set_status_message(L"%s%.*f %s written to: %s", auto_save_msg,
+                editor_set_status_message(L" %lluL %s%.*f %s written to: %s", n_lines, auto_save_msg,
                                 n_decimal, value, magnitudes[magnitude], filename);
         }
-        editor_log(LOG_INFO, "%s%.*f %s written to: %s", auto_save_msg,
+        editor_log(LOG_INFO, " %lluL %s%.*f %s written to: %s", n_lines, auto_save_msg,
                              n_decimal, value, magnitudes[magnitude], filename);
 }
 
@@ -239,7 +241,7 @@ int file_save(bool only_tmp, bool ask_filename){
 
 
 	if (only_tmp) {
-                __print_filesave(len, tmp_filename, true);
+                __print_filesave(len, tmp_filename, buffers.curr->num_lines, true);
                 goto cleanup;
         }
 
@@ -279,7 +281,7 @@ int file_save(bool only_tmp, bool ask_filename){
                 goto cleanup;
 	}
 
-        __print_filesave(len, filename, false);
+        __print_filesave(len, filename, buffers.curr->num_lines, false);
 	buffers.curr->dirty = 0;
 
 cleanup:

@@ -1,4 +1,5 @@
 #include "prelude.h"
+#include "api.h"
 
 #include "input.h"
 #include "init.h"
@@ -31,128 +32,6 @@ void init_input(void) {
         INIT_FUNC;
         response = wstr_empty();
         atexit(__cleanup_input);
-}
-
-static void alt_key_process(void){
-	switch (alt_key){
-	case L'h':
-		editor_help(); break;
-	case L'c':
-		line_toggle_comment(); break;
-	case L's':
-		editor_cmd(L"search"); break;
-	case L'r':
-		editor_cmd(L"replace"); break;
-	case L'k':
-		line_cut(false); break;
-	case 'A': // Alt + UP
-		line_move_up(); break;
-	case 'B': // Alt + DOWN
-		line_move_down(); break;
-	case 'C': // Alt + LEFT
-		cursor_jump_word(ARROW_RIGHT); break;
-	case 'D': // Alt + RIGHT
-		cursor_jump_word(ARROW_LEFT); break;
-	case 127: // Backspace
-		line_delete_word_backwards(); break;
-	case DEL_KEY:
-		line_delete_word_forward(); break;
-	default: break;
-	}
-	for (int i = 1; i <= 9; i++){
-		if ((wchar_t)(i + '0') == alt_key){
-			buffer_switch(i - 1);
-			return;
-		}
-	}
-}
-
-void editor_process_key_press(int c){
-	static int quit_times;
-#define confirm_action(key, body)                                                        \
-        do{                                                                              \
-                if (buffers.curr->dirty && quit_times > 0){                              \
-                        editor_set_status_message(L"WARNING! File has unsaved changes. " \
-                                                  L"Press %s %d more times to quit.",    \
-                                                  key, quit_times);                      \
-                        quit_times--;                                                    \
-                        return;                                                          \
-                }else if (quit_times == 0) {                                             \
-                        editor_set_status_message(L"");                                  \
-                }                                                                        \
-                body                                                                     \
-        }while(0)
-
-	switch (c){
-	case '\r':
-		line_insert_newline();
-		break;
-	case CTRL_KEY('q'):
-                confirm_action("Ctrl + Q", { buffer_drop(); } );
-		break;
-        case CTRL_KEY('k'):
-	case ARROW_UP:
-        case CTRL_KEY('j'):
-	case ARROW_DOWN:
-        case CTRL_KEY('h'):
-	case ARROW_LEFT:
-        case CTRL_KEY('l'):
-	case ARROW_RIGHT:
-	case PAGE_UP:
-	case PAGE_DOWN:
-	case HOME_KEY:
-	case END_KEY:
-		cursor_move(c);
-		break;
-	case CTRL_KEY('x'):
-		line_cut(true);
-		break;
-	case CTRL_KEY('s'):
-		file_save(false, true);
-		break;
-	case CTRL_KEY('o'):
-		confirm_action("Ctrl + O", { file_open(NULL); });
-		break;
-	case CTRL_KEY('f'):
-		line_format(buffers.curr->cy);
-		break;
-	case CTRL_KEY('n'):
-		buffer_insert();
-		break;
-	case ALT_KEY:
-		alt_key_process();
-		break;
-	case CTRL_ARROW_LEFT:
-		buffer_switch(buffers.curr_index - 1);
-		break;
-	case CTRL_ARROW_RIGHT:
-		buffer_switch(buffers.curr_index + 1);
-		break;
-	case CTRL_KEY('e'):
-		editor_cmd(NULL);
-		break;
-	case DEL_KEY:
-		line_delete_char_forward();
-		break;
-	case BACKSPACE:
-		line_delete_char_backwards();
-		break;
-	case F5:
-		if (buffers.curr->filename){
-			confirm_action("F5", { file_reload(); });
-		}
-		break;
-        case NO_KEY:
-                return;
-	case '\x1b':
-		break;
-	default:
-		if (iswprint(c) || c == L'\t')
-			line_put_char(c);
-		break;
-	}
-	quit_times = conf.quit_times;
-	cursor_adjust();
 }
 
 static inline int __replace_with(wstring_t *wstr, wchar_t *new) {
@@ -189,7 +68,7 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
 		wprintf(L"\x1b[%d;%zuH", state.screen_rows + 2, base_x + x + 1);
 		fflush(stdout);
 
-		c = editor_read_key();
+		c = editor_read_key().k;
 
 		switch (c)
 		{

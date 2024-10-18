@@ -11,5 +11,6 @@
 #include <platform.h>
 #include <state.h>
 #include <definitions.h>
+#include <stdbool.h>
 
 #endif

@@ -28,6 +28,7 @@ void buffer_insert(void);
 void buffer_clear(void);
 void buffer_drop(void);
 void buffer_switch(int index);
+int  buffer_current_index(void);
 struct buffer* buffer_at(int index);
 
 #define foreach_buffer(op) do { \

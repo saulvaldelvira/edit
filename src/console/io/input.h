@@ -6,7 +6,6 @@
 #include "keys.h"
 #include "linked_list.h"
 
-void editor_process_key_press(int c);
 const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, linked_list_t *history);
 bool editor_ask_confirmation(void);
 

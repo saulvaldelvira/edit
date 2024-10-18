@@ -10,6 +10,4 @@ void file_reload(void);
 int file_save(bool only_tmp, bool ask_filename);
 char* get_tmp_filename(void);
 
-void init_file(void);
-
 #endif
