@@ -5,6 +5,7 @@
 #include "log.h"
 #include "prelude.h"
 #include "util.h"
+#include "macros.h"
 
 static linked_list_t *history;
 
@@ -27,7 +28,6 @@ void cmd_replace(wchar_t **args);
 void cmd_goto(wchar_t **args);
 void cmd_set(wchar_t **args, bool local);
 
-
 static wchar_t **args;
 static wstring_t *cmdstr;
 
@@ -44,7 +44,6 @@ void editor_cmd(const wchar_t *command){
                 command = editor_prompt(L"Execute command", NULL, history);
                 if (!command || wstrlen(command) == 0){
                         editor_set_status_message(L"");
-                        wstr_free(cmdstr);
                         return;
                 }
         }
@@ -126,6 +125,23 @@ void editor_cmd(const wchar_t *command){
         }
         else if (wcscmp(cmd, L"log") == 0){
                 view_log_buffer();
+        }
+        else if (wcscmp(cmd, L"rec") == 0){
+                if (!args[1]) {
+                        editor_set_status_message(L"Missing argument for 'rec'");
+                } else {
+                        macro_start(args[1]);
+                }
+        }
+        else if (wcscmp(cmd, L"play") == 0){
+                if (!args[1]) {
+                        editor_set_status_message(L"Missing argument for 'play'");
+                } else {
+                        macro_play(args[1]);
+                }
+        }
+        else if (wcscmp(cmd, L"endrec") == 0){
+                macro_end();
         }
         else {
                 editor_set_status_message(L"Invalid command [%ls]", cmd);

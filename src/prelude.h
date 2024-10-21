@@ -12,5 +12,6 @@
 #include <state.h>
 #include <definitions.h>
 #include <stdbool.h>
+#include "api.h"
 
 #endif

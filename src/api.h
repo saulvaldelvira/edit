@@ -10,6 +10,7 @@ typedef struct command_arg {
                 CMD_ARG_T_BOOL,
                 CMD_ARG_T_CHAR,
                 CMD_ARG_T_PTR,
+                CMD_ARG_T_KEY_TY,
                 CMD_ARG_T_END,
         } type;
         union {
@@ -17,6 +18,7 @@ typedef struct command_arg {
                 bool b;
                 char c;
                 void *ptr;
+                key_ty key;
         };
 } command_arg_t;
 
@@ -41,5 +43,7 @@ void register_default_handler(default_handler_t h);
 void register_mapping(key_ty key, int confirm_times, command_func_t f, command_arg_t *args);
 
 int try_execute_action(key_ty key);
+
+int run_command(command_t cmd);
 
 #endif /* __API_H__ */

@@ -1,6 +1,7 @@
 #include "buffer/line.h"
 #include "cmd.h"
 #include "file.h"
+#include "macros.h"
 #include "prelude.h"
 #include "console/io.h"
 #include "api.h"
@@ -83,14 +84,16 @@ void register_default_handler(default_handler_t h) {
                 int:  CMD_ARG_T_INT, \
                 bool: CMD_ARG_T_BOOL, \
                 char: CMD_ARG_T_CHAR, \
-                void*: CMD_ARG_T_PTR \
+                void*: CMD_ARG_T_PTR, \
+                key_ty: CMD_ARG_T_KEY_TY \
                 )
 
 #define __get_type_variant(base,t) _Generic((t), \
                 int:  base . i, \
                 bool: base . b, \
                 char: base . c, \
-                void*: base . ptr \
+                void*: base . ptr, \
+                key_ty: base . key \
                 )
 
 #define check_type(t) if (args[_i].type != __get_type_flag(t)) { die("Error!");  return -1; };
@@ -434,10 +437,25 @@ void init_command(void) {
 	}
 }
 
-static int __try_execute_action(key_ty key) {
-        if (key.k == NO_KEY)
-                return 1;
+__api_func1(
+        api_default_handler,
+        key_ty, key,
+{
+        return default_handler(key);
+})
 
+command_t __dup_command(command_t *command) {
+        command_t cmd = {
+                .args = command->nargs > 0 ? malloc(command->nargs * sizeof(command_arg_t)) : NULL,
+                .nargs = command->nargs,
+                .func = command->func,
+        };
+        for (int i = 0; i < cmd.nargs; i++)
+                cmd.args[i] = command->args[i];
+        return cmd;
+}
+
+static int __try_get_action(key_ty key, command_t *out) {
         static int confirming_map = -1;
         static int n_confirms = 0;
 
@@ -459,26 +477,51 @@ static int __try_execute_action(key_ty key) {
                                                         L"Press %s %d more times to quit.",
                                                         editor_get_key_repr(key),
                                                         map.confirm_times - n_confirms);
-                                        return 1;
+                                        return 2;
                                 }
                         }
 
                         command_t cmd;
                         vector_at(commands_vec, map.cmd_id, &cmd);
-                        return cmd.func(cmd.nargs, cmd.args);
+                        *out = cmd;
+                        return 1;
+                        /* return cmd.func(cmd.nargs, cmd.args); */
                 }
         }
 
         n_confirms = 0;
 
-        if (default_handler)
-                return default_handler(key);
+        static command_arg_t args[1] = {0};
+        static command_t def_cmd = {
+                .func = api_default_handler,
+                .nargs = 1,
+                .args =  args,
+        };
 
+        if (default_handler) {
+                args[0] = (command_arg_t) { .key = key, .type = CMD_ARG_T_KEY_TY };
+                *out = def_cmd;
+                return 1;
+        }
         return 0;
 }
 
 int try_execute_action(key_ty key) {
-        int ret = __try_execute_action(key);
-        cursor_adjust();
-        return ret;
+        if (key.k == NO_KEY)
+                return 1;
+        command_t cmd = {0};
+        int ret = __try_get_action(key, &cmd);
+        if (ret == 1) {
+                ret = run_command(cmd);
+                cursor_adjust();
+                if (macro_is_recording()) {
+                        macro_track_command(__dup_command(&cmd));
+                }
+        }
+        return ret ? SUCCESS : FAILURE;
+}
+
+INLINE
+int run_command(command_t cmd) {
+        return cmd.func(cmd.nargs, cmd.args);
 }

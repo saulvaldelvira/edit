@@ -7,6 +7,8 @@
         else editor_log(LOG_INFO, "SHUTDOWN: %s", __func__); \
         _flag = true; } while (0)
 
+#include <log.h>
+
 #define INIT_FUNC do { \
         editor_log(LOG_INFO,"INIT: %s", __func__); } while (0)
 
