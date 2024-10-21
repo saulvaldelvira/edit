@@ -10,8 +10,6 @@ enum editor_key {
 	ARROW_RIGHT,
 	ARROW_UP,
 	ARROW_DOWN,
-	CTRL_ARROW_LEFT,
-	CTRL_ARROW_RIGHT,
 	PAGE_UP,
 	PAGE_DOWN,
 	HOME_KEY,
@@ -39,6 +37,7 @@ typedef struct key {
 
 #define KEY(kv) (key_ty) { .k = kv }
 #define KEY_ALT(kv) (key_ty) { .k = kv, .modif = KEY_MODIF_ALT }
+#define KEY_CTRL(kv) (key_ty) { .k = kv, .modif = KEY_MODIF_CTRL }
 
 key_ty editor_read_key(void);
 

@@ -1,6 +1,8 @@
 #include <prelude.h>
 #include "keys.h"
 #include "log.h"
+#include <stdio.h>
+#include <string.h>
 #include <wctype.h>
 #include "poll.h"
 
@@ -73,10 +75,10 @@ static key_ty keycode_seq(void) {
         }
         switch (keycode) {
         case 'C':
-                if (ctrl) return KEY(CTRL_ARROW_RIGHT);
+                if (ctrl) return KEY_CTRL(ARROW_RIGHT);
                 else return KEY(ARROW_RIGHT);
         case 'D':
-                if (ctrl) return KEY(CTRL_ARROW_LEFT);
+                if (ctrl) return KEY_CTRL(ARROW_LEFT);
                 else return KEY(ARROW_LEFT);
         }
         return KEY('\x1b');
@@ -100,13 +102,34 @@ static int single_shift_three(void) {
         return '\x1b';
 }
 
+static key_ty __single_key(wint_t c) {
+        bool is_ctrl = c <= CTRL_KEY('_');
+        is_ctrl &=    c != '\r'    /* \r => ^M */
+                   && c != '\t';   /* \t => ^I */
+        if (is_ctrl) {
+                c += 64;
+                return (key_ty) {
+                        .k = c,
+                        .modif = KEY_MODIF_CTRL,
+                };
+        }
+        return (key_ty){
+                .k = c,
+                .modif = KEY_MODIF_NORMAL,
+        };
+}
+
 static key_ty __editor_read_key(bool *is_seq){
         static wint_t c;
         if (!try_read_char(&c))
                 return KEY(NO_KEY);
         if (c != L'\x1b') {
-                editor_log(LOG_INPUT,"Received character: %d '%lc'", c, c);
-                return KEY(c);
+                if (iswprint(c))
+                        editor_log(LOG_INPUT,"Received character: %d '%lc'", c, c);
+                else
+                        editor_log(LOG_INPUT,"Received character: %d", c);
+
+                return __single_key(c);
         }
         for (int i = 0; i < 5; i++) {
                 if (!try_read_char(&seq[i]))
@@ -134,13 +157,21 @@ key_ty editor_read_key(void){
 }
 
 const char* editor_get_key_repr(key_ty key) {
+#define N 50
+        static char buf[N];
+        buf[0] = '\0';
+        char *firstbuf = "";
+        if (key.modif == KEY_MODIF_CTRL)
+                firstbuf = "Ctrl + ";
+        if (key.modif == KEY_MODIF_ALT)
+                firstbuf = "Alt + ";
+
         switch (key.k) {
-        case CTRL_KEY('q'):
-                return "Ctrl + Q";
-        case CTRL_KEY('o'):
-                return "Ctrl + O";
         case F5:
-                return "F5";
+                snprintf(buf, N, "%sF5", firstbuf); break;
+        default:
+                snprintf(buf, N, "%s%c", firstbuf, key.k); break;
+
         }
-        return "";
+        return buf;
 }

@@ -75,6 +75,7 @@ void register_default_handler(default_handler_t h) {
 
 #define map_modif(key, m, f, ...) map_confirm_modif(key, 0, m, f, __VA_ARGS__)
 #define map_alt(key, f, ...) map_confirm_modif(key, 0, KEY_MODIF_ALT, f, __VA_ARGS__)
+#define map_ctrl(key, f, ...) map_confirm_modif(key, 0, KEY_MODIF_CTRL, f, __VA_ARGS__)
 
 /* #define map_func(key, ...) map_func_confirm(key, 0, __VA_ARGS__) */
 
@@ -258,13 +259,13 @@ void init_command(void) {
                         arg_int(1) \
                 ));\
         __register_mapping((key_ty){ .k = ARROW_ ## dir }, 0, cmd);\
-        __register_mapping((key_ty) { .k = CTRL_KEY(kc) }, 0, cmd);\
+        __register_mapping((key_ty) { .k = kc, .modif = KEY_MODIF_CTRL }, 0, cmd);\
 }
 
-        direction_cmd('l', RIGHT);
-        direction_cmd('h', LEFT);
-        direction_cmd('k', UP);
-        direction_cmd('j', DOWN);
+        direction_cmd('L', RIGHT);
+        direction_cmd('H', LEFT);
+        direction_cmd('K', UP);
+        direction_cmd('J', DOWN);
 
         map(HOME_KEY,
            api_move_cursor,
@@ -287,57 +288,62 @@ void init_command(void) {
         );
 
 
-        map(
-            CTRL_KEY('x'),
+        map_ctrl(
+            'x',
             api_line_cut,
             arg_bool(true)
         );
 
-        map_confirm(
-                CTRL_KEY('q'),
+        map_confirm_modif(
+                'Q',
                 3,
+                KEY_MODIF_CTRL,
                 api_buffer_drop,
                 args_end
         );
 
-        map_confirm(
-                CTRL_KEY('o'),
+        map_confirm_modif(
+                'O',
                 3,
+                KEY_MODIF_CTRL,
                 api_file_open,
                 arg_ptr(NULL)
         );
 
-        map_confirm(
-                CTRL_KEY('f'),
+        map_confirm_modif(
+                'F',
                 3,
+                KEY_MODIF_CTRL,
                 api_line_format,
                 args_end
         );
 
-        map(CTRL_KEY('n'), api_buffer_insert);
+        map_ctrl('N', api_buffer_insert);
 
-        map(
-                CTRL_ARROW_LEFT,
+        map_ctrl(
+                ARROW_LEFT,
                 api_buffer_switch,
                 arg_bool(true),
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
-        map(
-                CTRL_ARROW_RIGHT,
+        map_ctrl(
+                ARROW_RIGHT,
                 api_buffer_switch,
                 arg_bool(true),
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
 
-        map(
-                CTRL_KEY('e'),
+        map_modif(
+                'E',
+                KEY_MODIF_CTRL,
                 api_cmd_run,
                 arg_ptr(NULL)
         );
 
-        map(
-                CTRL_KEY('s'),
+        map_modif(
+                'S',
+                KEY_MODIF_CTRL,
                 api_file_save,
                 arg_bool(false),
                 arg_bool(true)

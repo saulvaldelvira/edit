@@ -68,7 +68,10 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
 		wprintf(L"\x1b[%d;%zuH", state.screen_rows + 2, base_x + x + 1);
 		fflush(stdout);
 
-		c = editor_read_key().k;
+                key_ty key = editor_read_key();
+		c = key.k;
+                if (key.modif & KEY_MODIF_CTRL)
+                        c -= 64;
 
 		switch (c)
 		{
@@ -76,7 +79,6 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
 		case '\x1b':
                         break;
 		case DEL_KEY:
-		case CTRL_KEY(L'h'):
 		case BACKSPACE:
 			if (c == DEL_KEY){
 				if (x < wstr_length(response))
@@ -92,10 +94,12 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
 		case '\r':
                         end = true;
                         break;
+		case CTRL_KEY(L'h'):
 		case ARROW_LEFT:
 			if (x > 0)
 				x--;
 			break;
+		case CTRL_KEY(L'l'):
 		case ARROW_RIGHT:
 			if (x < wstr_length(response))
 				x++;
