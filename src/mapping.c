@@ -1,9 +1,9 @@
+#include "prelude.h"
 #include "buffer/line.h"
 #include "cmd.h"
 #include "file.h"
-#include "prelude.h"
 #include "console/io.h"
-#include "api.h"
+#include "mapping.h"
 #include "console/cursor.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -13,13 +13,13 @@
 static vector_t *mappings_vec;
 static vector_t *commands_vec;
 
-int __api_insert_key(key_ty c) {
+int __mapping_insert_key(key_ty c) {
         if (is_key_printable(c))
                 line_put_char(c.k);
         return SUCCESS;
 }
 
-static default_handler_t default_handler = __api_insert_key;
+static default_handler_t default_handler = __mapping_insert_key;
 
 #define arg_int(val) (command_arg_t) { .i = val, .type = CMD_ARG_T_INT }
 #define arg_bool(val) (command_arg_t) { .b = val, .type = CMD_ARG_T_BOOL }
@@ -119,22 +119,22 @@ void register_default_handler(default_handler_t h) {
 
 #define __args(n, ...) __unwrap_args(n __VA_OPT__( , __VA_ARGS__) )
 
-#define __api_func(name, pre, body) \
+#define __mapping_func(name, pre, body) \
 int name (int nargs, command_arg_t *args) { \
         pre; \
         body; \
         return 1; \
 }
 
-#define __api_func1(name, t, n, body) __api_func(name, __args(1, t, n), body)
-#define __api_func2(name, t, n, t2, n2, body) __api_func(name, __args(2, t, n, t2, n2), body)
+#define __mapping_func1(name, t, n, body) __mapping_func(name, __args(1, t, n), body)
+#define __mapping_func2(name, t, n, t2, n2, body) __mapping_func(name, __args(2, t, n, t2, n2), body)
 
-#define __api_func_call(name, callee) __api_func(name, __args(0), { callee(); })
+#define __mapping_func_call(name, callee) __mapping_func(name, __args(0), { callee(); })
 
-#define __api_func_void(name, body) __api_func(name, __args(0), body)
+#define __mapping_func_void(name, body) __mapping_func(name, __args(0), body)
 
-__api_func(
-        api_move_cursor,
+__mapping_func(
+        map_move_cursor,
         __args(2, int, direction, int, n),
 {
         while (n-- > 0) {
@@ -142,27 +142,27 @@ __api_func(
         }
 })
 
-__api_func1(
-        api_line_cut,
+__mapping_func1(
+        map_line_cut,
         bool, whole,
         line_cut(whole);
 )
 
-__api_func_void(api_line_format, {
+__mapping_func_void(map_line_format, {
         line_format(current_line_row());
 })
 
-__api_func_call(api_buffer_drop, buffer_drop)
+__mapping_func_call(map_buffer_drop, buffer_drop)
 
-__api_func1 (
-        api_file_open,
+__mapping_func1 (
+        map_file_open,
         void*, name,
 
         file_open(name)
 )
 
-__api_func2(
-        api_buffer_switch,
+__mapping_func2(
+        map_buffer_switch,
         bool, relative,
         int, direction,
 {
@@ -182,47 +182,47 @@ __api_func2(
         }
 })
 
-__api_func1(
-        api_cmd_run,
+__mapping_func1(
+        map_cmd_run,
         void*, cmd,
         editor_cmd(cmd);
 )
 
-__api_func_call(api_buffer_insert, buffer_insert)
-__api_func_call(api_help, editor_help)
-__api_func_call(api_line_toggle_comment, line_toggle_comment)
-__api_func_call(api_file_reload, file_reload)
+__mapping_func_call(map_buffer_insert, buffer_insert)
+__mapping_func_call(map_help, editor_help)
+__mapping_func_call(map_line_toggle_comment, line_toggle_comment)
+__mapping_func_call(map_file_reload, file_reload)
 
-__api_func1(
-        api_line_move,
+__mapping_func1(
+        map_line_move,
         int, direction,
 {
       return line_move(direction);
 })
 
-__api_func1(
-        api_cursor_jump_word,
+__mapping_func1(
+        map_cursor_jump_word,
         int, direction,
 {
       return cursor_jump_word(direction);
 })
 
-__api_func1(
-        api_cursor_delete_word,
+__mapping_func1(
+        map_cursor_delete_word,
         int, direction,
 {
         return line_delete_word(direction);
 })
 
-__api_func1(
-        api_cursor_delete_char,
+__mapping_func1(
+        map_cursor_delete_char,
         int, direction,
 {
         return line_delete_char(direction);
 })
 
-__api_func2(
-        api_file_save,
+__mapping_func2(
+        map_file_save,
         bool, only_tmp,
         bool, ask_filename,
 
@@ -242,7 +242,7 @@ void __cleanup_command(void) {
 }
 
 
-void init_command(void) {
+void init_mapping(void) {
         atexit(__cleanup_command);
 
         commands_vec = vector_init(sizeof(command_t), compare_equal);
@@ -253,7 +253,7 @@ void init_command(void) {
 
 #define direction_cmd(kc, dir) {\
         int cmd = \
-        __register_cmd(api_move_cursor, \
+        __register_cmd(map_move_cursor, \
                 __cmd_args( \
                         arg_int(CURSOR_DIRECTION_ ## dir),\
                         arg_int(1) \
@@ -268,29 +268,29 @@ void init_command(void) {
         direction_cmd('J', DOWN);
 
         map(HOME_KEY,
-           api_move_cursor,
+           map_move_cursor,
            arg_int(CURSOR_DIRECTION_START)
         );
 
         map(END_KEY,
-           api_move_cursor,
+           map_move_cursor,
            arg_int(CURSOR_DIRECTION_END)
         );
 
         map(PAGE_UP,
-            api_move_cursor,
+            map_move_cursor,
             arg_int(CURSOR_DIRECTION_PAGE_UP)
         );
 
         map(PAGE_DOWN,
-            api_move_cursor,
+            map_move_cursor,
             arg_int(CURSOR_DIRECTION_PAGE_DOWN)
         );
 
 
         map_ctrl(
             'x',
-            api_line_cut,
+            map_line_cut,
             arg_bool(true)
         );
 
@@ -298,7 +298,7 @@ void init_command(void) {
                 'Q',
                 3,
                 KEY_MODIF_CTRL,
-                api_buffer_drop,
+                map_buffer_drop,
                 args_end
         );
 
@@ -306,7 +306,7 @@ void init_command(void) {
                 'O',
                 3,
                 KEY_MODIF_CTRL,
-                api_file_open,
+                map_file_open,
                 arg_ptr(NULL)
         );
 
@@ -314,22 +314,22 @@ void init_command(void) {
                 'F',
                 3,
                 KEY_MODIF_CTRL,
-                api_line_format,
+                map_line_format,
                 args_end
         );
 
-        map_ctrl('N', api_buffer_insert);
+        map_ctrl('N', map_buffer_insert);
 
         map_ctrl(
                 ARROW_LEFT,
-                api_buffer_switch,
+                map_buffer_switch,
                 arg_bool(true),
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
         map_ctrl(
                 ARROW_RIGHT,
-                api_buffer_switch,
+                map_buffer_switch,
                 arg_bool(true),
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
@@ -337,14 +337,14 @@ void init_command(void) {
         map_modif(
                 'E',
                 KEY_MODIF_CTRL,
-                api_cmd_run,
+                map_cmd_run,
                 arg_ptr(NULL)
         );
 
         map_modif(
                 'S',
                 KEY_MODIF_CTRL,
-                api_file_save,
+                map_file_save,
                 arg_bool(false),
                 arg_bool(true)
         );
@@ -352,82 +352,82 @@ void init_command(void) {
 
         map(
                 DEL_KEY,
-                api_cursor_delete_char,
+                map_cursor_delete_char,
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
 
         map(
                 BACKSPACE,
-                api_cursor_delete_char,
+                map_cursor_delete_char,
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
         map_confirm(
                 F5,
                 3,
-                api_file_reload
+                map_file_reload
         );
 
-        map_alt('h', api_help );
-        map_alt('c', api_line_toggle_comment );
+        map_alt('h', map_help);
+        map_alt('c', map_line_toggle_comment);
         map_alt(
                 's',
-                api_cmd_run,
+                map_cmd_run,
                 arg_ptr(L"search")
        );
 
         map_alt(
                 's',
-                api_cmd_run,
+                map_cmd_run,
                 arg_ptr(L"replace")
        );
 
         map_alt(
                 'k',
-                api_line_cut,
+                map_line_cut,
                 arg_bool(false)
        );
 
         map_alt(
                 ARROW_UP,
-                api_line_move,
+                map_line_move,
                 arg_int(CURSOR_DIRECTION_UP)
         );
 
         map_alt(
                 ARROW_DOWN,
-                api_line_move,
+                map_line_move,
                 arg_int(CURSOR_DIRECTION_DOWN)
         );
 
         map_alt(
                 ARROW_LEFT,
-                api_cursor_jump_word,
+                map_cursor_jump_word,
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
         map_alt(
                 ARROW_RIGHT,
-                api_cursor_jump_word,
+                map_cursor_jump_word,
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
 
         map_alt(
                 BACKSPACE,
-                api_cursor_delete_word,
+                map_cursor_delete_word,
                 arg_int(CURSOR_DIRECTION_LEFT)
        );
 
         map_alt(
                 DEL_KEY,
-                api_cursor_delete_word,
+                map_cursor_delete_word,
                 arg_int(CURSOR_DIRECTION_RIGHT)
        );
 
 	for (int i = 1; i <= 9; i++){
                 map_alt(
                         (i + '0'),
-                        api_buffer_switch,
+                        map_buffer_switch,
                         arg_bool(false),
                         arg_int(i)
                );
