@@ -49,7 +49,8 @@ void init_state(void) {
 
         INIT_FUNC;
 
-        c = last_c = (key_ty) { .k = NO_KEY };
+        c = (key_ty) { .k = NO_KEY };
+        last_c = (key_ty) { .k = 'K' };
 
 	if (get_window_size(&state.screen_rows, &state.screen_cols) == -1)
 		die("get_window_size failed");

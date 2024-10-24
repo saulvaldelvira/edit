@@ -117,6 +117,11 @@ void cursor_goto(int x, int y){
 		buffers.curr->cx = (int)len;
 }
 
+INLINE
+void cursor_goto_start(void) {
+        cursor_goto(0,0);
+}
+
 int cursor_jump_word(cursor_direction_t dir){
         if (dir != CURSOR_DIRECTION_LEFT && dir != CURSOR_DIRECTION_RIGHT)
                 return -1;

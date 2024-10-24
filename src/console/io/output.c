@@ -16,8 +16,13 @@ static void editor_draw_rows(wstring_t *buf);
 static void editor_draw_status_bar(wstring_t *buf);
 static void editor_draw_message_bar(wstring_t *buf);
 
-static void cleanup(void){
+static void __cleanup_io_output(void){
 	wstr_free(buf);
+}
+
+void init_io_output(void) {
+        buf = wstr_empty();
+        atexit(__cleanup_io_output);
 }
 
 static int check_window_size(void){
@@ -57,12 +62,7 @@ static void move_cursor(int x, int y, bool respect_linenr){
         wstr_concat_cwstr(buf, move_cursor_buf, ARRAY_SIZE(move_cursor_buf));
 }
 
-void editor_refresh_screen(bool only_status_bar){
-	if (!buf){
-		buf = wstr_empty();
-		atexit(cleanup);
-	}
-
+void __editor_refresh_screen(bool only_status_bar){
 	if (check_window_size() != 0)
 		only_status_bar = false;
 
@@ -88,6 +88,18 @@ void editor_refresh_screen(bool only_status_bar){
 	wprintf(L"%ls", wstr_get_buffer(buf));
 	fflush(stdout);
 	wstr_clear(buf);
+}
+
+void editor_render_screen(void){
+        /* The first time this function is
+         * called, refresh the whole screen */
+        ONLY_ONCE( __editor_refresh_screen(false) );
+
+        if (must_render_buffer()){
+                __editor_refresh_screen(false);
+        }else if (must_render_stateline()){
+                __editor_refresh_screen(true);
+        }
 }
 
 static void print_welcome_msg(wstring_t *buf){
@@ -207,6 +219,7 @@ void editor_set_status_message(const wchar_t *fmt, ...){
 	vswprintf(state.status_msg, ARRAY_SIZE(state.status_msg), fmt, ap);
 	va_end(ap);
 	state.status_msg_time = time(NULL);
+        __editor_refresh_screen(true);
 }
 
 void editor_help(void){

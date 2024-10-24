@@ -94,7 +94,7 @@ int _file_open(const wchar_t *filename) {
         char *mbfilename = mb_filename(NULL, false);
 	FILE *f = fopen(mbfilename, "r");
 	if (!f)
-		return 1;
+		return FAILURE;
 
 	wint_t c = 1;
 	switch_ctrl_c(true);
@@ -123,8 +123,11 @@ int _file_open(const wchar_t *filename) {
                 }
         }
 	switch_ctrl_c(false);
+        fclose(f);
+
 	buffers.curr->dirty = 0;
-	fclose(f);
+        cursor_goto_start();
+        editor_set_status_message(L"");
 
         if (!file_writable(mbfilename))
                 editor_set_status_message(L"Warning! You have opened a READ ONLY file");
@@ -134,17 +137,18 @@ int _file_open(const wchar_t *filename) {
 		;
         editor_log(LOG_INFO, "Opened file: %s", mbfilename);
 
-	return 1;
+	return SUCCESS;
 }
 
 int file_open(const wchar_t *filename) {
-        if (filename)
-                return _file_open(filename);
-        filename = editor_prompt(L"Open file", buffers.curr->filename, history);
+        if (!filename)
+                filename = editor_prompt(L"Open file", buffers.curr->filename, history);
+        editor_set_status_message(L"Opening \"%ls\"", filename);
         if (filename && wstrlen(filename) > 0){
                 buffer_clear();
                 if (_file_open(filename) != 1) {
                         buffer_drop();
+                        editor_set_status_message(L"");
                         return FAILURE;
                 }
         }
@@ -212,13 +216,13 @@ int file_save(bool only_tmp, bool ask_filename){
         if (file_exists(mbfilename)    // file exists
             && !file_writable(mbfilename) // is NOT writable
         ){
-                editor_set_status_message(L"Can't save! You have no permissions");
+                if (!only_tmp)
+                        editor_set_status_message(L"Can't save! You have no permissions");
                 return -1;
         }
 
 	if (!only_tmp){
 		editor_set_status_message(L"Saving...");
-		editor_refresh_screen(true);
 	}
 
 	char *tmp_filename = get_tmp_filename();
@@ -276,7 +280,8 @@ int file_save(bool only_tmp, bool ask_filename){
 	if (rename(tmp_filename, filename) != 0
 	    || (adjust_perms && !change_mod(filename, perms))
 		){
-		editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
+                if (!only_tmp)
+                        editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno));
                 status = -4;
                 goto cleanup;
 	}
@@ -307,7 +312,6 @@ void file_reload(void){
 			buffers.curr->col_offset = col_offset;
 		}
 	}
-	editor_refresh_screen(false);
 }
 
 void file_auto_save(void){

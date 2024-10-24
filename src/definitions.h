@@ -10,16 +10,25 @@
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 #ifdef __GNUC__
+
 #define INLINE inline __attribute__((always_inline))
 #define NORETURN __attribute__((noreturn))
+#define unlikely(expr) __builtin_expect(!!(expr), 0)
+#define likely(expr) __builtin_expect(!!(expr), 1)
+
 #else
+
 #define INLINE inline
 #define NORETURN
+#define unlikely(expr) expr
+#define likely(expr) expr
+
 #endif
+
 
 #define ONLY_ONCE(body) { \
         static bool __flag = false; \
-        if (!__flag) { \
+        if (unlikely( !__flag )) { \
                 __flag = true; \
                 { body; } \
         } }

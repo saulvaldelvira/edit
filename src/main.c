@@ -10,7 +10,7 @@ int main(int argc, char *argv[]){
 	init();
         parse_args_post_init();
 
-        editor_refresh_screen(false);
+        editor_render_screen();
 
 	const int wait_timeout_ms = 30000;
 
@@ -19,17 +19,12 @@ int main(int argc, char *argv[]){
                 received_key(c);
 	       	try_execute_action(c);
 
-		if (must_render_buffer()){
-			editor_refresh_screen(false);
-		}else if (must_render_stateline()){
-			editor_refresh_screen(true);
-		}
+                editor_render_screen();
 
 		if (c.k == NO_KEY){
                         editor_on_update();
-			// Wait for 30 seconds, or until input is available
-			if (wait_for_input(wait_timeout_ms))
-				editor_refresh_screen(true);
+			/* Wait for 30 seconds, or until input is available */
+			wait_for_input(wait_timeout_ms);
 		}
 	}
 }

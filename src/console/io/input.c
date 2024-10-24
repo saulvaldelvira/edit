@@ -61,9 +61,6 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
 			offset = base_x + x + 1 - state.screen_cols;
 		const wchar_t *buf = wstr_get_buffer(response);
 		editor_set_status_message(L"%ls: %ls", prompt, &buf[offset]);
-		// TODO: check screen size and reisze if needed
-		if (c != NO_KEY)
-			editor_refresh_screen(true);
 		wprintf(L"\x1b[%d;%zuH", state.screen_rows + 2, base_x + x + 1);
 		fflush(stdout);
 
