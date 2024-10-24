@@ -3,7 +3,6 @@
 #include "console/io.h"
 #include "state.h"
 #include "conf.h"
-#include "api.h"
 #include <init.h>
 
 int main(int argc, char *argv[]){

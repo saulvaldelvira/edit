@@ -12,5 +12,6 @@
 #include <state.h>
 #include <definitions.h>
 #include <stdbool.h>
+#include "mapping.h"
 
 #endif

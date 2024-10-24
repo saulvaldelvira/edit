@@ -1,5 +1,5 @@
-#ifndef __API_H__
-#define __API_H__
+#ifndef __MAPPING_H__
+#define __MAPPING_H__
 
 #include "console/io/keys.h"
 #include <stdbool.h>
@@ -42,4 +42,4 @@ void register_mapping(key_ty key, int confirm_times, command_func_t f, command_a
 
 int try_execute_action(key_ty key);
 
-#endif /* __API_H__ */
+#endif /* __MAPPING_H__ */
