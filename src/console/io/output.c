@@ -134,14 +134,17 @@ static void print_welcome_msg(wstring_t *buf){
 }
 
 void editor_draw_rows(wstring_t *buf){
+        static bool welcome = true;
 	if (buffers.curr->num_lines == 0
 	 && buffers.curr->filename == NULL
 	 && buffers.curr->dirty == 0
 	 && buffers.amount == 1
-	 ){
+         && welcome
+        ){
 		print_welcome_msg(buf);
 		return;
-	 }
+        }
+        welcome = false;
 
 	for (int y = 0; y < state.screen_rows; y++){
 		int file_line = y + buffers.curr->row_offset;
