@@ -13,5 +13,6 @@
 #include <definitions.h>
 #include <stdbool.h>
 #include "mapping.h"
+#include "history.h"
 
 #endif

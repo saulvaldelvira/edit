@@ -1,4 +1,3 @@
-#include "prelude.h"
 #include "buffer/line.h"
 #include "cmd.h"
 #include "file.h"
@@ -192,6 +191,8 @@ __mapping_func_call(map_buffer_insert, buffer_insert)
 __mapping_func_call(map_help, editor_help)
 __mapping_func_call(map_line_toggle_comment, line_toggle_comment)
 __mapping_func_call(map_file_reload, file_reload)
+__mapping_func_call(map_history_undo, history_undo)
+__mapping_func_call(map_history_redo, history_redo)
 
 __mapping_func1(
         map_line_move,
@@ -319,6 +320,8 @@ void init_mapping(void) {
         );
 
         map_ctrl('N', map_buffer_insert);
+        map_ctrl('Z', map_history_undo);
+        map_ctrl('R', map_history_redo);
 
         map_ctrl(
                 ARROW_LEFT,

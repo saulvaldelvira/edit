@@ -102,6 +102,8 @@ static void __insert_newline(void){
 
 
 void line_put_char(int c){
+        history_entry(change_put_char, c, buffers.curr->cx, buffers.curr->cy);
+
         if (c == '\r' || c == '\n') {
                 __insert_newline();
                 return;

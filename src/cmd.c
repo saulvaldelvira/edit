@@ -127,6 +127,12 @@ void editor_cmd(const wchar_t *command){
         else if (wcscmp(cmd, L"log") == 0){
                 view_log_buffer();
         }
+        else if (wcscmp(cmd, L"undo") == 0){
+                history_undo();
+        }
+        else if (wcscmp(cmd, L"redo") == 0){
+                history_undo();
+        }
         else {
                 editor_set_status_message(L"Invalid command [%ls]", cmd);
         }

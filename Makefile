@@ -24,6 +24,7 @@ endif
 
 GDS_FILES= ./src/lib/GDS/src/vector.c \
 			./src/lib/GDS/src/linked_list.c \
+			./src/lib/GDS/src/stack.c \
 			./src/lib/GDS/src/gdsmalloc.c  \
 			./src/lib/GDS/src/error.c ./src/lib/GDS/src/compare.c
 LIBFILES= $(GDS_FILES) ./src/lib/str/wstr.c $(wildcard src/lib/json/src/*.c)

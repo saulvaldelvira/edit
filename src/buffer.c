@@ -17,6 +17,7 @@ static void free_buffer(void *e){
 	struct buffer *buf = * (struct buffer**) e;
 	free(buf->filename);
         vector_free(buf->lines);
+        history_free(buf->history);
 	free(buf);
 }
 
@@ -43,6 +44,7 @@ void buffer_insert(void){
 
 	*buffers.curr = (struct buffer) { .conf = buffer_conf };
 	buffers.curr[0].lines = lines,
+	buffers.curr[0].history = history_new();
 
 	buffers.curr_index++;
 	vector_insert_at(buffers_vec, buffers.curr_index, &buffers.curr);
