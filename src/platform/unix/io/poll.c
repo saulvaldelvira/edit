@@ -9,6 +9,7 @@
 #include <sys/poll.h>
 #include <unistd.h>
 #include <wctype.h>
+#include <signal.h>
 
 static int pipefd[2];
 
