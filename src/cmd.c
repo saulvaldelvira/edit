@@ -55,7 +55,7 @@ void editor_cmd(const wchar_t *command){
         if (wcscmp(cmd, L"!quit") == 0){
                 if (editor_ask_confirmation()) {
                         __cmd_end();
-                        editor_end();
+                        editor_shutdown();
                 }
         }
         else if (wcscmp(cmd, L"pwd") == 0){

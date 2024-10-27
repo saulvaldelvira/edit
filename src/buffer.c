@@ -53,6 +53,7 @@ void buffer_insert(void){
 
 void buffer_clear(void){
 	vector_clear(buffers.curr->lines);
+        history_clear(buffers.curr->history);
 	buffers.curr->cx = 0;
 	buffers.curr->cy = 0;
 	buffers.curr->rx = 0;
@@ -73,7 +74,7 @@ void buffer_drop(void){
         buffers.amount--;
         vector_at(buffers_vec, buffers.curr_index, &buffers.curr);
         if (buffers.amount == 0)
-                editor_end();
+                editor_shutdown();
 }
 
 void buffer_switch(int index){

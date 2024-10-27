@@ -20,9 +20,4 @@ void init(void) {
         init_cmd();
         init_file();
         init_mapping();
-
-        /* The atexit functions are executed in
-         * reverse order. So if we want this to
-         * be called firs, we need to register it last. */
-        atexit(editor_start_shutdown);
 }

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "state.h"
 #include "console/io/keys.h"
+#include "console/io/output.h"
 #include "definitions.h"
 #include "file.h"
 #include "init.h"
@@ -28,14 +29,13 @@ static INLINE void __exit_alternative_buffer(void) {
 	wprintf(L"\x1b[?1049l");
 }
 
-void editor_start_shutdown(void) {
+static void editor_prepare_shutdown(void) {
         ONLY_ONCE(
                 editor_log(LOG_INFO, "Shutting down editor");
                 restore_termios();
                 __exit_alternative_buffer();
         )
 }
-
 
 static void __cleanup_state(void) {
         CLEANUP_FUNC;
@@ -86,7 +86,7 @@ void change_current_buffer_filename(wchar_t *filename) {
 }
 
 void (die)(const char *msg, const char *fname, int line, const char *func) {
-        editor_start_shutdown();
+        editor_prepare_shutdown();
         fprintf(stderr, "ERROR: %s\n"
                         "In %s, line %d (%s)\n",
                         msg, fname, line, func);
@@ -94,7 +94,8 @@ void (die)(const char *msg, const char *fname, int line, const char *func) {
 }
 
 
-void editor_end(void) {
+void editor_shutdown(void) {
+        editor_prepare_shutdown();
         ONLY_ONCE_AND_WARN ({
                 for (int i = 0; i < buffers.amount; i++)
                         buffer_drop();

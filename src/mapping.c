@@ -8,13 +8,16 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include "history.h"
 
 static vector_t *mappings_vec;
 static vector_t *commands_vec;
 
 int __mapping_insert_key(key_ty c) {
-        if (is_key_printable(c))
+        if (is_key_printable(c)) {
+                history_entry(change_put_char, c.k, buffers.curr->cx, buffers.curr->cy);
                 line_put_char(c.k);
+        }
         return SUCCESS;
 }
 

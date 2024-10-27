@@ -39,7 +39,7 @@ typedef struct history {
 history_t history_new(void);
 void history_free(history_t history);
 
-void history_enable(void);
+void history_clear(history_t history);
 void history_push(change_func_t fn, change_arg_t *args);
 void history_undo(void);
 void history_redo(void);

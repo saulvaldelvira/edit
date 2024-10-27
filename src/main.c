@@ -10,10 +10,9 @@ int main(int argc, char *argv[]){
 	init();
         parse_args_post_init();
 
-        history_enable();
-        editor_render_screen();
-
 	const int wait_timeout_ms = 30000;
+
+        editor_force_render_screen();
 
 	for (;;){
 		key_ty c = editor_read_key();

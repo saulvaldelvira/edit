@@ -91,15 +91,16 @@ void __editor_refresh_screen(bool only_status_bar){
 }
 
 void editor_render_screen(void){
-        /* The first time this function is
-         * called, refresh the whole screen */
-        ONLY_ONCE( __editor_refresh_screen(false) );
-
         if (must_render_buffer()){
                 __editor_refresh_screen(false);
         }else if (must_render_stateline()){
                 __editor_refresh_screen(true);
         }
+}
+
+INLINE
+void editor_force_render_screen(void) {
+        __editor_refresh_screen(false);
 }
 
 static void print_welcome_msg(wstring_t *buf){

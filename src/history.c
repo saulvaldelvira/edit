@@ -83,38 +83,26 @@ static change_t __change_register(change_func_t fn, change_arg_t *args) {
         return change;
 }
 
-static bool history_enabled = false;
-
-void history_enable(void) {
-        history_enabled = true;
-}
-
 void history_push(change_func_t fn, change_arg_t *args) {
-        if (history_enabled) {
-                change_t c = __change_register(fn, args);
-                stack_clear(current_buffer->history.redo);
-                stack_push(current_buffer->history.undo, &c);
-        }
+        change_t c = __change_register(fn, args);
+        stack_clear(current_buffer->history.redo);
+        stack_push(current_buffer->history.undo, &c);
 }
 
 void history_undo(void) {
         change_t c;
         if ( stack_pop(current_buffer->history.undo, &c) == NULL )
                 return;
-        history_enabled = false;
         c.func(CHANGE_UNDO, c.nargs, c.args);
         stack_push(current_buffer->history.redo, &c);
-        history_enabled = true;
 }
 
 void history_redo(void) {
         change_t c;
         if ( stack_pop(current_buffer->history.redo, &c) == NULL )
                 return;
-        history_enabled = false;
         c.func(CHANGE_REDO, c.nargs, c.args);
         stack_push(current_buffer->history.undo, &c);
-        history_enabled = true;
 }
 
 static void __free_change(void *e) {
@@ -135,6 +123,11 @@ history_t history_new(void) {
 
 void history_free(history_t history) {
         stack_free(history.redo, history.undo);
+}
+
+void history_clear(history_t history) {
+        stack_clear(history.undo);
+        stack_clear(history.redo);
 }
 
 __change_func3(change_put_char, int, key, int, x, int, y,
