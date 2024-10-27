@@ -468,6 +468,7 @@ static int __try_execute_action(key_ty key) {
                                         return 1;
                                 }
                         }
+                        n_confirms = 0;
 
                         command_t cmd;
                         vector_at(commands_vec, map.cmd_id, &cmd);
