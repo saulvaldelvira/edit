@@ -323,8 +323,11 @@ void init_mapping(void) {
         );
 
         map_ctrl('N', map_buffer_insert);
-        map_ctrl('Z', map_history_undo);
-        map_ctrl('R', map_history_redo);
+
+        if (conf.history.enabled) {
+                map_ctrl('Z', map_history_undo);
+                map_ctrl('R', map_history_redo);
+        }
 
         map_ctrl(
                 ARROW_LEFT,

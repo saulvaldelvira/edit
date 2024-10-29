@@ -131,6 +131,14 @@ Deletes a word forward
 .B Ctrl + [hjkl] | Arrows
 Move cursor
 
+.TP
+.B Ctrl + Z
+Undo
+
+.TP
+.B Ctrl + R
+Redo
+
 .SH COMMANDS
 
 .TP
@@ -222,6 +230,8 @@ syntax_highlighting | Bool | false
 auto_save_interval | Number | 60
 line_number | Bool | false
 eol | String | "\\n"
+history.enabled | Bool | true
+history.max_size | Number | 1000 (0 means unlimited)
 .TE
 
 If not specified, with the --config-file argument, the program looks for it in the following places.

@@ -22,6 +22,7 @@
 
 struct conf conf = {
         .quit_times = 3,
+        .history.max_size = 1000,
 };
 
 struct buffer_conf buffer_conf = {
@@ -82,28 +83,57 @@ static int parse_conf_file(char *filename) {
         }
         editor_log(LOG_INFO, "CONFIG: Parsing file %s", filename);
 
-        #define VAL(field,_t,name,_fmt, ...) \
-        if (strcmp(p.key, # field) == 0) {\
-                if (p.val->type != _t) return -1; \
-                CONF_STRUCT. field = p.val->name; \
-                editor_log(LOG_INFO, "CONFIG: %s = " _fmt, #field, p.val->name); \
-                found = true; \
-                __VA_ARGS__ \
+        #define P p
+
+        #define _VAL(strict, field,_t,name,_fmt, ...) \
+        if (strcmp(P.key, # field) == 0) {\
+                if (P.val->type == _t) { \
+                        CONF_STRUCT. field = P.val->name; \
+                        editor_log(LOG_INFO, "CONFIG: " CONF_STRUCT_STR "%s = " _fmt, #field, P.val->name); \
+                        found = true; \
+                        __VA_ARGS__ \
+                } else if (strict) return -1; \
         }
+
+        #define VAL(field,_t,name,_fmt, ...) _VAL(true, field, _t, name, _fmt, __VA_ARGS__)
+        #define VAL_OPT(field,_t,name,_fmt, ...) _VAL(false, field, _t, name, _fmt, __VA_ARGS__)
 
         #define VAL_STR(field, ...) VAL(field,JSON_STRING,string,"%s", __VA_ARGS__)
         #define VAL_NUM(field, ...) VAL(field,JSON_NUMBER,number,"%.2f", __VA_ARGS__)
+        #define VAL_NUM_OPT(field, ...) VAL_OPT(field,JSON_NUMBER,number,"%.2f", __VA_ARGS__)
+
+        #define VAL_NULL(field, def, ...) \
+        if (strcmp(P.key, # field) == 0) {\
+                if (P.val->type == JSON_NULL) { \
+                        CONF_STRUCT. field = def; \
+                        editor_log(LOG_INFO, "CONFIG: " CONF_STRUCT_STR "%s = null", #field); \
+                        found = true; \
+                        __VA_ARGS__ \
+                } \
+        }
 
         #define VAL_BOOL(field) \
-        if (strcmp(p.key, # field) == 0) {\
-                if (p.val->type == JSON_TRUE) \
+        if (strcmp(P.key, # field) == 0) {\
+                if (P.val->type == JSON_TRUE) \
                         CONF_STRUCT. field = true; \
-                else if (p.val->type == JSON_FALSE) \
+                else if (P.val->type == JSON_FALSE) \
                         CONF_STRUCT. field = false; \
                 else return -1; \
-                editor_log(LOG_INFO, "CONFIG: %s = %s", #field, p.val->type == JSON_TRUE ? "true" : "false"); \
+                editor_log(LOG_INFO, "CONFIG: " CONF_STRUCT_STR "%s = %s", #field, P.val->type == JSON_TRUE ? "true" : "false"); \
                 found = true; \
         }
+
+        #define VAL_OBJ(name, act) \
+        if (strcmp(p.key, name) == 0) {\
+                if (p.val->type != JSON_OBJECT) return -1; \
+                for (size_t i = 0; i < p.val->object.elems_len; i++) { \
+                        struct pair p2 = p.val->object.elems[i]; \
+                        act ; \
+                } \
+        }
+
+
+#define CONF_STRUCT_STR ""
 
         for (size_t i = 0; i < json_conf.object.elems_len; i++) {
                 struct pair p = json_conf.object.elems[i];
@@ -119,6 +149,20 @@ static int parse_conf_file(char *filename) {
 #define CONF_STRUCT conf
                 VAL_NUM(quit_times);
 #undef CONF_STRUCT
+#define CONF_STRUCT conf.history
+#undef CONF_STRUCT_STR
+#define CONF_STRUCT_STR "history."
+                #undef P
+                #define P p2
+                VAL_OBJ("history", {
+                                VAL_BOOL(enabled);
+                                VAL_NUM_OPT(max_size);
+                                VAL_NULL(max_size, 0);
+                });
+                #undef P
+                #define P p
+#undef CONF_STRUCT
+#undef CONF_STRUCT_STR
 
                 if (!found) {
                         editor_log(LOG_WARN, "Unknown config key: %s", p.key);

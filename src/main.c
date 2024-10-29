@@ -12,7 +12,7 @@ int main(int argc, char *argv[]){
 
 	const int wait_timeout_ms = 30000;
 
-        editor_force_render_screen();
+        editor_start();
 
 	for (;;){
 		key_ty c = editor_read_key();

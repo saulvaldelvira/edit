@@ -6,6 +6,10 @@
 
 struct conf {
         int quit_times;
+        struct {
+                bool enabled;
+                double max_size;
+        } history;
 };
 
 struct buffer_conf {

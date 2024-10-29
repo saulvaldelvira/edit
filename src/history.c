@@ -84,12 +84,21 @@ static change_t __change_register(change_func_t fn, change_arg_t *args) {
 }
 
 void history_push(change_func_t fn, change_arg_t *args) {
+        if (!conf.history.enabled)
+                return;
         change_t c = __change_register(fn, args);
         deque_clear(current_buffer->history.redo);
         deque_push_back(current_buffer->history.undo, &c);
+        if (conf.history.max_size > 0) {
+                if (deque_size(current_buffer->history.undo) > conf.history.max_size) {
+                        deque_remove_front(current_buffer->history.undo);
+                }
+        }
 }
 
 void history_undo(void) {
+        if (!conf.history.enabled)
+                return;
         change_t c;
         if ( deque_pop_back(current_buffer->history.undo, &c) == NULL )
                 return;
@@ -98,6 +107,8 @@ void history_undo(void) {
 }
 
 void history_redo(void) {
+        if (!conf.history.enabled)
+                return;
         change_t c;
         if ( deque_pop_back(current_buffer->history.redo, &c) == NULL )
                 return;
@@ -111,24 +122,31 @@ static void __free_change(void *e) {
 }
 
 history_t history_new(void) {
-        history_t history;
-        history.undo = deque_init(sizeof(change_t), compare_equal);
-        deque_set_destructor(history.undo, __free_change);
+        history_t history = {0};
 
-        history.redo = deque_init(sizeof(change_t), compare_equal);
-        deque_set_destructor(history.redo, __free_change);
+        if (conf.history.enabled) {
+                history.undo = deque_init(sizeof(change_t), compare_equal);
+                deque_set_destructor(history.undo, __free_change);
+
+                history.redo = deque_init(sizeof(change_t), compare_equal);
+                deque_set_destructor(history.redo, __free_change);
+        }
 
         return history;
 }
 
 void history_free(history_t history) {
-        deque_free(history.redo);
-        deque_free(history.undo);
+        if (conf.history.enabled) {
+                deque_free(history.redo);
+                deque_free(history.undo);
+        }
 }
 
 void history_clear(history_t history) {
-        deque_clear(history.undo);
-        deque_clear(history.redo);
+        if (conf.history.enabled) {
+                deque_clear(history.undo);
+                deque_clear(history.redo);
+        }
 }
 
 __change_func3(change_put_char, int, key, int, x, int, y,

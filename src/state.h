@@ -15,6 +15,7 @@ extern struct state {
 	time_t status_msg_time;
 } state;
 
+void editor_start(void);
 long get_time_since_start_ms(void);
 void editor_on_update(void);
 void change_current_buffer_filename(wchar_t *filename);

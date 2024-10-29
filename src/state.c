@@ -85,6 +85,10 @@ void change_current_buffer_filename(wchar_t *filename) {
         buffers.curr->filename = filename;
 }
 
+void editor_start(void) {
+        editor_force_render_screen();
+}
+
 void (die)(const char *msg, const char *fname, int line, const char *func) {
         editor_prepare_shutdown();
         fprintf(stderr, "ERROR: %s\n"
