@@ -9,6 +9,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include "history.h"
+#include "log.h"
 
 static vector_t *mappings_vec;
 static vector_t *commands_vec;
@@ -111,7 +112,9 @@ void register_default_handler(default_handler_t h) {
         _i++; \
         __VA_OPT__ ( __unwrap_arg2(__VA_ARGS__) )
 
-#define __check_n_args(n) if (nargs != n) return -1;
+#define __check_n_args(n) if (nargs != n) {\
+        editor_log(LOG_ERROR, "Incorrect number of args: %s", __func__); \
+        return -1; }
 
 #define __unwrap_args(n, ...) \
         int _i = 0; \
@@ -273,12 +276,14 @@ void init_mapping(void) {
 
         map(HOME_KEY,
            map_move_cursor,
-           arg_int(CURSOR_DIRECTION_START)
+           arg_int(CURSOR_DIRECTION_START),
+           arg_int(1)
         );
 
         map(END_KEY,
            map_move_cursor,
-           arg_int(CURSOR_DIRECTION_END)
+           arg_int(CURSOR_DIRECTION_END),
+           arg_int(1)
         );
 
         map(PAGE_UP,
@@ -293,7 +298,7 @@ void init_mapping(void) {
 
 
         map_ctrl(
-            'x',
+            'X',
             map_line_cut,
             arg_bool(true)
         );

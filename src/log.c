@@ -56,9 +56,13 @@ void editor_log(enum log_level log_level, const char *fmt, ...) {
         size_t needed = vsnprintf(NULL, 0, fmt, ap) + 1;
         va_end(ap);
 
+        char *title = "";
+        if (log_level == LOG_ERROR)
+                title = "ERROR: ";
+
         static char timestamp[1024];
         double t = get_time_since_start_ms() / 1000.0;
-        snprintf(timestamp, 1024, "[%.2f] ", t);
+        snprintf(timestamp, 1024, "[%.2f] %s", t, title);
 
         char *buf = malloc(needed);
 
