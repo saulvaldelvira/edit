@@ -1,7 +1,8 @@
 #ifndef __HISTORY_H__
 #define __HISTORY_H__
 
-#include "stack.h"
+#include "deque.h"
+
 typedef enum change_type {
         CHANGE_UNDO,
         CHANGE_REDO,
@@ -32,8 +33,8 @@ typedef struct change {
 } change_t;
 
 typedef struct history {
-	stack_t *undo;
-	stack_t *redo;
+	deque_t *undo;
+	deque_t *redo;
 } history_t;
 
 history_t history_new(void);
