@@ -115,6 +115,7 @@ void line_insert_newline_bellow(void) {
 }
 
 void line_put_char(int c){
+        editor_track_change();
         if (c == '\r' || c == '\n') {
                 __line_insert_newline();
                 return;
@@ -218,6 +219,7 @@ int line_delete_word(cursor_direction_t dir) {
         default:
                 return -1;
         }
+        editor_track_change();
         return 1;
 }
 
@@ -233,6 +235,7 @@ void line_cut(bool whole){
 		wstr_remove_range(line, buffers.curr->cx, -1);
 	}
 	buffers.curr->dirty++;
+        editor_track_change();
 }
 
 void line_toggle_comment(void){
@@ -294,6 +297,7 @@ void line_strip_trailing_spaces(int cy){
 			}
 		}
 	}
+        editor_track_change();
 }
 
 void line_format(int cy){
@@ -301,13 +305,16 @@ void line_format(int cy){
 	wchar_t tab_buffer[80];
 	swprintf(tab_buffer, 80, L"%*c", buffers.curr->conf.tab_size, ' ');
 	wstring_t *line = line_at(cy);
+        int n;
 	if (buffers.curr->conf.substitute_tab_with_space){
-		int n = wstr_replace(line, L"\t", tab_buffer);
+	        n = wstr_replace(line, L"\t", tab_buffer);
                 buffers.curr->cx += n * (buffers.curr->conf.tab_size + 1);
 	}else{
-		int n = wstr_replace(line, tab_buffer, L"\t");
+		n = wstr_replace(line, tab_buffer, L"\t");
                 buffers.curr->cx -= n * (buffers.curr->conf.tab_size - 1);
 	}
+        if (n > 0)
+                editor_track_change();
 }
 
 INLINE

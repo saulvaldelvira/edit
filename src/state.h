@@ -15,6 +15,19 @@ extern struct state {
 	time_t status_msg_time;
 } state;
 
+enum {
+        CALLBACK_ON_CHANGE = 0,
+        CALLBACK_ON_RECEIVE_KEY,
+
+        CALLBACK_LAST,
+};
+
+typedef void (*callback_t)(void);
+
+void register_callback(int event, callback_t cb);
+
+void editor_track_change(void);
+
 void editor_start(void);
 long get_time_since_start_ms(void);
 void editor_on_update(void);

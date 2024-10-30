@@ -12,6 +12,7 @@
 #include "util.h"
 #include <lib/json/src/json.h>
 #include <unistd.h>
+#include "console/cursor.h"
 
 struct state state = {
 	.status_msg[0] = '\0',
@@ -20,6 +21,11 @@ struct state state = {
 long start_time;
 
 key_ty last_c, c;
+
+#define MAX_CALLBACKS 120
+
+int n_callbacks[CALLBACK_LAST] = {0};
+static callback_t cbs[CALLBACK_LAST][MAX_CALLBACKS];
 
 static INLINE void __enter_alternative_buffer(void) {
 	wprintf(L"\x1b[?1049h");
@@ -67,7 +73,19 @@ void init_state(void) {
 	setlocale(LC_CTYPE, "");
         __enter_alternative_buffer();
 
+        register_callback(CALLBACK_ON_CHANGE, cursor_stop_selection);
+
         atexit(__cleanup_state);
+}
+
+void register_callback(int event, callback_t cb) {
+        cbs[event][n_callbacks[event]++] = cb;
+}
+
+bool pending[CALLBACK_LAST] = {0};
+
+void editor_track_change(void) {
+        pending[CALLBACK_ON_CHANGE] = true;
 }
 
 INLINE
@@ -77,6 +95,15 @@ long get_time_since_start_ms(void) {
 
 void editor_on_update(void) {
         file_auto_save();
+        for (int i = 0; i < CALLBACK_LAST; i++) {
+                if (pending[i]) {
+                        for (int j = 0; j < n_callbacks[i]; j++) {
+                                callback_t cb = cbs[i][j];
+                                cb();
+                        }
+                }
+                pending[i] = false;
+        }
 }
 
 INLINE

@@ -1,6 +1,8 @@
 #ifndef CURSOR_H
 #define CURSOR_H
 
+#include <stdbool.h>
+
 typedef enum cursor_direction {
         CURSOR_DIRECTION_UP = 1,
         CURSOR_DIRECTION_RIGHT,
@@ -12,6 +14,18 @@ typedef enum cursor_direction {
         CURSOR_DIRECTION_PAGE_DOWN,
 } cursor_direction_t;
 
+typedef struct coord {
+        int x, y;
+} coord_t;
+
+typedef struct selection {
+        coord_t start, end;
+} selection_t;
+
+void cursor_start_selection(void);
+void cursor_stop_selection(void);
+bool cursor_has_selection(void);
+selection_t cursor_get_selection(void);
 int cursor_move(cursor_direction_t key);
 void cursor_goto(int x, int y);
 void cursor_goto_start(void);
