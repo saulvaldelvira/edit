@@ -220,6 +220,8 @@ __mapping_func_call(map_line_toggle_comment, line_toggle_comment)
 __mapping_func_call(map_file_reload, file_reload)
 __mapping_func_call(map_history_undo, history_undo)
 __mapping_func_call(map_history_redo, history_redo)
+__mapping_func_call(map_cursor_selection_start, cursor_start_selection)
+__mapping_func_call(map_cursor_selection_stop, cursor_stop_selection)
 
 __mapping_func_void(map_go_insert_on_newline, {
         line_insert_newline_bellow();

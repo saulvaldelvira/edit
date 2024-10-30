@@ -75,6 +75,44 @@ int cursor_move(cursor_direction_t direction){
 	return 1;
 }
 
+static bool is_selected;
+static coord_t start;
+
+void cursor_start_selection(void) {
+        is_selected = true;
+        start.x = buffers.curr->cx;
+        start.y = buffers.curr->cy;
+}
+
+void cursor_stop_selection(void) {
+        is_selected = false;
+}
+
+bool cursor_has_selection(void) { return is_selected; }
+
+selection_t cursor_get_selection(void) {
+        coord_t end = {
+                .x = buffers.curr->cx,
+                .y = buffers.curr->cy
+        };
+        int f = 0;
+        if (end.y < start.y) {
+                f = 1;
+        } else if (end.y == start.y) {
+                if (end.x < start.x)
+                        f = 1;
+        }
+        selection_t sel;
+        if (f == 0) {
+                sel.start = start;
+                sel.end = end;
+        } else {
+                sel.start = end;
+                sel.end = start;
+        }
+        return sel;
+}
+
 static void __cursor_page_up(void) {
         if (buffers.curr->cy > buffers.curr->row_offset){
                 buffers.curr->cy = buffers.curr->row_offset;
