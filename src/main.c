@@ -19,10 +19,11 @@ int main(int argc, char *argv[]){
                 received_key(c);
 	       	try_execute_action(c);
 
+                editor_on_update();
+
                 editor_render_screen();
 
 		if (c.k == NO_KEY){
-                        editor_on_update();
 			/* Wait for 30 seconds, or until input is available */
 			wait_for_input(wait_timeout_ms);
 		}
