@@ -477,6 +477,7 @@ static int __try_execute_action(key_ty key) {
                                 }
                         }
                         n_confirms = 0;
+                        editor_set_status_message(L"");
 
                         command_t cmd;
                         vector_at(commands_vec, map.cmd_id, &cmd);
