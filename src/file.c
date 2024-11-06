@@ -300,6 +300,8 @@ void file_reload(void){
 	int row_offset = buffers.curr->row_offset;
 	int col_offset = buffers.curr->col_offset;
 	buffer_clear();
+        if (!buffers.curr->filename)
+                return;
 	file_open(buffers.curr->filename);
 	if (cy + row_offset <= buffers.curr->num_lines){
 		buffers.curr->cy = cy;
