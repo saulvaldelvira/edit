@@ -62,6 +62,12 @@ void register_mapping(buffer_mode_t mode, key_ty key, int confirm_times, command
         __register_mapping(mode, key, confirm_times, cmd_id);
 }
 
+static void __register_mapping2(buffer_mode_t mode1, buffer_mode_t mode2, key_ty key, int confirm_times, command_func_t f, command_arg_t *args) {
+        int cmd_id = __register_cmd(f, args);
+        __register_mapping(mode1, key, confirm_times, cmd_id);
+        __register_mapping(mode2, key, confirm_times, cmd_id);
+}
+
 void register_default_handler(buffer_mode_t mode, default_handler_t h) {
         default_handlers[mode] = h;
 }
@@ -71,6 +77,10 @@ void register_default_handler(buffer_mode_t mode, default_handler_t h) {
 #define map_confirm(mode, key, n, f, ...) register_mapping(mode, (key_ty) { .k = key}, n, f, __cmd_args(__VA_ARGS__) )
 
 #define map_confirm_modif(mode, key, n, m, f, ...) register_mapping(mode, (key_ty) { .k = key, .modif = m}, n, f, __cmd_args(__VA_ARGS__) )
+
+#define map_confirm_2(mode1, mode2, key, n, f, ...) __register_mapping2(mode1, mode2, (key_ty) { .k = key}, n, f, __cmd_args(__VA_ARGS__) )
+
+#define map_confirm_modif_2(mode1, mode2, key, n, m, f, ...) __register_mapping2(mode1, mode2, (key_ty) { .k = key, .modif = m}, n, f, __cmd_args(__VA_ARGS__) )
 
 /* #define map_func_confirm(key, n, ...) map_confirm(key, n, command_func_call, __VA_ARGS__) */
 
@@ -84,6 +94,10 @@ void register_default_handler(buffer_mode_t mode, default_handler_t h) {
 #define imap_alt(key, f, ...) map_confirm_modif(BUFFER_MODE_INSERT, key, 0, KEY_MODIF_ALT, f, __VA_ARGS__)
 #define imap_ctrl(key, f, ...) map_confirm_modif(BUFFER_MODE_INSERT, key, 0, KEY_MODIF_CTRL, f, __VA_ARGS__)
 
+#define inmap(key, f, ...) map_confirm_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, 0, f, __VA_ARGS__)
+#define inmap_modif(key, m, f, ...) map_confirm_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, 0, m, f, __VA_ARGS__)
+#define inmap_alt(key, f, ...) map_confirm_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, 0, KEY_MODIF_ALT, f, __VA_ARGS__)
+#define inmap_ctrl(key, f, ...) map_confirm_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, 0, KEY_MODIF_CTRL, f, __VA_ARGS__)
 
 /* #define map_func(key, ...) map_func_confirm(key, 0, __VA_ARGS__) */
 
@@ -118,7 +132,7 @@ void register_default_handler(buffer_mode_t mode, default_handler_t h) {
         __VA_OPT__ ( __unwrap_arg2(__VA_ARGS__) )
 
 #define __check_n_args(n) if (nargs != n) {\
-        editor_log(LOG_ERROR, "Incorrect number of args: %s", __func__); \
+        editor_log(LOG_ERROR, "%s: Incorrect number of args. Expected %d, found %d", __func__, n, nargs); \
         return -1; }
 
 #define __unwrap_args(n, ...) \
@@ -162,7 +176,9 @@ __mapping_func_void(map_line_format, {
         line_format(current_line_row());
 })
 
-__mapping_func_call(map_buffer_drop, buffer_drop)
+__mapping_func_void(map_buffer_drop, {
+        buffer_drop(true);
+})
 
 __mapping_func1 (
         map_file_open,
@@ -207,6 +223,11 @@ __mapping_func_call(map_history_redo, history_redo)
 __mapping_func_call(map_cursor_selection_start, cursor_start_selection)
 __mapping_func_call(map_cursor_selection_stop, cursor_stop_selection)
 
+__mapping_func_void(map_go_insert_on_newline, {
+        line_insert_newline_bellow();
+        buffer_mode_set(BUFFER_MODE_INSERT);
+})
+
 __mapping_func1(
         map_line_move,
         int, direction,
@@ -243,6 +264,10 @@ __mapping_func2(
         file_save(only_tmp, ask_filename);
 )
 
+__mapping_func1(map_change_mode, int, mode, {
+        buffer_mode_set(mode);
+})
+
 static void __destroy_command(void *ptr) {
         command_t *cmd = ptr;
         free(cmd->args);
@@ -275,8 +300,9 @@ void init_mapping(void) {
                         arg_int(1) \
                 ));\
         __register_mapping(BUFFER_MODE_INSERT, (key_ty){ .k = ARROW_ ## dir }, 0, cmd);\
+        __register_mapping(BUFFER_MODE_NORMAL, (key_ty){ .k = ARROW_ ## dir }, 0, cmd);\
         __register_mapping(BUFFER_MODE_INSERT, (key_ty) { .k = kc, .modif = KEY_MODIF_CTRL }, 0, cmd);\
-        __register_mapping(BUFFER_MODE_NORMAL, (key_ty) { .k = kc }, 0, cmd);\
+        __register_mapping(BUFFER_MODE_NORMAL, (key_ty) { .k = towlower(kc) }, 0, cmd);\
 }
 
         direction_cmd('L', RIGHT);
@@ -284,26 +310,28 @@ void init_mapping(void) {
         direction_cmd('K', UP);
         direction_cmd('J', DOWN);
 
-        imap(HOME_KEY,
+        inmap(HOME_KEY,
            map_move_cursor,
            arg_int(CURSOR_DIRECTION_START),
            arg_int(1)
         );
 
-        imap(END_KEY,
+        inmap(END_KEY,
            map_move_cursor,
            arg_int(CURSOR_DIRECTION_END),
            arg_int(1)
         );
 
-        imap(PAGE_UP,
+        inmap(PAGE_UP,
             map_move_cursor,
-            arg_int(CURSOR_DIRECTION_PAGE_UP)
+            arg_int(CURSOR_DIRECTION_PAGE_UP),
+            arg_int(1)
         );
 
-        imap(PAGE_DOWN,
+        inmap(PAGE_DOWN,
             map_move_cursor,
-            arg_int(CURSOR_DIRECTION_PAGE_DOWN)
+            arg_int(CURSOR_DIRECTION_PAGE_DOWN),
+            arg_int(1)
         );
 
 
@@ -313,8 +341,9 @@ void init_mapping(void) {
             arg_bool(true)
         );
 
-        map_confirm_modif(
+        map_confirm_modif_2(
                 BUFFER_MODE_INSERT,
+                BUFFER_MODE_NORMAL,
                 'Q',
                 3,
                 KEY_MODIF_CTRL,
@@ -340,21 +369,22 @@ void init_mapping(void) {
                 args_end
         );
 
-        imap_ctrl('N', map_buffer_insert);
+        inmap_ctrl('N', map_buffer_insert);
 
         if (conf.history.enabled) {
                 imap_ctrl('Z', map_history_undo);
-                imap_ctrl('R', map_history_redo);
+                inmap_ctrl('R', map_history_redo);
+                nmap_ctrl('u', map_history_undo);
         }
 
-        imap_ctrl(
+        inmap_ctrl(
                 ARROW_LEFT,
                 map_buffer_switch,
                 arg_bool(true),
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
-        imap_ctrl(
+        inmap_ctrl(
                 ARROW_RIGHT,
                 map_buffer_switch,
                 arg_bool(true),
@@ -368,6 +398,8 @@ void init_mapping(void) {
                 arg_ptr(NULL)
         );
 
+        nmap(':', map_cmd_run, arg_ptr(NULL));
+
         imap_modif(
                 'S',
                 KEY_MODIF_CTRL,
@@ -376,10 +408,15 @@ void init_mapping(void) {
                 arg_bool(true)
         );
 
-
         imap(
                 DEL_KEY,
                 map_cursor_delete_char,
+                arg_int(CURSOR_DIRECTION_RIGHT)
+        );
+
+        nmap(
+                DEL_KEY,
+                map_move_cursor,
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
 
@@ -389,14 +426,10 @@ void init_mapping(void) {
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
-        map_ctrl(
-                '@', /* Ctrl + [Space] */
-                map_cursor_selection_start
-        );
-
-        map_ctrl(
-                '[', /* ESC */
-                map_cursor_selection_stop
+        nmap(
+                BACKSPACE,
+                map_move_cursor,
+                arg_int(CURSOR_DIRECTION_LEFT)
         );
 
         map_confirm(
@@ -412,7 +445,13 @@ void init_mapping(void) {
                 's',
                 map_cmd_run,
                 arg_ptr(L"search")
-       );
+        );
+
+        nmap(
+                '/',
+                map_cmd_run,
+                arg_ptr(L"search")
+        );
 
         imap_alt(
                 's',
@@ -454,13 +493,45 @@ void init_mapping(void) {
                 BACKSPACE,
                 map_cursor_delete_word,
                 arg_int(CURSOR_DIRECTION_LEFT)
-       );
+        );
 
         imap_alt(
                 DEL_KEY,
                 map_cursor_delete_word,
                 arg_int(CURSOR_DIRECTION_RIGHT)
-       );
+        );
+
+        nmap(
+                'i',
+                map_change_mode,
+                arg_int(BUFFER_MODE_INSERT)
+        );
+
+        nmap(
+                'w',
+                map_cursor_jump_word,
+                arg_int(CURSOR_DIRECTION_RIGHT)
+        );
+
+        nmap(
+                'b',
+                map_cursor_jump_word,
+                arg_int(CURSOR_DIRECTION_LEFT)
+        );
+
+        nmap('o', map_go_insert_on_newline);
+
+        imap_ctrl(
+                'C',
+                map_change_mode,
+                arg_int(BUFFER_MODE_NORMAL)
+        );
+
+        imap(
+                ESC,
+                map_change_mode,
+                arg_int(BUFFER_MODE_NORMAL)
+        );
 
 	for (int i = 1; i <= 9; i++){
                 imap_alt(

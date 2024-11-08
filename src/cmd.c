@@ -41,7 +41,7 @@ static INLINE void __cmd_end(void) {
 
 void editor_cmd(const wchar_t *command){
         if (!command){
-                command = editor_prompt(L"Execute command", NULL, history);
+                command = editor_prompt(L"", NULL, history);
                 if (!command || wstrlen(command) == 0){
                         editor_set_status_message(L"");
                         wstr_free(cmdstr);
@@ -61,20 +61,13 @@ void editor_cmd(const wchar_t *command){
         else if (wcscmp(cmd, L"pwd") == 0){
                 editor_set_status_message(L"%s", editor_cwd());
         }
-        else if (wcscmp(cmd, L"wq") == 0){
-                bool ask_filename = buffers.curr->filename == NULL;
-                int ret = file_save(false, ask_filename);
-                if (ret > 0){
-                        buffer_drop();
-                }
-        }
         else if (wcscmp(cmd, L"fwq") == 0){
                 bool ask_filename = buffers.curr->filename == NULL;
                 for (int i = 0; i < buffers.curr->num_lines; i++)
                         line_format(i);
                 int ret = file_save(false, ask_filename);
                 if (ret > 0){
-                        buffer_drop();
+                        buffer_drop(true);
                 }
         }
         else if (wcscmp(cmd, L"strip") == 0){
@@ -133,6 +126,40 @@ void editor_cmd(const wchar_t *command){
         else if (wcscmp(cmd, L"redo") == 0){
                 history_undo();
         }
+
+#define cmp(str) else if (wcscmp(cmd, str) == 0)
+
+        cmp(L"w")
+                file_save(false, false);
+
+        cmp(L"wa") {
+                foreach_buffer(
+                    file_save(false, false);
+                );
+        }
+
+        cmp(L"qa") {
+                foreach_buffer(
+                        buffer_drop(false);
+                );
+        }
+
+        cmp(L"qa!") {
+                foreach_buffer(
+                        buffer_drop(true);
+                );
+        }
+
+        cmp(L"wq") {
+                file_save(false, false);
+                buffer_drop(false);
+        }
+
+        cmp(L"q")
+                buffer_drop(false);
+        cmp(L"q!")
+                buffer_drop(true);
+
         else {
                 editor_set_status_message(L"Invalid command [%ls]", cmd);
         }

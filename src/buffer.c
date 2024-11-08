@@ -63,7 +63,9 @@ void buffer_clear(void){
 	buffers.curr->dirty = 0;
 }
 
-void buffer_drop(void){
+int buffer_drop(bool force){
+        if (!force && buffers.curr->dirty)
+                return FAILURE;
 	char *tmp = get_tmp_filename();
 	if (tmp)
 		remove(tmp);
@@ -75,6 +77,7 @@ void buffer_drop(void){
         vector_at(buffers_vec, buffers.curr_index, &buffers.curr);
         if (buffers.amount == 0)
                 editor_shutdown();
+        return SUCCESS;
 }
 
 void buffer_switch(int index){

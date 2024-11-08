@@ -105,7 +105,8 @@ static int single_shift_three(void) {
 static key_ty __single_key(wint_t c) {
         bool is_ctrl = c <= CTRL_KEY('_');
         is_ctrl &=    c != '\r'    /* \r => ^M */
-                   && c != '\t';   /* \t => ^I */
+                   && c != '\t'    /* \t => ^I */
+                   && c != 27;     /* ESC */
         if (is_ctrl) {
                 c += 64;
                 return (key_ty) {
@@ -123,17 +124,22 @@ static key_ty __editor_read_key(bool *is_seq){
         static wint_t c;
         if (!try_read_char(&c))
                 return KEY(NO_KEY);
-        if (c != L'\x1b') {
+        bool single = true;
+        if (c == L'\x1b') {
+                for (int i = 0; i < 5; i++) {
+                        if (try_read_char(&seq[i]))
+                                single = false;
+                        else
+                                seq[i] = L' ';
+                }
+        }
+        if (single) {
                 if (iswprint(c))
                         editor_log(LOG_INPUT,"Received character: %d '%lc'", c, c);
                 else
                         editor_log(LOG_INPUT,"Received character: %d", c);
 
                 return __single_key(c);
-        }
-        for (int i = 0; i < 5; i++) {
-                if (!try_read_char(&seq[i]))
-                        seq[i] = L' ';
         }
         *is_seq = true;
         if (seq[0] == L'[') {
@@ -169,6 +175,8 @@ const char* editor_get_key_repr(key_ty key) {
         switch (key.k) {
         case F5:
                 snprintf(buf, N, "%sF5", firstbuf); break;
+        case PAGE_UP:
+                snprintf(buf, N, "%sREPAG", firstbuf); break;
         default:
                 snprintf(buf, N, "%s%c", firstbuf, key.k); break;
 
