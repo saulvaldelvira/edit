@@ -102,7 +102,7 @@ void editor_shutdown(void) {
         editor_prepare_shutdown();
         ONLY_ONCE_AND_WARN ({
                 for (int i = 0; i < buffers.amount; i++)
-                        buffer_drop();
+                        buffer_drop(true);
         });
         exit(0);
 }

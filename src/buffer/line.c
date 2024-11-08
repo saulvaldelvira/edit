@@ -3,7 +3,7 @@
 #include "prelude.h"
 #include "util.h"
 #include <console/cursor.h>
-#include "buffer/mode.h"
+#include "buffer/highlight/mode.h"
 #include <stdlib.h>
 #include <wchar.h>
 #include <assert.h>
@@ -83,7 +83,12 @@ int line_move(cursor_direction_t dir) {
         return 1;
 }
 
-static void __insert_newline(void){
+#define adjust_post_newline() { \
+	buffers.curr->cy++; \
+	buffers.curr->cx = 0; \
+	buffers.curr->dirty++; }
+
+static void __line_insert_newline(void) {
 	if (buffers.curr->cx == 0){
 		line_insert(buffers.curr->cy, L"", 0);
 	}else{
@@ -95,15 +100,23 @@ static void __insert_newline(void){
 		line_insert(buffers.curr->cy + 1, split, split_len);
 		free(split);
 	}
-	buffers.curr->cy++;
-	buffers.curr->cx = 0;
-	buffers.curr->dirty++;
+        adjust_post_newline();
 }
 
+INLINE
+void line_insert_newline(int at) {
+        line_insert(at, L"", 0);
+        adjust_post_newline();
+}
+
+INLINE
+void line_insert_newline_bellow(void) {
+        line_insert_newline(buffers.curr->cy + 1);
+}
 
 void line_put_char(int c){
         if (c == '\r' || c == '\n') {
-                __insert_newline();
+                __line_insert_newline();
                 return;
         }
 	if (buffers.curr->cy == buffers.curr->num_lines)
@@ -223,7 +236,7 @@ void line_cut(bool whole){
 }
 
 void line_toggle_comment(void){
-	int mode = mode_get_current();
+	int mode = highligth_mode_current();
 	if (mode == NO_MODE) return;
 	const wchar_t *comment_start = mode_comments[mode][0];
 	const wchar_t *comment_end = mode_comments[mode][1];

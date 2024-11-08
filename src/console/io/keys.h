@@ -5,6 +5,7 @@
 
 enum editor_key {
 	NO_KEY = 9999,
+        ESC = 27,
 	BACKSPACE = 127,
 	ARROW_LEFT = 1000,
 	ARROW_RIGHT,

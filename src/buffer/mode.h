@@ -1,15 +1,15 @@
-#ifndef MODE_H
-#define MODE_H
+#ifndef __BUFFER_MODE_H__
+#define __BUFFER_MODE_H__
 
-#include <stddef.h>
+typedef enum buffer_mode {
+        BUFFER_MODE_NORMAL = 0,
+        BUFFER_MODE_INSERT,
+        BUFFER_MODE_VISUAL,
 
+        BUFFER_MODE_LEN
+} buffer_mode_t;
 
-extern wchar_t * mode_comments[][2];
+buffer_mode_t buffer_mode_get_current(void);
+void buffer_mode_set(buffer_mode_t mode);
 
-enum {
-	NO_MODE = 0, C_MODE, DEFAULT_MODE, HTML_MODE
-};
-
-int mode_get_current(void);
-
-#endif // MODE_H
+#endif /* __BUFFER_MODE_H__ */

@@ -147,7 +147,7 @@ int file_open(const wchar_t *filename) {
         if (filename && wstrlen(filename) > 0){
                 buffer_clear();
                 if (_file_open(filename) != 1) {
-                        buffer_drop();
+                        buffer_drop(true);
                         editor_set_status_message(L"");
                         return FAILURE;
                 }

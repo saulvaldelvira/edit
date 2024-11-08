@@ -51,7 +51,7 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
 		wstr_concat_cwstr(response, default_response, FILENAME_MAX);
 
 	size_t x = wstr_length(response);
-	size_t base_x = wstrlen(prompt) + 2;
+	size_t base_x = wstrlen(prompt) + 1;
 	int c = 'C';
         bool end = false;
         enum { UP, DOWN } direction = UP;
@@ -60,7 +60,7 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
 		if (base_x + x + 1 >= (size_t) state.screen_cols)
 			offset = base_x + x + 1 - state.screen_cols;
 		const wchar_t *buf = wstr_get_buffer(response);
-		editor_set_status_message(L"%ls: %ls", prompt, &buf[offset]);
+		editor_set_status_message(L"%ls:%ls", prompt, &buf[offset]);
 		wprintf(L"\x1b[%d;%zuH", state.screen_rows + 2, base_x + x + 1);
 		fflush(stdout);
 
