@@ -11,8 +11,8 @@
 #include "history.h"
 #include "log.h"
 
-static vector_t *mappings_vec;
-static vector_t *commands_vec;
+static vector_t *mappings[BUFFER_MODE_LEN] = {0};
+static vector_t *commands;
 
 int __mapping_insert_key(key_ty c) {
         if (is_key_printable(c)) {
@@ -22,7 +22,7 @@ int __mapping_insert_key(key_ty c) {
         return SUCCESS;
 }
 
-static default_handler_t default_handler = __mapping_insert_key;
+static default_handler_t default_handlers[BUFFER_MODE_LEN] = {0};
 
 #define arg_int(val) (command_arg_t) { .i = val, .type = CMD_ARG_T_INT }
 #define arg_bool(val) (command_arg_t) { .b = val, .type = CMD_ARG_T_BOOL }
@@ -43,42 +43,47 @@ static int __register_cmd(command_func_t f, command_arg_t *args) {
                 cmd.args[i] = args[i];
         }
 
-        vector_append(commands_vec, &cmd);
-        size_t len = vector_size(commands_vec);
+        vector_append(commands, &cmd);
+        size_t len = vector_size(commands);
         return len - 1;
 }
 
-static void __register_mapping(key_ty key, int confirm_times, int cmd_id) {
+static void __register_mapping(buffer_mode_t mode, key_ty key, int confirm_times, int cmd_id) {
         mapping_t m = {
                 .cmd_id = cmd_id,
                 .key = key,
                 .confirm_times = confirm_times,
         };
-        vector_append(mappings_vec, &m);
+        vector_append(mappings[mode], &m);
 }
 
-void register_mapping(key_ty key, int confirm_times, command_func_t f, command_arg_t *args) {
+void register_mapping(buffer_mode_t mode, key_ty key, int confirm_times, command_func_t f, command_arg_t *args) {
         int cmd_id = __register_cmd(f, args);
-        __register_mapping(key, confirm_times, cmd_id);
+        __register_mapping(mode, key, confirm_times, cmd_id);
 }
 
-void register_default_handler(default_handler_t h) {
-        default_handler = h;
+void register_default_handler(buffer_mode_t mode, default_handler_t h) {
+        default_handlers[mode] = h;
 }
 
 #define __cmd_args(...) (command_arg_t[]){ __VA_ARGS__  __VA_OPT__(,) args_end }
 
-#define map_confirm(key, n, f, ...) register_mapping((key_ty) { .k = key}, n, f, __cmd_args(__VA_ARGS__) )
+#define map_confirm(mode, key, n, f, ...) register_mapping(mode, (key_ty) { .k = key}, n, f, __cmd_args(__VA_ARGS__) )
 
-#define map_confirm_modif(key, n, m, f, ...) register_mapping((key_ty) { .k = key, .modif = m}, n, f, __cmd_args(__VA_ARGS__) )
+#define map_confirm_modif(mode, key, n, m, f, ...) register_mapping(mode, (key_ty) { .k = key, .modif = m}, n, f, __cmd_args(__VA_ARGS__) )
 
 /* #define map_func_confirm(key, n, ...) map_confirm(key, n, command_func_call, __VA_ARGS__) */
 
-#define map(key, f, ...) map_confirm(key, 0, f, __VA_ARGS__)
+#define nmap(key, f, ...) map_confirm(BUFFER_MODE_NORMAL, key, 0, f, __VA_ARGS__)
+#define nmap_modif(key, m, f, ...) map_confirm_modif(BUFFER_MODE_NORMAL, key, 0, m, f, __VA_ARGS__)
+#define nmap_alt(key, f, ...) map_confirm_modif(BUFFER_MODE_NORMAL, key, 0, KEY_MODIF_ALT, f, __VA_ARGS__)
+#define nmap_ctrl(key, f, ...) map_confirm_modif(BUFFER_MODE_NORMAL, key, 0, KEY_MODIF_CTRL, f, __VA_ARGS__)
 
-#define map_modif(key, m, f, ...) map_confirm_modif(key, 0, m, f, __VA_ARGS__)
-#define map_alt(key, f, ...) map_confirm_modif(key, 0, KEY_MODIF_ALT, f, __VA_ARGS__)
-#define map_ctrl(key, f, ...) map_confirm_modif(key, 0, KEY_MODIF_CTRL, f, __VA_ARGS__)
+#define imap(key, f, ...) map_confirm(BUFFER_MODE_INSERT, key, 0, f, __VA_ARGS__)
+#define imap_modif(key, m, f, ...) map_confirm_modif(BUFFER_MODE_INSERT, key, 0, m, f, __VA_ARGS__)
+#define imap_alt(key, f, ...) map_confirm_modif(BUFFER_MODE_INSERT, key, 0, KEY_MODIF_ALT, f, __VA_ARGS__)
+#define imap_ctrl(key, f, ...) map_confirm_modif(BUFFER_MODE_INSERT, key, 0, KEY_MODIF_CTRL, f, __VA_ARGS__)
+
 
 /* #define map_func(key, ...) map_func_confirm(key, 0, __VA_ARGS__) */
 
@@ -243,19 +248,21 @@ static void __destroy_command(void *ptr) {
 
 void __cleanup_command(void) {
         IGNORE_ON_FAST_CLEANUP(
-                vector_free(commands_vec);
-                vector_free(mappings_vec);
+                vector_free(commands);
+                for (int i = 0; i < BUFFER_MODE_LEN; i++) {
+                        vector_free(mappings[i]);
+                }
         )
 }
 
 
 void init_mapping(void) {
         atexit(__cleanup_command);
-
-        commands_vec = vector_init(sizeof(command_t), compare_equal);
-        vector_set_destructor(commands_vec, __destroy_command);
-
-        mappings_vec = vector_init(sizeof(mapping_t), compare_equal);
+        commands = vector_init(sizeof(command_t), compare_equal);
+        vector_set_destructor(commands, __destroy_command);
+        for (int i = 0; i < BUFFER_MODE_LEN; i++) {
+                mappings[i] = vector_init(sizeof(mapping_t), compare_equal);
+        }
 
 
 #define direction_cmd(kc, dir) {\
@@ -265,8 +272,9 @@ void init_mapping(void) {
                         arg_int(CURSOR_DIRECTION_ ## dir),\
                         arg_int(1) \
                 ));\
-        __register_mapping((key_ty){ .k = ARROW_ ## dir }, 0, cmd);\
-        __register_mapping((key_ty) { .k = kc, .modif = KEY_MODIF_CTRL }, 0, cmd);\
+        __register_mapping(BUFFER_MODE_INSERT, (key_ty){ .k = ARROW_ ## dir }, 0, cmd);\
+        __register_mapping(BUFFER_MODE_INSERT, (key_ty) { .k = kc, .modif = KEY_MODIF_CTRL }, 0, cmd);\
+        __register_mapping(BUFFER_MODE_NORMAL, (key_ty) { .k = kc }, 0, cmd);\
 }
 
         direction_cmd('L', RIGHT);
@@ -274,36 +282,37 @@ void init_mapping(void) {
         direction_cmd('K', UP);
         direction_cmd('J', DOWN);
 
-        map(HOME_KEY,
+        imap(HOME_KEY,
            map_move_cursor,
            arg_int(CURSOR_DIRECTION_START),
            arg_int(1)
         );
 
-        map(END_KEY,
+        imap(END_KEY,
            map_move_cursor,
            arg_int(CURSOR_DIRECTION_END),
            arg_int(1)
         );
 
-        map(PAGE_UP,
+        imap(PAGE_UP,
             map_move_cursor,
             arg_int(CURSOR_DIRECTION_PAGE_UP)
         );
 
-        map(PAGE_DOWN,
+        imap(PAGE_DOWN,
             map_move_cursor,
             arg_int(CURSOR_DIRECTION_PAGE_DOWN)
         );
 
 
-        map_ctrl(
+        imap_ctrl(
             'X',
             map_line_cut,
             arg_bool(true)
         );
 
         map_confirm_modif(
+                BUFFER_MODE_INSERT,
                 'Q',
                 3,
                 KEY_MODIF_CTRL,
@@ -312,6 +321,7 @@ void init_mapping(void) {
         );
 
         map_confirm_modif(
+                BUFFER_MODE_INSERT,
                 'O',
                 3,
                 KEY_MODIF_CTRL,
@@ -320,6 +330,7 @@ void init_mapping(void) {
         );
 
         map_confirm_modif(
+                BUFFER_MODE_INSERT,
                 'F',
                 3,
                 KEY_MODIF_CTRL,
@@ -327,35 +338,35 @@ void init_mapping(void) {
                 args_end
         );
 
-        map_ctrl('N', map_buffer_insert);
+        imap_ctrl('N', map_buffer_insert);
 
         if (conf.history.enabled) {
-                map_ctrl('Z', map_history_undo);
-                map_ctrl('R', map_history_redo);
+                imap_ctrl('Z', map_history_undo);
+                imap_ctrl('R', map_history_redo);
         }
 
-        map_ctrl(
+        imap_ctrl(
                 ARROW_LEFT,
                 map_buffer_switch,
                 arg_bool(true),
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
-        map_ctrl(
+        imap_ctrl(
                 ARROW_RIGHT,
                 map_buffer_switch,
                 arg_bool(true),
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
 
-        map_modif(
+        imap_modif(
                 'E',
                 KEY_MODIF_CTRL,
                 map_cmd_run,
                 arg_ptr(NULL)
         );
 
-        map_modif(
+        imap_modif(
                 'S',
                 KEY_MODIF_CTRL,
                 map_file_save,
@@ -364,88 +375,91 @@ void init_mapping(void) {
         );
 
 
-        map(
+        imap(
                 DEL_KEY,
                 map_cursor_delete_char,
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
 
-        map(
+        imap(
                 BACKSPACE,
                 map_cursor_delete_char,
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
         map_confirm(
+                BUFFER_MODE_INSERT,
                 F5,
                 3,
                 map_file_reload
         );
 
-        map_alt('h', map_help);
-        map_alt('c', map_line_toggle_comment);
-        map_alt(
+        imap_alt('h', map_help);
+        imap_alt('c', map_line_toggle_comment);
+        imap_alt(
                 's',
                 map_cmd_run,
                 arg_ptr(L"search")
        );
 
-        map_alt(
+        imap_alt(
                 's',
                 map_cmd_run,
                 arg_ptr(L"replace")
        );
 
-        map_alt(
+        imap_alt(
                 'k',
                 map_line_cut,
                 arg_bool(false)
        );
 
-        map_alt(
+        imap_alt(
                 ARROW_UP,
                 map_line_move,
                 arg_int(CURSOR_DIRECTION_UP)
         );
 
-        map_alt(
+        imap_alt(
                 ARROW_DOWN,
                 map_line_move,
                 arg_int(CURSOR_DIRECTION_DOWN)
         );
 
-        map_alt(
+        imap_alt(
                 ARROW_LEFT,
                 map_cursor_jump_word,
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
-        map_alt(
+        imap_alt(
                 ARROW_RIGHT,
                 map_cursor_jump_word,
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
 
-        map_alt(
+        imap_alt(
                 BACKSPACE,
                 map_cursor_delete_word,
                 arg_int(CURSOR_DIRECTION_LEFT)
        );
 
-        map_alt(
+        imap_alt(
                 DEL_KEY,
                 map_cursor_delete_word,
                 arg_int(CURSOR_DIRECTION_RIGHT)
        );
 
 	for (int i = 1; i <= 9; i++){
-                map_alt(
+                imap_alt(
                         (i + '0'),
                         map_buffer_switch,
                         arg_bool(false),
                         arg_int(i)
                );
 	}
+
+        register_default_handler(BUFFER_MODE_INSERT, __mapping_insert_key);
 }
 
 static int __try_execute_action(key_ty key) {
@@ -455,9 +469,11 @@ static int __try_execute_action(key_ty key) {
         static int confirming_map = -1;
         static int n_confirms = 0;
 
-        for (size_t i = 0; i < vector_size(mappings_vec); i++) {
+        vector_t *m = mappings[buffer_mode_get_current()];
+
+        for (size_t i = 0; i < vector_size(m); i++) {
                 mapping_t map;
-                vector_at(mappings_vec, i, &map);
+                vector_at(m, i, &map);
 
                 if (map.key.k == key.k
                     && map.key.modif == key.modif)
@@ -480,15 +496,16 @@ static int __try_execute_action(key_ty key) {
                         editor_set_status_message(L"");
 
                         command_t cmd;
-                        vector_at(commands_vec, map.cmd_id, &cmd);
+                        vector_at(commands, map.cmd_id, &cmd);
                         return cmd.func(cmd.nargs, cmd.args);
                 }
         }
 
         n_confirms = 0;
 
-        if (default_handler)
-                return default_handler(key);
+        default_handler_t dh = default_handlers[buffer_mode_get_current()];
+        if (dh)
+                return dh(key);
 
         return 0;
 }

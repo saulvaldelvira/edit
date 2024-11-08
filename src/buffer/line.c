@@ -3,7 +3,7 @@
 #include "prelude.h"
 #include "util.h"
 #include <console/cursor.h>
-#include "buffer/mode.h"
+#include "buffer/highlight/mode.h"
 #include <stdlib.h>
 #include <wchar.h>
 #include <assert.h>
@@ -223,7 +223,7 @@ void line_cut(bool whole){
 }
 
 void line_toggle_comment(void){
-	int mode = mode_get_current();
+	int mode = highligth_mode_current();
 	if (mode == NO_MODE) return;
 	const wchar_t *comment_start = mode_comments[mode][0];
 	const wchar_t *comment_end = mode_comments[mode][1];

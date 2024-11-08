@@ -2,7 +2,7 @@
 #include "highlight/color.h"
 #include <lib/str/wstr.h>
 #include "state.h"
-#include "mode.h"
+#include "buffer/highlight/mode.h"
 
 static void default_highlight(void){
 	wstring_t *line;
@@ -17,7 +17,7 @@ static void default_highlight(void){
 }
 
 void editor_highlight(void){
-	int mode = mode_get_current();
+	int mode = highligth_mode_current();
 	if (mode == NO_MODE) return;
 
 	switch (mode){
