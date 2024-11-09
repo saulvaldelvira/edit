@@ -22,19 +22,26 @@
 #include <init.h>
 #include <platform.h>
 
-static linked_list_t *history;
+static vector_t *history;
 
 static void __cleanup_file(void) {
         CLEANUP_FUNC;
+        if (conf.command_history.save_to_file) {
+                save_history_to_file("file_save", history);
+        }
         IGNORE_ON_FAST_CLEANUP(
-                list_free(history);
+                vector_free(history);
         )
 }
 
 void init_file(void) {
         INIT_FUNC;
-        history = list_init(sizeof(wchar_t*), compare_pointer);
-        list_set_destructor(history, destroy_ptr);
+        if (conf.command_history.save_to_file) {
+                history = load_history_from_file("file_save");
+        } else {
+                history = vector_init(sizeof(wchar_t*), compare_pointer);
+                vector_set_destructor(history, destroy_ptr);
+        }
         atexit(__cleanup_file);
 }
 
@@ -142,7 +149,7 @@ int _file_open(const wchar_t *filename) {
 
 int file_open(const wchar_t *filename) {
         if (!filename)
-                filename = editor_prompt(L"Open file", buffers.curr->filename, history);
+                filename = editor_prompt(L"Open file: ", buffers.curr->filename, history);
         editor_set_status_message(L"Opening \"%ls\"", filename);
         if (filename && wstrlen(filename) > 0){
                 buffer_clear();
@@ -197,7 +204,7 @@ static int __save_to(char *fname, size_t *len) {
 
 int file_save(bool only_tmp, bool ask_filename){
 	if (ask_filename){
-		const wchar_t *filename = editor_prompt(L"Save as", buffers.curr->filename, history);
+		const wchar_t *filename = editor_prompt(L"Save as: ", buffers.curr->filename, history);
 		if (!filename || wstrlen(filename) == 0)
 			return -1;
                 change_current_buffer_filename(wstrdup(filename));

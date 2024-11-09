@@ -6,19 +6,28 @@
 #include "prelude.h"
 #include "util.h"
 
-static linked_list_t *history;
+static vector_t *history;
 
 static void __cleanup_cmd(void) {
         CLEANUP_FUNC;
+
+        if (conf.command_history.save_to_file) {
+                save_history_to_file("cmd", history);
+        }
+
         IGNORE_ON_FAST_CLEANUP(
-                list_free(history);
+                vector_free(history);
         )
 }
 
 void init_cmd(void) {
         INIT_FUNC;
-        history = list_init(sizeof(wchar_t*), compare_pointer);
-        list_set_destructor(history, destroy_ptr);
+        if (conf.command_history.save_to_file) {
+                history = load_history_from_file("cmd");
+        } else {
+                history = vector_init(sizeof(wchar_t*), compare_pointer);
+                vector_set_destructor(history, destroy_ptr);
+        }
         atexit(__cleanup_cmd);
 }
 
@@ -26,7 +35,6 @@ void cmd_search(bool forward, wchar_t **args);
 void cmd_replace(wchar_t **args);
 void cmd_goto(wchar_t **args);
 void cmd_set(wchar_t **args, bool local);
-
 
 static wchar_t **args;
 static wstring_t *cmdstr;
@@ -41,10 +49,9 @@ static INLINE void __cmd_end(void) {
 
 void editor_cmd(const wchar_t *command){
         if (!command){
-                command = editor_prompt(L"", NULL, history);
+                command = editor_prompt(L":", NULL, history);
                 if (!command || wstrlen(command) == 0){
                         editor_set_status_message(L"");
-                        wstr_free(cmdstr);
                         return;
                 }
         }

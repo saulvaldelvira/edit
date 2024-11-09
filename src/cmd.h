@@ -5,6 +5,4 @@
 
 void editor_cmd(const wchar_t *command);
 
-void init_cmd(void);
-
 #endif

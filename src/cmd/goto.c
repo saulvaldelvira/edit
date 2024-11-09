@@ -15,9 +15,9 @@ void cmd_goto(wchar_t **args){
 	}
 	if (!arg) {
 		if (buffer)
-    			arg = editor_prompt(L"Buffer number", NULL, NULL);
+    			arg = editor_prompt(L"Buffer number: ", NULL, NULL);
 		else
-			arg = editor_prompt(L"Line number", NULL, NULL);
+			arg = editor_prompt(L"Line number: ", NULL, NULL);
 		if (!arg || wstrlen(arg) == 0){
 			return;
 		}

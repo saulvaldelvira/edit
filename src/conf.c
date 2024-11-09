@@ -23,6 +23,7 @@
 struct conf conf = {
         .quit_times = 3,
         .history.max_size = 1000,
+        .command_history.save_to_file = true,
 };
 
 struct buffer_conf buffer_conf = {
@@ -158,6 +159,17 @@ static int parse_conf_file(char *filename) {
                                 VAL_BOOL(enabled);
                                 VAL_NUM_OPT(max_size);
                                 VAL_NULL(max_size, 0);
+                });
+                #undef P
+                #define P p
+#undef CONF_STRUCT
+#define CONF_STRUCT conf.command_history
+#undef CONF_STRUCT_STR
+#define CONF_STRUCT_STR "command_history."
+                #undef P
+                #define P p2
+                VAL_OBJ("command_history", {
+                                VAL_BOOL(save_to_file);
                 });
                 #undef P
                 #define P p

@@ -5,13 +5,13 @@ void cmd_replace(wchar_t **args){
 	const wchar_t *text = NULL,*replacement = NULL;
 
 	if (!args[1]){
-		text = editor_prompt(L"Replace", text, NULL);
+		text = editor_prompt(L"Replace: ", text, NULL);
 	}else{
 		text = args[1];
 	}
 
 	if (!args[1] || !args[2]){
-		replacement = editor_prompt(L"Replace with", replacement, NULL);
+		replacement = editor_prompt(L"Replace with: ", replacement, NULL);
 	}else{
 		replacement = args[2];
 	}

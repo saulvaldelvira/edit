@@ -6,7 +6,7 @@
 #include "keys.h"
 #include "linked_list.h"
 
-const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, linked_list_t *history);
+const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, vector_t *history);
 bool editor_ask_confirmation(void);
 
 #endif

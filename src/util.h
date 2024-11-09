@@ -18,4 +18,7 @@ void free_wstr(void *e);
 long get_time_millis(void);
 int get_cursor_position(int *row, int *col);
 
+void save_history_to_file(char *sub_path, vector_t *entries);
+vector_t* load_history_from_file(char *sub_path);
+
 #endif

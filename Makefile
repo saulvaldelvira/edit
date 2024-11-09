@@ -23,7 +23,6 @@ ifeq ($(PROFILE),release)
 endif
 
 GDS_FILES= ./src/lib/GDS/src/vector.c \
-			./src/lib/GDS/src/linked_list.c \
 			./src/lib/GDS/src/deque.c \
 			./src/lib/GDS/src/gdsmalloc.c  \
 			./src/lib/GDS/src/error.c ./src/lib/GDS/src/compare.c

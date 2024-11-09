@@ -5,7 +5,7 @@ void cmd_search(bool forward, wchar_t **args){
 	const wchar_t *search = args[1];
 
 	if (!search){
-		search = editor_prompt(L"Search text", search, NULL);
+		search = editor_prompt(L"/", search, NULL);
 		if (!search || wstrlen(search) == 0){
 			return;
 		}
