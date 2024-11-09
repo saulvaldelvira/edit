@@ -1,4 +1,5 @@
 #include "prelude.h"
+#include "fs.h"
 #include "state.h"
 #include <string.h>
 #include <sys/stat.h>
@@ -124,4 +125,65 @@ wchar_t* wstrdup(const wchar_t *wstr) {
         memcpy(dup, wstr, len * sizeof(wchar_t));
         dup[len-1] = L'\0';
         return dup;
+}
+
+#include <assert.h>
+static FILE* __get_file_from_sub_path(char *sub_path) {
+        char *data_dir = get_data_directory();
+        size_t len = strlen(data_dir) + strlen(sub_path) + 2;
+        char *full_path = malloc(len);
+        snprintf(full_path, len, "%s" PATH_SEP "%s", data_dir, sub_path);
+        full_path[len - 1] = '\0';
+
+        FILE *f = fopen_mkdir(full_path, "w");
+
+        free(full_path);
+
+        return f;
+}
+
+void save_history_to_file(char *sub_path, vector_t *entries) {
+        FILE *f = __get_file_from_sub_path(sub_path);
+        if (!f)
+                return;
+
+        for (size_t i = 0; i < vector_size(entries); i++) {
+                wchar_t *line;
+                vector_at(entries, i, &line);
+                fprintf(f, "%ls\n", line);
+        }
+
+        fclose(f);
+}
+
+static wchar_t* strtowstr(char *str) {
+        if (!str)
+                return NULL;
+        size_t len = mbstowcs(NULL, str, 0);
+        if (len == (size_t) -1)
+                return NULL;
+        wchar_t *wstr = malloc((len + 1) * sizeof(wchar_t));
+        mbstowcs(wstr, str, len);
+        wstr[len] = '\0';
+        return wstr;
+}
+
+vector_t* load_history_from_file(char *sub_path) {
+        vector_t *vec = vector_init(sizeof(wchar_t*), compare_pointer);
+        vector_set_destructor(vec, destroy_ptr);
+
+        FILE *f = __get_file_from_sub_path(sub_path);
+        if (!f)
+                return vec;
+
+        char *line = NULL;
+        size_t len = 0;
+        while (getline(&line, &len, f) != -1) {
+                wchar_t *wstrline = strtowstr(line);
+                vector_append(vec, &wstrline);
+        }
+        free(line);
+
+        fclose(f);
+        return vec;
 }

@@ -24,4 +24,10 @@ void restore_termios(void);
 
 char* get_default_eol(void);
 
+#ifdef _WIN32
+#define PATH_SEP "\\"
+#else
+#define PATH_SEP "/"
+#endif
+
 #endif

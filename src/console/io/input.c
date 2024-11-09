@@ -40,12 +40,12 @@ static inline int __replace_with(wstring_t *wstr, wchar_t *new) {
         return wstr_length(wstr);
 }
 
-const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, linked_list_t *history){
+const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, vector_t *history){
         wstr_clear(response);
 
-        list_iterator_t it = {0};
+        vector_iterator_t it = {0};
         if (history)
-                it = list_iterator_from_back(history);
+                it = vector_iterator_from_back(history);
 
 	if (default_response)
 		wstr_concat_cwstr(response, default_response, FILENAME_MAX);
@@ -103,19 +103,21 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
                 case ARROW_UP:
                         if (!history) break;
                         wchar_t *prev;
-                        if (direction == DOWN) list_it_prev(&it, &prev);
+                        if (direction == DOWN) vector_it_prev(&it, &prev);
                         direction = UP;
-                        if (list_it_prev(&it, &prev) != NULL) {
+                        if (vector_it_prev(&it, &prev) != NULL) {
                                 x = __replace_with(response, prev);
                         }
                         break;
                 case ARROW_DOWN:
                         if (!history) break;
                         wchar_t *next;
-                        if (direction == UP) list_it_next(&it, &next);
+                        if (direction == UP) vector_it_next(&it, &next);
                         direction = DOWN;
-                        if (list_it_next(&it, &next) != NULL) {
+                        if (vector_it_next(&it, &next) != NULL) {
                                 x = __replace_with(response, next);
+                        } else {
+                                x = __replace_with(response, L"");
                         }
                         break;
 		case HOME_KEY:
@@ -138,11 +140,11 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
         editor_set_status_message(L"");
         if (history) {
                 wchar_t *last;
-                if (!list_get_back(history, &last)
+                if (!vector_back(history, &last)
                         || wstr_cmp_cwstr(response, last) != 0)
                 {
                         wchar_t *entry = wstr_cloned_cwstr(response);
-                        list_append(history, &entry);
+                        vector_append(history, &entry);
                 }
         }
         return wstr_get_buffer(response);

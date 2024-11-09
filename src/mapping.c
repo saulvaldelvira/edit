@@ -399,6 +399,7 @@ void init_mapping(void) {
         );
 
         nmap(':', map_cmd_run, arg_ptr(NULL));
+        nmap(',', map_cmd_run, arg_ptr(NULL));
 
         imap_modif(
                 'S',

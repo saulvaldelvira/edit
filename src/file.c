@@ -22,19 +22,19 @@
 #include <init.h>
 #include <platform.h>
 
-static linked_list_t *history;
+static vector_t *history;
 
 static void __cleanup_file(void) {
         CLEANUP_FUNC;
         IGNORE_ON_FAST_CLEANUP(
-                list_free(history);
+                vector_free(history);
         )
 }
 
 void init_file(void) {
         INIT_FUNC;
-        history = list_init(sizeof(wchar_t*), compare_pointer);
-        list_set_destructor(history, destroy_ptr);
+        history = vector_init(sizeof(wchar_t*), compare_pointer);
+        vector_set_destructor(history, destroy_ptr);
         atexit(__cleanup_file);
 }
 

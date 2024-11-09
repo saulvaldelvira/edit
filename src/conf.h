@@ -7,6 +7,9 @@
 struct conf {
         int quit_times;
         struct {
+                bool save_to_file;
+        } command_history;
+        struct {
                 bool enabled;
                 double max_size;
         } history;

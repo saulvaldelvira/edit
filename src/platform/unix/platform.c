@@ -95,7 +95,7 @@ void enable_raw_mode(void){
 	setvbuf(stdout, NULL, _IONBF, 0);
 }
 
-INLINE void restore_termios(void) {
+void restore_termios(void) {
         tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_term); // restore termios
 }
 

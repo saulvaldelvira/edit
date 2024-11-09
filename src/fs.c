@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <log.h>
 
 #ifdef _WIN32
 #define SEP '\\'
@@ -26,6 +27,7 @@ void  mkdir_recursive(char *file_path, mode_t mode) {
                 *next_sep = SEP;
                 next_sep = strchr(next_sep + 1, SEP);
         }
+        makedir(file_path, mode);
 }
 
 FILE* fopen_mkdir(char *fname, char *mode) {
@@ -36,6 +38,7 @@ FILE* fopen_mkdir(char *fname, char *mode) {
         if (last) {
                 *last = '\0';
                 mkdir_recursive(buf, getumask());
+                *last = SEP;
         }
         return fopen(fname, mode);
 }
@@ -49,9 +52,9 @@ char* get_config_directory(void) {
         if (!dir) {
                 dir = getenv("HOME");
                 if (!dir) return NULL;
-                sprintf(buf, "%s/.config/" DIR, dir);
+                sprintf(buf, "%s" PATH_SEP ".config" PATH_SEP DIR, dir);
         } else {
-                sprintf(buf, "%s/" DIR, dir);
+                sprintf(buf, "%s" PATH_SEP DIR, dir);
         }
         return buf;
 }
@@ -63,11 +66,10 @@ char* get_data_directory(void) {
         if (!dir) {
                 dir = getenv("HOME");
                 if (!dir) return NULL;
-                sprintf(buf, "%s/.local/share/" DIR, dir);
+                sprintf(buf, "%s" PATH_SEP ".local" PATH_SEP "share" PATH_SEP DIR, dir);
         } else {
-                sprintf(buf, "%s/" DIR, dir);
+                sprintf(buf, "%s" PATH_SEP DIR, dir);
         }
-        mkdir_recursive(buf, getumask());
         return buf;
 }
 
