@@ -94,7 +94,7 @@ int _file_open(const wchar_t *filename) {
         char *mbfilename = mb_filename(NULL, false);
 	FILE *f = fopen(mbfilename, "r");
 	if (!f)
-		return FAILURE;
+		return SUCCESS;
 
 	wint_t c = 1;
 	switch_ctrl_c(true);
@@ -146,7 +146,7 @@ int file_open(const wchar_t *filename) {
         editor_set_status_message(L"Opening \"%ls\"", filename);
         if (filename && wstrlen(filename) > 0){
                 buffer_clear();
-                if (_file_open(filename) != 1) {
+                if (_file_open(filename) != SUCCESS) {
                         buffer_drop(true);
                         editor_set_status_message(L"");
                         return FAILURE;
