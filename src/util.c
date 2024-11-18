@@ -132,11 +132,11 @@ static FILE* __get_file_from_sub_path(char *sub_path, char *mode) {
         char *data_dir = get_data_directory();
         size_t len = strlen(data_dir) + strlen(sub_path) + 2;
         char *full_path = malloc(len);
+
+        snprintf(full_path, len, "%s/%s", data_dir, sub_path);
         full_path[len - 1] = '\0';
 
         FILE *f = fopen_mkdir(full_path, mode);
-
-        fprintf(stderr, "%s\n", full_path);
 
         free(full_path);
 
