@@ -23,7 +23,7 @@
 struct conf conf = {
         .quit_times = 3,
         .history.max_size = 1000,
-        .command_history.save_to_file = true,
+        .command_history.save_to_file = false,
 };
 
 struct buffer_conf buffer_conf = {
