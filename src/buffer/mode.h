@@ -12,4 +12,6 @@ typedef enum buffer_mode {
 buffer_mode_t buffer_mode_get_current(void);
 void buffer_mode_set(buffer_mode_t mode);
 
+const char* buffer_mode_get_string(buffer_mode_t mode);
+
 #endif /* __BUFFER_MODE_H__ */

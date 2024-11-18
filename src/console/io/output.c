@@ -1,5 +1,6 @@
 #include "output.h"
 #include "buffer.h"
+#include "buffer/mode.h"
 #include "lib/str/wstr.h"
 #include <buffer/line.h>
 #include "util.h"
@@ -183,7 +184,8 @@ void editor_draw_status_bar(wstring_t *buf){
 
 	wchar_t status[256], rstatus[256], sep[256];
 	int len = swprintf(status, ARRAY_SIZE(status),
-			   L" %ls - %d lines %ls",
+			   L" <%s> %ls - %d lines %ls",
+                           buffer_mode_get_string(buffer_mode_get_current()),
 			   buffers.curr->filename ? buffers.curr->filename : L"[Unnamed]",
 			   buffers.curr->num_lines,
 		       	   buffers.curr->dirty ? L"(modified)" : L"");
