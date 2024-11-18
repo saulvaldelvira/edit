@@ -1,4 +1,5 @@
 #include "buffer/line.h"
+#include "buffer/mode.h"
 #include "cmd.h"
 #include "file.h"
 #include "console/io.h"
@@ -10,8 +11,10 @@
 #include <string.h>
 #include "history.h"
 #include "log.h"
+#include "vector.h"
 
 static vector_t *mappings[BUFFER_MODE_LEN] = {0};
+static vector_t *mappings_default;
 static vector_t *commands;
 
 int __mapping_insert_key(key_ty c) {
@@ -54,7 +57,8 @@ static void __register_mapping(buffer_mode_t mode, key_ty key, int confirm_times
                 .key = key,
                 .confirm_times = confirm_times,
         };
-        vector_append(mappings[mode], &m);
+        vector_t *v = mode == BUFFER_MODE_LEN ? mappings_default : mappings[mode];
+        vector_append(v, &m);
 }
 
 void register_mapping(buffer_mode_t mode, key_ty key, int confirm_times, command_func_t f, command_arg_t *args) {
@@ -83,6 +87,11 @@ void register_default_handler(buffer_mode_t mode, default_handler_t h) {
 #define map_confirm_modif_2(mode1, mode2, key, n, m, f, ...) __register_mapping2(mode1, mode2, (key_ty) { .k = key, .modif = m}, n, f, __cmd_args(__VA_ARGS__) )
 
 /* #define map_func_confirm(key, n, ...) map_confirm(key, n, command_func_call, __VA_ARGS__) */
+
+#define allmap(key, f, ...) map_confirm(BUFFER_MODE_LEN, key, 0, f, __VA_ARGS__)
+#define allmap_modif(key, m, f, ...) map_confirm_modif(BUFFER_MODE_LEN, key, 0, m, f, __VA_ARGS__)
+#define allmap_alt(key, f, ...) map_confirm_modif(BUFFER_MODE_LEN, key, 0, KEY_MODIF_ALT, f, __VA_ARGS__)
+#define allmap_ctrl(key, f, ...) map_confirm_modif(BUFFER_MODE_LEN, key, 0, KEY_MODIF_CTRL, f, __VA_ARGS__)
 
 #define nmap(key, f, ...) map_confirm(BUFFER_MODE_NORMAL, key, 0, f, __VA_ARGS__)
 #define nmap_modif(key, m, f, ...) map_confirm_modif(BUFFER_MODE_NORMAL, key, 0, m, f, __VA_ARGS__)
@@ -288,6 +297,7 @@ void init_mapping(void) {
         for (int i = 0; i < BUFFER_MODE_LEN; i++) {
                 mappings[i] = vector_init(sizeof(mapping_t), compare_equal);
         }
+        mappings_default = vector_init(sizeof(mapping_t), compare_equal);
 
 
 #define direction_cmd(kc, dir) {\
@@ -299,8 +309,10 @@ void init_mapping(void) {
                 ));\
         __register_mapping(BUFFER_MODE_INSERT, (key_ty){ .k = ARROW_ ## dir }, 0, cmd);\
         __register_mapping(BUFFER_MODE_NORMAL, (key_ty){ .k = ARROW_ ## dir }, 0, cmd);\
+        __register_mapping(BUFFER_MODE_VISUAL, (key_ty){ .k = ARROW_ ## dir }, 0, cmd);\
         __register_mapping(BUFFER_MODE_INSERT, (key_ty) { .k = kc, .modif = KEY_MODIF_CTRL }, 0, cmd);\
         __register_mapping(BUFFER_MODE_NORMAL, (key_ty) { .k = towlower(kc) }, 0, cmd);\
+        __register_mapping(BUFFER_MODE_VISUAL, (key_ty) { .k = towlower(kc) }, 0, cmd);\
 }
 
         direction_cmd('L', RIGHT);
@@ -515,6 +527,12 @@ void init_mapping(void) {
         );
 
         nmap(
+                'v',
+                map_change_mode,
+                arg_int(BUFFER_MODE_VISUAL)
+        );
+
+        nmap(
                 'w',
                 map_cursor_jump_word,
                 arg_int(CURSOR_DIRECTION_RIGHT)
@@ -527,6 +545,18 @@ void init_mapping(void) {
         );
 
         nmap('o', map_go_insert_on_newline);
+
+        allmap_ctrl(
+                'C',
+                map_change_mode,
+                arg_int(BUFFER_MODE_NORMAL)
+        );
+
+        allmap(
+                ESC,
+                map_change_mode,
+                arg_int(BUFFER_MODE_NORMAL)
+        );
 
         imap_ctrl(
                 'C',
@@ -552,14 +582,12 @@ void init_mapping(void) {
         register_default_handler(BUFFER_MODE_INSERT, __mapping_insert_key);
 }
 
-static int __try_execute_action(key_ty key) {
+static int __try_execute_action(vector_t *m, key_ty key) {
         if (key.k == NO_KEY)
                 return 1;
 
         static int confirming_map = -1;
         static int n_confirms = 0;
-
-        vector_t *m = mappings[buffer_mode_get_current()];
 
         for (size_t i = 0; i < vector_size(m); i++) {
                 mapping_t map;
@@ -601,7 +629,9 @@ static int __try_execute_action(key_ty key) {
 }
 
 int try_execute_action(key_ty key) {
-        int ret = __try_execute_action(key);
+        int ret = __try_execute_action(mappings[buffer_mode_get_current()], key);
+        if (ret == 0)
+                ret = __try_execute_action(mappings_default, key);
         cursor_adjust();
         return ret;
 }
