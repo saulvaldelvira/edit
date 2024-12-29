@@ -12,9 +12,13 @@ else
 	EXECUTABLE = edit
 endif
 
+GDS_HOME=src/lib/GDS
+JSON_HOME=src/lib/json
+
 INCLUDE_DIRS = -I./src -I./src/lib/GDS/include
 CFLAGS += -Wall -Wextra -pedantic -Wstrict-prototypes -ggdb \
-		  $(INCLUDE_DIRS) $(FLAGS)
+		  $(INCLUDE_DIRS) $(FLAGS) \
+		  -L$(GDS_HOME)/bin -lGDS-static -L$(JSON_HOME)/bin -ljson-static
 
 PROFILE := debug
 
@@ -22,17 +26,17 @@ ifeq ($(PROFILE),release)
 	CFLAGS += -O3
 endif
 
-GDS_FILES= ./src/lib/GDS/src/vector.c \
-			./src/lib/GDS/src/deque.c \
-			./src/lib/GDS/src/gdsmalloc.c  \
-			./src/lib/GDS/src/error.c ./src/lib/GDS/src/compare.c
-LIBFILES= $(GDS_FILES) ./src/lib/str/wstr.c $(wildcard src/lib/json/src/*.c)
+LIBFILES= ./src/lib/str/wstr.c
 CFILES=  $(shell find src -name '*.c' -not -path "src/lib/*" -not -path "src/platform/*") \
 		 $(LIBFILES) \
 		 $(shell find src/platform/$(TARGET_PLATFORM) -name '*.c')
+
 OFILES= $(patsubst %.c,%.o,$(CFILES))
 
 edit: $(OFILES)
+	@ make -C $(GDS_HOME)
+	@ make -C $(JSON_HOME)
+	@ echo " LD => edit"
 	@ $(CC) -o $(EXECUTABLE) $(OFILES) $(CFLAGS)
 
 .c.o:
@@ -64,5 +68,10 @@ init:
 		" -xc $(CLANGD_PLATFORM), " \
 		"-std=c23 ]" > .clangd
 
+CLEAN_LIBS:="false"
 clean:
+	@ if [ "$(CLEAN_LIBS)" != "false" ] ; then \
+		 make -s -C $(GDS_HOME) clean ; \
+		 make -s -C $(JSON_HOME) clean ; \
+	  fi
 	@ rm -f $(EXECUTABLE) $(OFILES)
