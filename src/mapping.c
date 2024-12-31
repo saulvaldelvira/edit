@@ -1,20 +1,24 @@
 #include "buffer/line.h"
 #include "buffer/mode.h"
 #include "cmd.h"
+#include "console/io/keys.h"
 #include "file.h"
 #include "console/io.h"
 #include "mapping.h"
 #include "console/cursor.h"
 #include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include "hash.h"
 #include "history.h"
 #include "log.h"
-#include "vector.h"
+#include "hash_map.h"
 
-static vector_t *mappings[BUFFER_MODE_LEN] = {0};
-static vector_t *mappings_default;
+static hash_map_t *mappings[BUFFER_MODE_LEN] = {0};
+static hash_map_t *mappings_default;
 static vector_t *commands;
 
 int __mapping_insert_key(key_ty c) {
@@ -54,11 +58,11 @@ static int __register_cmd(command_func_t f, command_arg_t *args) {
 static void __register_mapping(buffer_mode_t mode, key_ty key, int confirm_times, int cmd_id) {
         mapping_t m = {
                 .cmd_id = cmd_id,
-                .key = key,
                 .confirm_times = confirm_times,
         };
-        vector_t *v = mode == BUFFER_MODE_LEN ? mappings_default : mappings[mode];
-        vector_append(v, &m);
+        hash_map_t *v = mode == BUFFER_MODE_LEN ? mappings_default : mappings[mode];
+        hashmap_put(v, &key, &m);
+        assert(hashmap_exists(v, &key));
 }
 
 void register_mapping(buffer_mode_t mode, key_ty key, int confirm_times, command_func_t f, command_arg_t *args) {
@@ -286,20 +290,32 @@ void __cleanup_command(void) {
         IGNORE_ON_FAST_CLEANUP(
                 vector_free(commands);
                 for (int i = 0; i < BUFFER_MODE_LEN; i++) {
-                        vector_free(mappings[i]);
+                        hashmap_free(mappings[i]);
                 }
         )
 }
 
+int64_t hash_key_ty(const void *e) {
+        const key_ty *k = e;
+        return (int64_t)k->k << 32 | k->modif;
+}
+
+int compare_key_ty(const void *e1, const void *e2) {
+        const key_ty *k1 = e1;
+        const key_ty *k2 = e2;
+        if (k1->modif == k2->modif && k1->k && k2->k)
+                return 0;
+        return 1;
+}
 
 void init_mapping(void) {
         atexit(__cleanup_command);
         commands = vector_init(sizeof(command_t), compare_equal);
         vector_set_destructor(commands, __destroy_command);
         for (int i = 0; i < BUFFER_MODE_LEN; i++) {
-                mappings[i] = vector_init(sizeof(mapping_t), compare_equal);
+                mappings[i] = hashmap_init(sizeof(key_ty), sizeof(mapping_t), hash_key_ty, compare_key_ty);
         }
-        mappings_default = vector_init(sizeof(mapping_t), compare_equal);
+        mappings_default = hashmap_init(sizeof(key_ty), sizeof(mapping_t), hash_key_ty, compare_key_ty);
 
 
 #define direction_cmd(kc, dir) {\
@@ -596,41 +612,35 @@ void init_mapping(void) {
         register_default_handler(BUFFER_MODE_INSERT, __mapping_insert_key);
 }
 
-static int __try_execute_action(vector_t *m, key_ty key) {
+static int __try_execute_action(hash_map_t *m, key_ty key) {
         if (key.k == NO_KEY)
                 return 1;
 
-        static int confirming_map = -1;
+        static key_ty confirming_map = {.k = -1};
         static int n_confirms = 0;
 
-        for (size_t i = 0; i < vector_size(m); i++) {
-                mapping_t map;
-                vector_at(m, i, &map);
-
-                if (map.key.k == key.k
-                    && map.key.modif == key.modif)
-                {
-                        if ((int)i != confirming_map) {
-                                n_confirms = 0;
-                        }
-                        confirming_map = i;
-
-                        if (map.confirm_times > 0 && buffers.curr->dirty) {
-                                if (++n_confirms < map.confirm_times) {
-                                        editor_set_status_message(L"WARNING! File has unsaved changes. "
-                                                        L"Press %s %d more times to quit.",
-                                                        editor_get_key_repr(key),
-                                                        map.confirm_times - n_confirms);
-                                        return 1;
-                                }
-                        }
+        mapping_t map;
+        if ( hashmap_get(m, &key, &map) != NULL ) {
+                if (key.k != confirming_map.k || key.modif != confirming_map.modif) {
                         n_confirms = 0;
-                        editor_set_status_message(L"");
-
-                        command_t cmd;
-                        vector_at(commands, map.cmd_id, &cmd);
-                        return cmd.func(cmd.nargs, cmd.args);
                 }
+                confirming_map = key;
+
+                if (map.confirm_times > 0 && buffers.curr->dirty) {
+                        if (++n_confirms < map.confirm_times) {
+                                editor_set_status_message(L"WARNING! File has unsaved changes. "
+                                                L"Press %s %d more times to quit.",
+                                                editor_get_key_repr(key),
+                                                map.confirm_times - n_confirms);
+                                return 1;
+                        }
+                }
+                n_confirms = 0;
+                editor_set_status_message(L"");
+
+                command_t cmd;
+                vector_at(commands, map.cmd_id, &cmd);
+                return cmd.func(cmd.nargs, cmd.args);
         }
 
         n_confirms = 0;

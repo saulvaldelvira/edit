@@ -30,7 +30,6 @@ typedef struct command {
 } command_t;
 
 typedef struct mapping {
-        key_ty key;
         int confirm_times;
         int cmd_id;
 } mapping_t;
