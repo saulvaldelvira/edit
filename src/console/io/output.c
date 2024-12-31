@@ -148,6 +148,11 @@ void editor_draw_rows(wstring_t *buf){
         }
         welcome = false;
 
+        bool has_selection = cursor_has_selection();
+        selection_t sel;
+        if (has_selection)
+                sel = cursor_get_selection();
+
 	for (int y = 0; y < state.screen_rows; y++){
 		int file_line = y + buffers.curr->row_offset;
 		if (file_line >= buffers.curr->num_lines){
@@ -171,7 +176,34 @@ void editor_draw_rows(wstring_t *buf){
 				if (len > screen_cols)
 					len = screen_cols;
 				const wchar_t *line_buf = wstr_get_buffer(line);
-				wstr_concat_cwstr(buf, &line_buf[buffers.curr->col_offset], len);
+
+                                if (has_selection && y >= sel.start.y && y <= sel.end.y) {
+                                        if (y == sel.start.y) {
+                                                wstr_concat_cwstr(buf, &line_buf[buffers.curr->col_offset], sel.start.x);
+                                                wstr_concat_cwstr(buf, L"\x1b[7m", 4);
+                                                if (y == sel.end.y) {
+                                                        wstr_concat_cwstr(buf, &line_buf[buffers.curr->col_offset + sel.start.x], sel.end.x - sel.start.x);
+                                                        wstr_concat_cwstr(buf, L"\x1b[0m", 4);
+                                                        wstr_concat_cwstr(buf, &line_buf[buffers.curr->col_offset + sel.end.x], len - sel.end.x);
+                                                } else {
+                                                        wstr_concat_cwstr(buf, &line_buf[buffers.curr->col_offset + sel.start.x], len - sel.start.x);
+                                                        wstr_concat_cwstr(buf, L"\x1b[0m", 4);
+                                                }
+                                        } else if (y == sel.end.y) {
+                                                wstr_concat_cwstr(buf, L"\x1b[7m", 4);
+                                                wstr_concat_cwstr(buf, &line_buf[buffers.curr->col_offset], sel.end.x);
+                                                wstr_concat_cwstr(buf, L"\x1b[0m", 4);
+                                                wstr_concat_cwstr(buf, &line_buf[buffers.curr->col_offset + sel.end.x], len - sel.end.x);
+                                        } else {
+                                                wstr_concat_cwstr(buf, L"\x1b[7m", 4);
+                                                wstr_concat_cwstr(buf, &line_buf[buffers.curr->col_offset], len);
+                                                wstr_concat_cwstr(buf, L"\x1b[0m", 4);
+                                        }
+                                } else {
+                                        wstr_concat_cwstr(buf, &line_buf[buffers.curr->col_offset], len);
+                                }
+
+
 			}
 		}
 
