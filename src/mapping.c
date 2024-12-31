@@ -548,6 +548,18 @@ void init_mapping(void) {
 
         nmap('o', map_go_insert_on_newline);
 
+        allmap('0',
+                map_move_cursor,
+                arg_int(CURSOR_DIRECTION_START),
+                arg_int(1)
+              );
+
+        allmap('$',
+                map_move_cursor,
+                arg_int(CURSOR_DIRECTION_END),
+                arg_int(1)
+              );
+
         allmap_ctrl(
                 'C',
                 map_change_mode,
