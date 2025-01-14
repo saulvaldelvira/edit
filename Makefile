@@ -43,21 +43,21 @@ edit: $(OFILES)
 	@ echo " CC $@"
 	@ $(CC) -c $< -o $@ $(CFLAGS)
 
-INSTALL_PATH ?= /usr/local
+PREFIX ?= /usr/local
 
 install: edit
-	@ echo "edit => $(INSTALL_PATH)/bin"
-	@ echo "edit.1 => $(INSTALL_PATH)/share/man/man1"
-	@ install -d $(INSTALL_PATH)/bin
-	@ install -m  755 ./edit $(INSTALL_PATH)/bin
-	@ install -d $(INSTALL_PATH)/share/man/man1
-	@ install -m  644 edit.1 $(INSTALL_PATH)/share/man/man1
+	@ echo "edit => $(PREFIX)/bin"
+	@ echo "edit.1 => $(PREFIX)/share/man/man1"
+	@ install -d $(PREFIX)/bin
+	@ install -m  755 ./edit $(PREFIX)/bin
+	@ install -d $(PREFIX)/share/man/man1
+	@ install -m  644 edit.1 $(PREFIX)/share/man/man1
 
 uninstall:
-	@ echo " RM $(INSTALL_PATH)/bin/edit"
-	@ echo " RM $(INSTALL_PATH)/share/man/man1/edit.1"
-	@ rm -f $(INSTALL_PATH)/bin/edit \
-			$(INSTALL_PATH)/share/man/man1/edit.1
+	@ echo " RM $(PREFIX)/bin/edit"
+	@ echo " RM $(PREFIX)/share/man/man1/edit.1"
+	@ rm -f $(PREFIX)/bin/edit \
+			$(PREFIX)/share/man/man1/edit.1
 
 init:
 	@ git submodule update --init
