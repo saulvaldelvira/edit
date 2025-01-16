@@ -75,7 +75,6 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
 		switch (c)
 		{
 		case NO_KEY:
-		case '\x1b':
                         break;
 		case DEL_KEY:
 		case BACKSPACE:
@@ -88,6 +87,7 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
 			}
 			break;
 		case CTRL_KEY(L'c'):
+                case ESC:
 			editor_set_status_message(L"");
 			return NULL;
 		case '\r':
