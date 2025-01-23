@@ -363,7 +363,7 @@ void init_mapping(void) {
         );
 
 
-        imap_ctrl(
+        inmap_ctrl(
             'X',
             map_line_cut,
             arg_bool(true)
