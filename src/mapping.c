@@ -369,6 +369,20 @@ void init_mapping(void) {
             arg_bool(true)
         );
 
+        nmap_ctrl(
+                'J',
+                map_move_cursor,
+                arg_int(CURSOR_DIRECTION_DOWN),
+                arg_int(4)
+        );
+
+        nmap_ctrl(
+                'K',
+                map_move_cursor,
+                arg_int(CURSOR_DIRECTION_UP),
+                arg_int(4)
+        );
+
         map_confirm_modif_2(
                 BUFFER_MODE_INSERT,
                 BUFFER_MODE_NORMAL,
