@@ -292,6 +292,7 @@ void __cleanup_command(void) {
                 for (int i = 0; i < BUFFER_MODE_LEN; i++) {
                         hashmap_free(mappings[i]);
                 }
+                hashmap_free(mappings_default);
         )
 }
 
