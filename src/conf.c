@@ -289,7 +289,7 @@ void parse_args_post_init(void) {
 		mbstowcs(filename, argvec[i], NAME_MAX);
 		filename[NAME_MAX-1] = '\0';
 		if (file_open(filename) != SUCCESS)
-			editor_shutdown();
+                        editor_shutdown_with_error(1);
 	}
 
         if (!buffers.curr)

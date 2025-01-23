@@ -1,4 +1,5 @@
 #include <prelude.h>
+#include "console/io/output.h"
 #include "limits.h"
 #include "platform.h"
 #include <fs.h>
@@ -227,12 +228,17 @@ int _file_open(const wchar_t *filename) {
 int file_open(const wchar_t *filename) {
         if (!filename)
                 filename = editor_prompt(L"Open file: ", buffers.curr->filename, history);
+
+        char *mbfilename = mb_filename(filename, NULL, false);
+        if (is_dir(mbfilename)) {
+                log_and_display(LOG_ERROR, "Attemp to open directory: %s", mbfilename);
+                return -1;
+        }
+
         editor_set_status_message(L"Opening \"%ls\"", filename);
         if (filename && wstrlen(filename) > 0){
                 buffer_clear();
                 if (_file_open(filename) != SUCCESS) {
-                        buffer_drop(true);
-                        editor_set_status_message(L"");
                         return FAILURE;
                 }
         }
@@ -297,6 +303,11 @@ int file_save(bool only_tmp, bool ask_filename){
            could cause the original file to be replaced. If the
            file does not exist it is fine to create a new one.*/
         char *mbfilename = mb_filename(buffers.curr->filename, NULL, false);
+        if (is_dir(mbfilename)) {
+                if (!only_tmp)
+                        editor_set_status_message(L"ERROR: Attempt to save to a directory");
+                return -1;
+        }
         if (file_exists(mbfilename)    // file exists
             && !file_writable(mbfilename) // is NOT writable
         ){

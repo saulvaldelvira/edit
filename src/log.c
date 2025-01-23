@@ -48,6 +48,12 @@ void set_log_level(enum log_level log_level) {
         __log_level = log_level;
 }
 
+#define LAST_LOGGED_ERROR_LEN 1024
+static char LAST_LOGGED_ERROR[LAST_LOGGED_ERROR_LEN];
+
+#define LAST_LOGGED_MSG_LEN 1024
+static char LAST_LOGGED_MSG[LAST_LOGGED_MSG_LEN];
+
 void editor_log(enum log_level log_level, const char *fmt, ...) {
         if (log_level > __log_level)
                 return;
@@ -70,6 +76,16 @@ void editor_log(enum log_level log_level, const char *fmt, ...) {
         vsprintf(buf, fmt, ap);
         va_end(ap);
 
+        if (log_level == LOG_ERROR) {
+                va_start(ap, fmt);
+                vsnprintf(LAST_LOGGED_ERROR, LAST_LOGGED_ERROR_LEN, fmt, ap);
+                va_end(ap);
+        }
+
+        va_start(ap, fmt);
+        vsnprintf(LAST_LOGGED_MSG, LAST_LOGGED_MSG_LEN, fmt, ap);
+        va_end(ap);
+
         wstring_t *wstr = wstr_from_cstr(timestamp, 1024);
         wstr_concat_cstr(wstr, buf, needed);
 
@@ -84,6 +100,14 @@ void editor_log(enum log_level log_level, const char *fmt, ...) {
         }
 
         free(buf);
+}
+
+char* last_logged_error(void) {
+        return LAST_LOGGED_ERROR;
+}
+
+char* last_logged_message(void) {
+        return LAST_LOGGED_MSG;
 }
 
 void view_log_buffer(void) {

@@ -1,5 +1,6 @@
 #include <prelude.h>
 #include <locale.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "state.h"
 #include "console/io/keys.h"
@@ -97,6 +98,7 @@ void (die)(const char *msg, const char *fname, int line, const char *func) {
         exit(1);
 }
 
+static int exit_code = 0;
 
 void editor_shutdown(void) {
         editor_prepare_shutdown();
@@ -104,7 +106,16 @@ void editor_shutdown(void) {
                 for (int i = 0; i < buffers.amount; i++)
                         buffer_drop(true);
         });
-        exit(0);
+        if (exit_code != 0) {
+                char *err = last_logged_error();
+                fprintf(stderr, "%s\n", err);
+        }
+        exit(exit_code);
+}
+
+void editor_shutdown_with_error(int code) {
+        exit_code = code;
+        editor_shutdown();
 }
 
 INLINE void received_key(key_ty _c) {

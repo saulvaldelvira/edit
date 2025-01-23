@@ -21,6 +21,7 @@ void editor_on_update(void);
 void change_current_buffer_filename(wchar_t *filename);
 void NORETURN die(const char *msg, const char *fname, int line, const char *func);
 void NORETURN editor_shutdown(void);
+void NORETURN editor_shutdown_with_error(int code);
 
 void received_key(key_ty c);
 void updated_status_line(void);
