@@ -5,7 +5,7 @@
 #include "console/io/keys.h"
 #include "console/io/output.h"
 #include "definitions.h"
-#include "file.h"
+#include "fs.h"
 #include "init.h"
 #include "log.h"
 #include "platform.h"

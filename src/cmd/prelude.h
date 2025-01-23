@@ -8,7 +8,7 @@
 #include <console/io.h>
 #include <buffer/line.h>
 #include <util.h>
-#include <file.h>
+#include <fs.h>
 #include <buffer.h>
 #include <console/cursor.h>
 #include <unistd.h>

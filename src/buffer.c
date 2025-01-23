@@ -1,7 +1,7 @@
 #include <prelude.h>
 #include "buffer.h"
 #include "conf.h"
-#include "file.h"
+#include "fs.h"
 #include "init.h"
 #include "lib/str/wstr.h"
 #include "state.h"

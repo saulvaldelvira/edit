@@ -2,7 +2,7 @@
 #include "buffer/mode.h"
 #include "cmd.h"
 #include "console/io/keys.h"
-#include "file.h"
+#include "fs.h"
 #include "console/io.h"
 #include "mapping.h"
 #include "console/cursor.h"

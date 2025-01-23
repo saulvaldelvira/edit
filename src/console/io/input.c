@@ -5,7 +5,7 @@
 #include "linked_list.h"
 #include "lib/str/wstr.h"
 #include "output.h"
-#include "file.h"
+#include "fs.h"
 #include "util.h"
 #include "state.h"
 #include "buffer.h"
