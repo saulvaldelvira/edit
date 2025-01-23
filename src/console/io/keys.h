@@ -1,6 +1,9 @@
 #ifndef KEYS_H
 #define KEYS_H
 
+#include <stdint.h>
+#include <sys/types.h>
+
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 enum editor_key {
@@ -35,6 +38,9 @@ typedef struct key {
         int k;
         int modif;
 } key_ty;
+
+int64_t hash_key_ty(const void *e);
+int compare_key_ty(const void *e1, const void *e2);
 
 #define KEY(kv) (key_ty) { .k = kv }
 #define KEY_ALT(kv) (key_ty) { .k = kv, .modif = KEY_MODIF_ALT }

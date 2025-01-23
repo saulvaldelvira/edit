@@ -183,3 +183,16 @@ const char* editor_get_key_repr(key_ty key) {
         }
         return buf;
 }
+
+int64_t hash_key_ty(const void *e) {
+        const key_ty *k = e;
+        return (int64_t)k->k << 32 | k->modif;
+}
+
+int compare_key_ty(const void *e1, const void *e2) {
+        const key_ty *k1 = e1;
+        const key_ty *k2 = e2;
+        if (k1->modif == k2->modif && k1->k && k2->k)
+                return 0;
+        return 1;
+}
