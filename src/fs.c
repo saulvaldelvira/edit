@@ -34,7 +34,7 @@
 #define SEP '/'
 #endif
 
-void  mkdir_recursive(char *file_path, mode_t mode) {
+void mkdir_recursive(char *file_path, mode_t mode) {
         if (!strchr(file_path, SEP))
                 return;
         char dir_path[PATH_MAX];

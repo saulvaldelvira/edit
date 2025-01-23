@@ -8,38 +8,6 @@
 #include <signal.h>
 #include <sys/ioctl.h>
 
-INLINE bool file_exists(char *filename) {
-        return access(filename, F_OK) == 0;
-}
-
-INLINE bool file_writable(char *filename) {
-        return access(filename, W_OK) == 0;
-}
-
-INLINE int read_link(const char *lname, char *out, unsigned len) {
-        return readlink(lname, out, len) > 0;
-}
-
-bool is_link(char *filename) {
-        struct stat file_stat = {0};
-	lstat(filename, &file_stat);
-	return S_ISLNK(file_stat.st_mode);
-}
-
-int get_file_mode(char *fname) {
-        struct stat file_stat;
-        stat(fname, &file_stat);
-        return file_stat.st_mode;
-}
-
-INLINE bool change_mod(const char *fname, int mode) {
-        return chmod(fname, mode) == 0;
-}
-
-INLINE int makedir(char *fname, int mode) {
-        return mkdir(fname,mode);
-}
-
 static volatile int ctrl_c_pressed = 0;
 
 INLINE bool is_ctrl_c_pressed(void) { return ctrl_c_pressed; }
