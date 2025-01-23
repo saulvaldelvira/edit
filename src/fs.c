@@ -122,10 +122,10 @@ void init_fs(void) {
         atexit(__cleanup_file);
 }
 
-static char* mb_filename(size_t *written, bool tmp){
+static char* mb_filename(const wchar_t *src, size_t *written, bool tmp){
 	static char mbfilename[NAME_MAX];
 	static char full_filename[PATH_MAX];
-	size_t wrt = wcstombs(mbfilename, buffers.curr->filename, NAME_MAX);
+	size_t wrt = wcstombs(mbfilename, src, NAME_MAX);
 	mbfilename[NAME_MAX - 1] = '\0';
 
 	char *last_slash = strrchr(mbfilename, '/');
@@ -154,11 +154,11 @@ static char* mb_filename(size_t *written, bool tmp){
 	return full_filename;
 }
 
-char* get_tmp_filename(void){
-	if (!buffers.curr->filename)
+char* get_tmp_filename(const wchar_t *fname){
+	if (!fname)
 		return NULL;
 	size_t written;
-	char *filename = mb_filename(&written, true);
+	char *filename = mb_filename(fname, &written, true);
 	size_t tmp_filename_len = written + sizeof(TMP_EXT) + 1;
 	char *tmp_filename = xmalloc(tmp_filename_len * sizeof(char));
 	snprintf(tmp_filename, tmp_filename_len, "%s%s", filename, TMP_EXT);
@@ -175,7 +175,7 @@ int _file_open(const wchar_t *filename) {
 		memcpy(buffers.curr->filename, filename, len);
 	}
 
-        char *mbfilename = mb_filename(NULL, false);
+        char *mbfilename = mb_filename(filename, NULL, false);
 	FILE *f = fopen(mbfilename, "r");
 	if (!f)
 		return SUCCESS;
@@ -296,7 +296,7 @@ int file_save(bool only_tmp, bool ask_filename){
            write to a temporary file and then rename it, which
            could cause the original file to be replaced. If the
            file does not exist it is fine to create a new one.*/
-        char *mbfilename = mb_filename(NULL, false);
+        char *mbfilename = mb_filename(buffers.curr->filename, NULL, false);
         if (file_exists(mbfilename)    // file exists
             && !file_writable(mbfilename) // is NOT writable
         ){
@@ -309,7 +309,7 @@ int file_save(bool only_tmp, bool ask_filename){
 		editor_set_status_message(L"Saving...");
 	}
 
-	char *tmp_filename = get_tmp_filename();
+	char *tmp_filename = get_tmp_filename(buffers.curr->filename);
 	/* FILE *f = fopen(tmp_filename, "w"); */
 	/* if (!f){ */
 	/* 	editor_set_status_message(L"Can't save! I/O error: %s", strerror(errno)); */
@@ -333,7 +333,7 @@ int file_save(bool only_tmp, bool ask_filename){
                 goto cleanup;
         }
 
-	char *filename = mb_filename(NULL, false);
+	char *filename = mb_filename(buffers.curr->filename, NULL, false);
 	// if the file already exists, adjust the permissions
 	bool adjust_perms = file_exists(filename);
         long perms = 0;

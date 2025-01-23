@@ -70,7 +70,7 @@ int buffer_drop(bool force){
                 editor_set_status_message(L"Can't close. Buffer has unsaved changes");
                 return FAILURE;
         }
-	char *tmp = get_tmp_filename();
+	char *tmp = get_tmp_filename(buffers.curr->filename);
 	if (tmp)
 		remove(tmp);
 	free(tmp);
