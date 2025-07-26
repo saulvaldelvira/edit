@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <prelude.h>
 #include <limits.h>
 #include "buffer.h"
@@ -247,7 +248,12 @@ void parse_args(int argc, char *argv[]) {
                 ARG("--", false, { i++; break; })
 
                 ARG("--conf-file", true, { conf_file = n;})
-                ARG("--log-file", true, { set_log_file(n); })
+                ARG("--log-file", true, {
+                        if (!set_log_file(n)) {
+                                fprintf(stderr, "Unable to open log file '%s': %s", n, strerror(errno));
+                                exit(1);
+                        }
+                })
                 ARG("--log-level", true, {
                                 int l = atoi(n);
                                 set_log_level(l);

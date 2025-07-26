@@ -36,10 +36,11 @@ void init_log(void) {
 }
 
 
-void set_log_file(char *fname) {
+bool set_log_file(char *fname) {
         if (log_file)
                 fclose(log_file);
         log_file = fopen(fname, "w");
+        return log_file != NULL;
 }
 
 static enum log_level __log_level = LOG_INFO;

@@ -1,7 +1,6 @@
 #ifndef LOG_H
 #define LOG_H
 
-#include "console/io/output.h"
 enum log_level {
         LOG_ERROR = 1,
         LOG_WARN = 2,
@@ -13,7 +12,7 @@ void editor_log(enum log_level log_level, const char *fmt, ...);
 
 void view_log_buffer(void);
 
-void set_log_file(char *fname);
+bool set_log_file(char *fname);
 void set_log_level(enum log_level log_level);
 
 char* last_logged_error(void);
