@@ -4,6 +4,7 @@
 #include "buffer/mode.h"
 #include "console/io/keys.h"
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef struct command_arg {
         enum {
@@ -38,7 +39,7 @@ typedef int (*default_handler_t)(key_ty);
 
 void register_default_handler(buffer_mode_t mode, default_handler_t h);
 
-void register_mapping(buffer_mode_t mode, key_ty key, int confirm_times, command_func_t f, command_arg_t *args);
+void register_mapping(buffer_mode_t mode, key_ty *keys, size_t keys_len, command_func_t, command_arg_t *args);
 
 int try_execute_action(key_ty key);
 

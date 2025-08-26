@@ -5,8 +5,26 @@
 #include "log.h"
 #include "prelude.h"
 #include "util.h"
+#include <unistd.h>
 
 static vector_t *history;
+
+static wchar_t **args;
+static wstring_t *cmdstr;
+
+static INLINE void __cmd_end(void) {
+        if (args) {
+                for (wchar_t **p = args; *p; p++)
+                        free(*p);
+                free(args);
+        }
+        args = NULL;
+        if (cmdstr) {
+                editor_log(LOG_INFO, "CMD: %ls", wstr_get_buffer(cmdstr));
+                wstr_free(cmdstr);
+                cmdstr = NULL;
+        }
+}
 
 static void __cleanup_cmd(void) {
         CLEANUP_FUNC;
@@ -14,6 +32,8 @@ static void __cleanup_cmd(void) {
         if (conf.command_history.save_to_file) {
                 save_history_to_file("cmd", history);
         }
+
+        __cmd_end();
 
         IGNORE_ON_FAST_CLEANUP(
                 vector_free(history);
@@ -35,17 +55,6 @@ void cmd_search(bool forward, wchar_t **args);
 void cmd_replace(wchar_t **args);
 void cmd_goto(wchar_t **args);
 void cmd_set(wchar_t **args, bool local);
-
-static wchar_t **args;
-static wstring_t *cmdstr;
-
-static INLINE void __cmd_end(void) {
-        editor_log(LOG_INFO, "CMD: %ls", wstr_get_buffer(cmdstr));
-        for (wchar_t **p = args; *p; p++)
-                free(*p);
-        free(args);
-        wstr_free(cmdstr);
-}
 
 void editor_cmd(const wchar_t *command){
         if (!command){

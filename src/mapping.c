@@ -1,28 +1,34 @@
+#include "buffer.h"
 #include "buffer/line.h"
 #include "buffer/mode.h"
 #include "cmd.h"
 #include "console/io/keys.h"
+#include "console/io/output.h"
 #include "fs.h"
 #include "console/io.h"
 #include "mapping.h"
 #include "console/cursor.h"
 #include <assert.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <time.h>
 #include "hash.h"
 #include "history.h"
 #include "log.h"
 #include "hash_map.h"
+#include "prefix_tree.h"
 
-static hash_map_t *mappings[BUFFER_MODE_LEN] = {0};
-static hash_map_t *mappings_default;
+static trie_node_t mappings[BUFFER_MODE_LEN] = {0};
+static trie_node_t mappings_default;
+
 static vector_t *commands;
 
 int __mapping_insert_key(key_ty c) {
-        if (is_key_printable(c)) {
+        if (c.k != NO_KEY && is_key_printable(c)) {
                 history_entry(change_put_char, c.k, buffers.curr->cx, buffers.curr->cy);
                 line_put_char(c.k);
         }
@@ -55,25 +61,23 @@ static int __register_cmd(command_func_t f, command_arg_t *args) {
         return len - 1;
 }
 
-static void __register_mapping(buffer_mode_t mode, key_ty key, int confirm_times, int cmd_id) {
-        mapping_t m = {
-                .cmd_id = cmd_id,
-                .confirm_times = confirm_times,
-        };
-        hash_map_t *v = mode == BUFFER_MODE_LEN ? mappings_default : mappings[mode];
-        hashmap_put(v, &key, &m);
-        assert(hashmap_exists(v, &key));
+void __register_mapping(buffer_mode_t mode, key_ty *keys, size_t keys_len, int cmd_id) {
+        trie_node_t *trie = mode == BUFFER_MODE_LEN ? &mappings_default : &mappings[mode];
+        trie_add(trie, keys, keys_len, cmd_id);
 }
 
-void register_mapping(buffer_mode_t mode, key_ty key, int confirm_times, command_func_t f, command_arg_t *args) {
+void register_mapping(buffer_mode_t mode, key_ty *keys, size_t keys_len, command_func_t f, command_arg_t *args) {
         int cmd_id = __register_cmd(f, args);
-        __register_mapping(mode, key, confirm_times, cmd_id);
+        __register_mapping(mode, keys, keys_len, cmd_id);
 }
 
-static void __register_mapping2(buffer_mode_t mode1, buffer_mode_t mode2, key_ty key, int confirm_times, command_func_t f, command_arg_t *args) {
+void register_mapping_2(buffer_mode_t mode1, buffer_mode_t mode2, key_ty *keys, size_t keys_len, command_func_t f, command_arg_t *args) {
         int cmd_id = __register_cmd(f, args);
-        __register_mapping(mode1, key, confirm_times, cmd_id);
-        __register_mapping(mode2, key, confirm_times, cmd_id);
+        trie_node_t *trie1 = mode1 == BUFFER_MODE_LEN ? &mappings_default : &mappings[mode1];
+        trie_add(trie1, keys, keys_len, cmd_id);
+
+        trie_node_t *trie2 = mode2 == BUFFER_MODE_LEN ? &mappings_default : &mappings[mode2];
+        trie_add(trie2, keys, keys_len, cmd_id);
 }
 
 void register_default_handler(buffer_mode_t mode, default_handler_t h) {
@@ -82,35 +86,37 @@ void register_default_handler(buffer_mode_t mode, default_handler_t h) {
 
 #define __cmd_args(...) (command_arg_t[]){ __VA_ARGS__  __VA_OPT__(,) args_end }
 
-#define map_confirm(mode, key, n, f, ...) register_mapping(mode, (key_ty) { .k = key}, n, f, __cmd_args(__VA_ARGS__) )
+#define map(mode, keys, n, f, ...) register_mapping(mode, keys, n, f, __cmd_args(__VA_ARGS__) )
 
-#define map_confirm_modif(mode, key, n, m, f, ...) register_mapping(mode, (key_ty) { .k = key, .modif = m}, n, f, __cmd_args(__VA_ARGS__) )
+#define map1(mode, key, f, ...) map(mode, (key_ty[]) { key }, 1, f, __VA_ARGS__)
 
-#define map_confirm_2(mode1, mode2, key, n, f, ...) __register_mapping2(mode1, mode2, (key_ty) { .k = key}, n, f, __cmd_args(__VA_ARGS__) )
+#define map_modif(mode, key, m, f, ...) map1(mode, ((key_ty) { .k = key, .modif = m }), f, __VA_ARGS__)
 
-#define map_confirm_modif_2(mode1, mode2, key, n, m, f, ...) __register_mapping2(mode1, mode2, (key_ty) { .k = key, .modif = m}, n, f, __cmd_args(__VA_ARGS__) )
+#define map_2(mode1, mode2, key, f, ...) register_mapping_2(mode1, mode2, (key_ty[]) { (key_ty) { .k = key} }, 1, f, __cmd_args(__VA_ARGS__) )
+
+#define map_modif_2(mode1, mode2, key, m, f, ...) register_mapping_2(mode1, mode2, (key_ty[]) { (key_ty) { .k = key, .modif = m} }, 1, f, __cmd_args(__VA_ARGS__) )
 
 /* #define map_func_confirm(key, n, ...) map_confirm(key, n, command_func_call, __VA_ARGS__) */
 
-#define allmap(key, f, ...) map_confirm(BUFFER_MODE_LEN, key, 0, f, __VA_ARGS__)
-#define allmap_modif(key, m, f, ...) map_confirm_modif(BUFFER_MODE_LEN, key, 0, m, f, __VA_ARGS__)
-#define allmap_alt(key, f, ...) map_confirm_modif(BUFFER_MODE_LEN, key, 0, KEY_MODIF_ALT, f, __VA_ARGS__)
-#define allmap_ctrl(key, f, ...) map_confirm_modif(BUFFER_MODE_LEN, key, 0, KEY_MODIF_CTRL, f, __VA_ARGS__)
+#define allmap(key, f, ...) map1(BUFFER_MODE_LEN, (key_ty) { .k = key }, f, __VA_ARGS__)
+#define allmap_modif(key, m, f, ...) map_modif(BUFFER_MODE_LEN, key, m, f, __VA_ARGS__)
+#define allmap_alt(key, f, ...) map_modif(BUFFER_MODE_LEN, key, KEY_MODIF_ALT, f, __VA_ARGS__)
+#define allmap_ctrl(key, f, ...) map_modif(BUFFER_MODE_LEN, key, KEY_MODIF_CTRL, f, __VA_ARGS__)
 
-#define nmap(key, f, ...) map_confirm(BUFFER_MODE_NORMAL, key, 0, f, __VA_ARGS__)
-#define nmap_modif(key, m, f, ...) map_confirm_modif(BUFFER_MODE_NORMAL, key, 0, m, f, __VA_ARGS__)
-#define nmap_alt(key, f, ...) map_confirm_modif(BUFFER_MODE_NORMAL, key, 0, KEY_MODIF_ALT, f, __VA_ARGS__)
-#define nmap_ctrl(key, f, ...) map_confirm_modif(BUFFER_MODE_NORMAL, key, 0, KEY_MODIF_CTRL, f, __VA_ARGS__)
+#define nmap(key, f, ...) map1(BUFFER_MODE_NORMAL, (key_ty) { .k = key }, f, __VA_ARGS__)
+#define nmap_modif(key, m, f, ...) map_modif(BUFFER_MODE_NORMAL, key, m, f, __VA_ARGS__)
+#define nmap_alt(key, f, ...) map_modif(BUFFER_MODE_NORMAL, key, KEY_MODIF_ALT, f, __VA_ARGS__)
+#define nmap_ctrl(key, f, ...) map_modif(BUFFER_MODE_NORMAL, key, KEY_MODIF_CTRL, f, __VA_ARGS__)
 
-#define imap(key, f, ...) map_confirm(BUFFER_MODE_INSERT, key, 0, f, __VA_ARGS__)
-#define imap_modif(key, m, f, ...) map_confirm_modif(BUFFER_MODE_INSERT, key, 0, m, f, __VA_ARGS__)
-#define imap_alt(key, f, ...) map_confirm_modif(BUFFER_MODE_INSERT, key, 0, KEY_MODIF_ALT, f, __VA_ARGS__)
-#define imap_ctrl(key, f, ...) map_confirm_modif(BUFFER_MODE_INSERT, key, 0, KEY_MODIF_CTRL, f, __VA_ARGS__)
+#define imap(key, f, ...) map1(BUFFER_MODE_INSERT, (key_ty) { .k = key }, f, __VA_ARGS__)
+#define imap_modif(key, m, f, ...) map_modif(BUFFER_MODE_INSERT, key, m, f, __VA_ARGS__)
+#define imap_alt(key, f, ...) map_modif(BUFFER_MODE_INSERT, key, KEY_MODIF_ALT, f, __VA_ARGS__)
+#define imap_ctrl(key, f, ...) map_modif(BUFFER_MODE_INSERT, key, KEY_MODIF_CTRL, f, __VA_ARGS__)
 
-#define inmap(key, f, ...) map_confirm_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, 0, f, __VA_ARGS__)
-#define inmap_modif(key, m, f, ...) map_confirm_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, 0, m, f, __VA_ARGS__)
-#define inmap_alt(key, f, ...) map_confirm_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, 0, KEY_MODIF_ALT, f, __VA_ARGS__)
-#define inmap_ctrl(key, f, ...) map_confirm_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, 0, KEY_MODIF_CTRL, f, __VA_ARGS__)
+#define inmap(key, f, ...) map_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, f, __VA_ARGS__)
+#define inmap_modif(key, m, f, ...) map_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, m, f, __VA_ARGS__)
+#define inmap_alt(key, f, ...) map_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, KEY_MODIF_ALT, f, __VA_ARGS__)
+#define inmap_ctrl(key, f, ...) map_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, KEY_MODIF_CTRL, f, __VA_ARGS__)
 
 /* #define map_func(key, ...) map_func_confirm(key, 0, __VA_ARGS__) */
 
@@ -290,9 +296,9 @@ void __cleanup_command(void) {
         IGNORE_ON_FAST_CLEANUP(
                 vector_free(commands);
                 for (int i = 0; i < BUFFER_MODE_LEN; i++) {
-                        hashmap_free(mappings[i]);
+                        trie_free(&mappings[i]);
                 }
-                hashmap_free(mappings_default);
+                trie_free(&mappings_default);
         )
 }
 
@@ -311,12 +317,13 @@ int compare_key_ty(const void *e1, const void *e2) {
 
 void init_mapping(void) {
         atexit(__cleanup_command);
+
         commands = vector_init(sizeof(command_t), compare_equal);
         vector_set_destructor(commands, __destroy_command);
         for (int i = 0; i < BUFFER_MODE_LEN; i++) {
-                mappings[i] = hashmap_init(sizeof(key_ty), sizeof(mapping_t), hash_key_ty, compare_key_ty);
+                mappings[i] = trie_new();
         }
-        mappings_default = hashmap_init(sizeof(key_ty), sizeof(mapping_t), hash_key_ty, compare_key_ty);
+        mappings_default = trie_new();
 
 
 #define direction_cmd(kc, dir) {\
@@ -326,12 +333,12 @@ void init_mapping(void) {
                         arg_int(CURSOR_DIRECTION_ ## dir),\
                         arg_int(1) \
                 ));\
-        __register_mapping(BUFFER_MODE_INSERT, (key_ty){ .k = ARROW_ ## dir }, 0, cmd);\
-        __register_mapping(BUFFER_MODE_NORMAL, (key_ty){ .k = ARROW_ ## dir }, 0, cmd);\
-        __register_mapping(BUFFER_MODE_VISUAL, (key_ty){ .k = ARROW_ ## dir }, 0, cmd);\
-        __register_mapping(BUFFER_MODE_INSERT, (key_ty) { .k = kc, .modif = KEY_MODIF_CTRL }, 0, cmd);\
-        __register_mapping(BUFFER_MODE_NORMAL, (key_ty) { .k = towlower(kc) }, 0, cmd);\
-        __register_mapping(BUFFER_MODE_VISUAL, (key_ty) { .k = towlower(kc) }, 0, cmd);\
+        __register_mapping(BUFFER_MODE_INSERT, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd);\
+        __register_mapping(BUFFER_MODE_NORMAL, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd);\
+        __register_mapping(BUFFER_MODE_VISUAL, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd);\
+        __register_mapping(BUFFER_MODE_INSERT, (key_ty[]) {(key_ty) {  .k = kc, .modif = KEY_MODIF_CTRL } }, 1, cmd);\
+        __register_mapping(BUFFER_MODE_NORMAL, (key_ty[]) {(key_ty) {  .k = towlower(kc) } }, 1, cmd);\
+        __register_mapping(BUFFER_MODE_VISUAL, (key_ty[]) {(key_ty) {  .k = towlower(kc) } }, 1, cmd);\
 }
 
         direction_cmd('L', RIGHT);
@@ -382,34 +389,6 @@ void init_mapping(void) {
                 map_move_cursor,
                 arg_int(CURSOR_DIRECTION_UP),
                 arg_int(4)
-        );
-
-        map_confirm_modif_2(
-                BUFFER_MODE_INSERT,
-                BUFFER_MODE_NORMAL,
-                'Q',
-                3,
-                KEY_MODIF_CTRL,
-                map_buffer_drop,
-                args_end
-        );
-
-        map_confirm_modif(
-                BUFFER_MODE_INSERT,
-                'O',
-                3,
-                KEY_MODIF_CTRL,
-                map_file_open,
-                arg_ptr(NULL)
-        );
-
-        map_confirm_modif(
-                BUFFER_MODE_INSERT,
-                'F',
-                3,
-                KEY_MODIF_CTRL,
-                map_line_format,
-                args_end
         );
 
         inmap_ctrl('N', map_buffer_insert);
@@ -482,13 +461,6 @@ void init_mapping(void) {
                 map_move_cursor,
                 arg_int(CURSOR_DIRECTION_DOWN),
                 arg_int(1)
-        );
-
-        map_confirm(
-                BUFFER_MODE_INSERT,
-                F5,
-                3,
-                map_file_reload
         );
 
         imap_alt('h', map_help);
@@ -625,52 +597,61 @@ void init_mapping(void) {
 	}
 
         register_default_handler(BUFFER_MODE_INSERT, __mapping_insert_key);
+
+        register_mapping(
+                BUFFER_MODE_NORMAL,
+                (key_ty[])  {
+                        KEY('d'),
+                        KEY('d'),
+                },
+                2,
+                map_line_cut,
+                __cmd_args(
+                        arg_bool(true)
+                )
+        );
 }
 
-static int __try_execute_action(hash_map_t *m, key_ty key) {
+int __try_execute_action(buffer_mode_t bmode, key_ty key) {
+        static trie_node_t *currents[BUFFER_MODE_LEN] = {0};
+
         if (key.k == NO_KEY)
                 return 1;
 
-        static key_ty confirming_map = {.k = -1};
-        static int n_confirms = 0;
+        trie_node_t **curr = &currents[bmode];
 
-        mapping_t map;
-        if ( hashmap_get(m, &key, &map) != NULL ) {
-                if (key.k != confirming_map.k || key.modif != confirming_map.modif) {
-                        n_confirms = 0;
-                }
-                confirming_map = key;
-
-                if (map.confirm_times > 0 && buffers.curr->dirty) {
-                        if (++n_confirms < map.confirm_times) {
-                                editor_set_status_message(L"WARNING! File has unsaved changes. "
-                                                L"Press %s %d more times to quit.",
-                                                editor_get_key_repr(key),
-                                                map.confirm_times - n_confirms);
-                                return 1;
-                        }
-                }
-                n_confirms = 0;
-                editor_set_status_message(L"");
-
-                command_t cmd;
-                vector_at(commands, map.cmd_id, &cmd);
-                return cmd.func(cmd.nargs, cmd.args);
+        if (*curr == NULL) {
+                *curr = bmode == BUFFER_MODE_LEN ? &mappings_default : &mappings[bmode];
         }
 
-        n_confirms = 0;
+        *curr = trie_get_next(*curr, key);
 
-        default_handler_t dh = default_handlers[buffer_mode_get_current()];
-        if (dh)
-                return dh(key);
+        if (*curr == NULL)
+                return 0;
+
+        if (curr[0]->cmd_id >= 0) {
+                command_t cmd;
+                vector_at(commands, curr[0]->cmd_id, &cmd);
+
+                *curr = NULL;
+
+                return cmd.func(cmd.nargs, cmd.args);
+        }
 
         return 0;
 }
 
 int try_execute_action(key_ty key) {
-        int ret = __try_execute_action(mappings[buffer_mode_get_current()], key);
+        int ret = __try_execute_action(buffer_mode_get_current(), key);
         if (ret == 0)
-                ret = __try_execute_action(mappings_default, key);
+                ret = __try_execute_action(BUFFER_MODE_LEN, key);
+        if (ret == 0) {
+                default_handler_t dh = default_handlers[buffer_mode_get_current()];
+                if (dh) {
+                        return dh(key);
+                }
+        }
         cursor_adjust();
         return ret;
 }
+
