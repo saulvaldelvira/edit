@@ -9,6 +9,7 @@
 #include "mapping.h"
 #include "console/cursor.h"
 #include <assert.h>
+#include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -610,10 +611,41 @@ void init_mapping(void) {
                         arg_bool(true)
                 )
         );
+
+#define wind_move(ctrl_val, move_val, dir) \
+        register_mapping( \
+                BUFFER_MODE_NORMAL, \
+                (key_ty[])  { \
+                        KEY_CTRL(ctrl_val), \
+                        KEY(move_val), \
+                }, \
+                2, \
+                map_buffer_switch, \
+                __cmd_args( \
+                        arg_bool(true), \
+                        arg_int(dir) \
+                ) \
+        ); \
+        register_mapping( \
+                BUFFER_MODE_NORMAL, \
+                (key_ty[])  { \
+                        KEY_CTRL(ctrl_val), \
+                        KEY_CTRL(toupper(move_val)), \
+                }, \
+                2, \
+                map_buffer_switch, \
+                __cmd_args( \
+                        arg_bool(true), \
+                        arg_int(dir) \
+                ) \
+        ); \
+
+        wind_move('W', 'l', CURSOR_DIRECTION_RIGHT);
+        wind_move('W', 'h', CURSOR_DIRECTION_LEFT);
 }
 
 int __try_execute_action(buffer_mode_t bmode, key_ty key) {
-        static trie_node_t *currents[BUFFER_MODE_LEN] = {0};
+        static trie_node_t *currents[BUFFER_MODE_LEN + 1] = {0};
 
         if (key.k == NO_KEY)
                 return 1;
@@ -638,7 +670,7 @@ int __try_execute_action(buffer_mode_t bmode, key_ty key) {
                 return cmd.func(cmd.nargs, cmd.args);
         }
 
-        return 0;
+        return 1;
 }
 
 int try_execute_action(key_ty key) {
