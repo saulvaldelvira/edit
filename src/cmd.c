@@ -1,5 +1,7 @@
 #include "cmd.h"
+#include "buffer.h"
 #include "cmd/prelude.h"
+#include "definitions.h"
 #include "init.h"
 #include "lib/str/wstr.h"
 #include "log.h"
@@ -155,15 +157,20 @@ void editor_cmd(const wchar_t *command){
         }
 
         cmp(L"qa") {
-                foreach_buffer(
-                        buffer_drop(false);
-                );
+                buffer_switch(0);
+                int amm = buffers.amount;
+                while (amm-- > 0) {
+                        if (buffer_drop(false) != SUCCESS)
+                                buffer_switch(buffer_current_index() + 1);
+                }
         }
 
         cmp(L"qa!") {
-                foreach_buffer(
+                buffer_switch(0);
+                int amm = buffers.amount;
+                while (amm-- > 0) {
                         buffer_drop(true);
-                );
+                }
         }
 
         cmp(L"wq") {
