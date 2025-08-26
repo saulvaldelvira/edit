@@ -13,6 +13,7 @@ struct conf {
                 bool enabled;
                 double max_size;
         } history;
+        const char *word_delimiters;
 };
 
 struct buffer_conf {

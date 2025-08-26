@@ -1,8 +1,11 @@
+#include "console/io/output.h"
+#include "console/io/poll.h"
 #include "prelude.h"
 #include "cursor.h"
 #include "state.h"
 #include "io/input.h"
 #include <buffer/line.h>
+#include <stdlib.h>
 
 static void __cursor_page_down(void);
 static void __cursor_page_up(void);
@@ -163,18 +166,18 @@ void cursor_goto_start(void) {
 int cursor_jump_word(cursor_direction_t dir){
         if (dir != CURSOR_DIRECTION_LEFT && dir != CURSOR_DIRECTION_RIGHT)
                 return -1;
-	cursor_move(dir);
-	wchar_t startc = line_curr_char();
-	bool startwhite = (startc == ' ' || startc == '\t');
-	for (;;) {
-		wchar_t c = line_curr_char();
-		if (!startwhite && (c == ' ' || c == '\t')) break;
-		if (startwhite && c != ' ' && c != '\t') break;
+        bool found = false;
+	while (!found) {
+                cursor_move(dir);
+                wchar_t c = line_curr_char();
+                for (const char *d = conf.word_delimiters; *d; d++) {
+                        if (*d == c) {
+                                found = true;
+                                break;
+                        }
+                }
 		if ((size_t)buffers.curr->cx == current_line_length()) return SUCCESS;
 		if (buffers.curr->cx == 0) return SUCCESS;
-		cursor_move(dir);
 	}
-	if (dir == CURSOR_DIRECTION_LEFT)
-		cursor_move(CURSOR_DIRECTION_RIGHT);
         return SUCCESS;
 }

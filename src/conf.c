@@ -24,6 +24,7 @@ struct conf conf = {
         .quit_times = 3,
         .history.max_size = 1000,
         .command_history.save_to_file = false,
+        .word_delimiters = "(),{}@?=<>#\"[]",
 };
 
 struct buffer_conf buffer_conf = {
@@ -149,6 +150,7 @@ static int parse_conf_file(char *filename) {
 #undef CONF_STRUCT
 #define CONF_STRUCT conf
                 VAL_NUM(quit_times);
+                VAL_STR(word_delimiters);
 #undef CONF_STRUCT
 #define CONF_STRUCT conf.history
 #undef CONF_STRUCT_STR
