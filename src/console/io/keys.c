@@ -166,20 +166,51 @@ const char* editor_get_key_repr(key_ty key) {
 #define N 50
         static char buf[N];
         buf[0] = '\0';
-        char *firstbuf = "";
-        if (key.modif == KEY_MODIF_CTRL)
-                firstbuf = "Ctrl + ";
-        if (key.modif == KEY_MODIF_ALT)
-                firstbuf = "Alt + ";
+
+        bool tag = false;
+        char *prefix = "";
+        char *value = NULL;
+
+        if (key.modif == KEY_MODIF_CTRL) {
+                prefix = "C-";
+                tag = true;
+        }
+        else if (key.modif == KEY_MODIF_ALT) {
+                prefix = "A-";
+                tag = true;
+        }
+
+#define SPECIAL(variant, str)\
+        case variant: \
+                value = str; \
+                tag = true; \
+                break;
 
         switch (key.k) {
-        case F5:
-                snprintf(buf, N, "%sF5", firstbuf); break;
-        case PAGE_UP:
-                snprintf(buf, N, "%sREPAG", firstbuf); break;
+                SPECIAL(F5, "F5")
+                SPECIAL(PAGE_UP, "REPAG")
+                SPECIAL(ARROW_LEFT, "ARROW_LEFT")
+                SPECIAL(ARROW_UP, "ARROW_UP")
+                SPECIAL(ARROW_DOWN, "ARROW_DOWN")
+                SPECIAL(ARROW_RIGHT, "ARROW_RIGHT")
+                SPECIAL(ESC, "ESC")
+                SPECIAL('\r', "CR")
         default:
-                snprintf(buf, N, "%s%c", firstbuf, key.k); break;
 
         }
+
+        char *tpre = tag ? "<" : "";
+        char *tpost = tag ? ">" : "";
+
+        if (value == NULL) {
+                if (iswprint(key.k)) {
+                        snprintf(buf, N, "%s%s%c%s", tpre, prefix, key.k, tpost);
+                } else {
+                        snprintf(buf, N, "%s%s%d%s", tpre, prefix, key.k, tpost);
+                }
+        } else {
+                snprintf(buf, N, "%s%s%s%s", tpre, prefix, value, tpost);
+        }
+
         return buf;
 }

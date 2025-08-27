@@ -26,7 +26,89 @@
 static trie_node_t mappings[BUFFER_MODE_LEN] = {0};
 static trie_node_t mappings_default;
 
+static hash_map_t *commands_ids;
 static vector_t *commands;
+
+int64_t hash_command(const void *cmd_ptr) {
+        command_t *cmd = (command_t*)cmd_ptr;
+
+        int64_t hash_func = (uintptr_t)cmd->func;
+
+        int64_t args_hash_acc = 0;
+
+        for (size_t i = 0; i < (size_t)cmd->nargs; i++) {
+                command_arg_t arg = cmd->args[i];
+                int64_t arg_hash;
+                switch (arg.type) {
+                        case CMD_ARG_T_INT:
+                                arg_hash = hash_int(&arg.i);
+                                break;
+                        case CMD_ARG_T_CHAR:
+                                arg_hash = hash_char(&arg.c);
+                                break;
+
+                        case CMD_ARG_T_BOOL:
+                                arg_hash = hash_int(&arg.b);
+                                break;
+
+                        case CMD_ARG_T_PTR:
+                                arg_hash = hash_ptr(&arg.b);
+                                break;
+                        default:
+                                arg_hash = 0;
+                                break;
+                }
+                arg_hash = arg_hash << 1 | arg.type;
+                args_hash_acc += i * arg_hash;
+        }
+
+        return hash_func + args_hash_acc * 3;
+}
+
+int command_eq(const void *cmd1_ptr, const void *cmd2_ptr) {
+        command_t *cmd1 = (command_t*)cmd1_ptr;
+        command_t *cmd2 = (command_t*)cmd2_ptr;
+
+        if (cmd1->func != cmd2->func)
+                return -1;
+
+        if (cmd1->nargs != cmd2->nargs)
+                return -1;
+
+        for (int i = 0; i < cmd1->nargs; i++) {
+                command_arg_t arg1 = cmd1->args[i];
+                command_arg_t arg2 = cmd2->args[i];
+
+                if (arg1.type != arg2.type)
+                        return -1;
+
+                switch (arg1.type) {
+                        case CMD_ARG_T_INT:
+                                if (arg1.i != arg2.i)
+                                        return -1;
+                                break;
+                        case CMD_ARG_T_CHAR:
+                                if (arg1.c != arg2.c)
+                                        return -1;
+                                break;
+
+                        case CMD_ARG_T_BOOL:
+                                if (arg1.b != arg2.b)
+                                        return -1;
+                                break;
+
+                        case CMD_ARG_T_PTR:
+                                if (arg1.ptr != arg2.ptr)
+                                        return -1;
+                                break;
+                        default:
+                                return -1;
+                                break;
+                }
+        }
+
+        return 0;
+}
 
 int __mapping_insert_key(key_ty c) {
         if (c.k != NO_KEY && is_key_printable(c)) {
@@ -51,15 +133,24 @@ static int __register_cmd(command_func_t f, command_arg_t *args) {
         command_t cmd = {
                 .func = f,
                 .nargs = n,
-                .args = n > 0 ? malloc(sizeof(command_arg_t) * n) : NULL,
+                .args = args,
         };
+
+        int* maybe_id = hashmap_get_ref(commands_ids, &cmd);
+        if (maybe_id)
+                return *maybe_id;
+
+        cmd.args = n > 0 ? malloc(sizeof(command_arg_t) * n) : NULL;
         for (size_t i = 0; i < n; i++) {
                 cmd.args[i] = args[i];
         }
 
         vector_append(commands, &cmd);
-        size_t len = vector_size(commands);
-        return len - 1;
+        int id = vector_size(commands) - 1;
+
+        hashmap_put(commands_ids, &cmd, &id);
+
+        return id;
 }
 
 void __register_mapping(buffer_mode_t mode, key_ty *keys, size_t keys_len, int cmd_id) {
@@ -321,6 +412,9 @@ void init_mapping(void) {
 
         commands = vector_init(sizeof(command_t), compare_equal);
         vector_set_destructor(commands, __destroy_command);
+
+        commands_ids = hashmap_init(sizeof(command_t), sizeof(int), hash_command, command_eq);
+
         for (int i = 0; i < BUFFER_MODE_LEN; i++) {
                 mappings[i] = trie_new();
         }
@@ -464,9 +558,9 @@ void init_mapping(void) {
                 arg_int(1)
         );
 
-        imap_alt('h', map_help);
-        imap_alt('c', map_line_toggle_comment);
-        imap_alt(
+        nmap_alt('h', map_help);
+        inmap_alt('c', map_line_toggle_comment);
+        inmap_alt(
                 's',
                 map_cmd_run,
                 arg_ptr(L"search")
@@ -484,11 +578,17 @@ void init_mapping(void) {
                 arg_ptr(L"replace")
        );
 
-        imap_alt(
+        inmap_alt(
                 'k',
                 map_line_cut,
                 arg_bool(false)
        );
+
+        nmap(
+                'D',
+                map_line_cut,
+                arg_bool(false)
+        );
 
         imap_alt(
                 ARROW_UP,
@@ -687,3 +787,17 @@ int try_execute_action(key_ty key) {
         return ret;
 }
 
+static void print_keymap(const key_ty *keys, size_t len, int cmd_id) {
+        for (size_t i = 0; i < len; i++) {
+                key_ty key =  keys[i];
+                line_put_str(editor_get_key_repr(key));
+        }
+        char tmp[1024];
+        snprintf(tmp, 1024, "\t = %d\n", cmd_id);
+        line_put_str(tmp);
+}
+
+void format_keybindings(buffer_mode_t bmode) {
+        trie_node_t *trie = bmode == BUFFER_MODE_LEN ? &mappings_default : &mappings[bmode];
+        trie_foreach(trie, print_keymap);
+}

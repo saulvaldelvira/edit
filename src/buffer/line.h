@@ -12,6 +12,7 @@ void line_insert(int at, const wchar_t *line, size_t len);
 void line_append(const wchar_t *line, size_t len);
 int line_cx_to_rx(wstring_t *line, int cx);
 void line_put_char(int c);
+void line_put_str(const char *str);
 void line_insert_newline(int at);
 void line_insert_newline_bellow(void);
 int  line_move(cursor_direction_t dir);

@@ -18,8 +18,10 @@ int trie_search(trie_node_t *trie, key_ty *keys, size_t keys_len);
 
 trie_node_t* trie_get_next(trie_node_t *trie, key_ty key);
 
-bool trie_is_leaf(trie_node_t *trie);
+bool trie_is_leaf(const trie_node_t *trie);
 
 void trie_free(trie_node_t *trie);
+
+void trie_foreach(const trie_node_t *trie, void (*func)(const key_ty*, size_t, int));
 
 #endif /* __PREFIX_TREE_H__ */

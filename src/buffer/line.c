@@ -4,6 +4,7 @@
 #include "util.h"
 #include <console/cursor.h>
 #include "buffer/highlight/mode.h"
+#include <stddef.h>
 #include <stdlib.h>
 #include <wchar.h>
 #include <assert.h>
@@ -133,6 +134,13 @@ void line_put_char(int c){
 	}
 	buffers.curr->cx += n;
 	buffers.curr->dirty += n;
+}
+
+void line_put_str(const char *str) {
+        while (*str) {
+                line_put_char(*str);
+                str++;
+        }
 }
 
 static void line_delete_char_backwards(void){

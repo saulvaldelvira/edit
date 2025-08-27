@@ -1,6 +1,7 @@
 
 #include "console/io/keys.h"
 #include "hash_map.h"
+#include "vector.h"
 #include <stdint.h>
 #include "prefix_tree.h"
 
@@ -78,10 +79,42 @@ trie_node_t* trie_get_next(trie_node_t *trie, key_ty key) {
         return hashmap_get_ref(trie->keys, &key);
 }
 
-bool trie_is_leaf(trie_node_t *trie) {
+bool trie_is_leaf(const trie_node_t *trie) {
         return hashmap_length(trie->keys) == 0;
 }
 
 void trie_free(trie_node_t *trie) {
         hashmap_free(trie->keys);
+}
+
+static void __trie_foreach(const trie_node_t *trie, void (*func)(const key_ty*, size_t, int), vector_t *acc) {
+        if (trie_is_leaf(trie))
+                return;
+
+        vector_t *keys = hashmap_keys(trie->keys);
+
+        for (size_t i = 0; i < vector_size(keys); i++) {
+                key_ty key;
+                vector_at(keys, i, &key);
+
+                trie_node_t next;
+                hashmap_get(trie->keys, &key, &next);
+
+                vector_append(acc, &key);
+                if (next.cmd_id >= 0) {
+                        func(vector_get_buffer(acc), vector_size(acc), next.cmd_id);
+                }
+                __trie_foreach(&next, func, acc);
+                vector_remove_back(acc);
+        }
+
+        vector_free(keys);
+}
+
+void trie_foreach(const trie_node_t *trie, void (*func)(const key_ty*, size_t, int)) {
+        vector_t *acc = vector_init(sizeof(key_ty), cmp_key_t);
+
+        __trie_foreach(trie, func, acc);
+
+        vector_free(acc);
 }
