@@ -148,7 +148,7 @@ void editor_cmd(const wchar_t *command){
 #define cmp(str) else if (wcscmp(cmd, str) == 0)
 
         cmp(L"w")
-                file_save(false, false);
+                file_save(false, true);
 
         cmp(L"wa") {
                 foreach_buffer(
@@ -174,7 +174,7 @@ void editor_cmd(const wchar_t *command){
         }
 
         cmp(L"wq") {
-                file_save(false, false);
+                file_save(false, true);
                 buffer_drop(false);
         }
 

@@ -286,7 +286,7 @@ static int __save_to(char *fname, size_t *len) {
 }
 
 int file_save(bool only_tmp, bool ask_filename){
-	if (ask_filename){
+	if (ask_filename && !buffers.curr->filename){
 		const wchar_t *filename = editor_prompt(L"Save as: ", buffers.curr->filename, history);
 		if (!filename || wstrlen(filename) == 0)
 			return -1;
