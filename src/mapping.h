@@ -32,12 +32,17 @@ typedef struct command {
 
 typedef int (*default_handler_t)(key_ty);
 
+typedef struct mapping {
+        int cmd_id;
+        char *desc;
+} mapping_t;
+
 void register_default_handler(buffer_mode_t mode, default_handler_t h);
 
-void register_mapping(buffer_mode_t mode, key_ty *keys, size_t keys_len, command_func_t, command_arg_t *args);
+void register_mapping(buffer_mode_t mode, key_ty *keys, size_t keys_len, command_func_t f, command_arg_t *args, char *desc);
 
 int try_execute_action(key_ty key);
 
-void format_keybindings(buffer_mode_t bmode);
+void format_keybindings(void);
 
 #endif /* __MAPPING_H__ */

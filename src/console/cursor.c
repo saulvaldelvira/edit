@@ -1,3 +1,4 @@
+#include "buffer.h"
 #include "console/io/output.h"
 #include "console/io/poll.h"
 #include "prelude.h"
@@ -161,6 +162,11 @@ void cursor_goto(int x, int y){
 INLINE
 void cursor_goto_start(void) {
         cursor_goto(0,0);
+}
+
+void cursor_goto_end(void) {
+        size_t last_line = buffers.curr->num_lines;
+        cursor_goto(0,last_line);
 }
 
 int cursor_jump_word(cursor_direction_t dir){

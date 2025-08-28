@@ -266,32 +266,7 @@ void editor_help(void){
 	buffer_insert();
         buffers.curr->conf.line_number = false;
         static wchar_t *lines[] = {
-		// L"Keybindings",
-		// L"===========",
-		// L"Ctrl + E           \t Execute command",
-		// L"Ctrl + F           \t Format line",
-		// L"Ctrl + K           \t Cut line",
-		// L"Ctrl + N           \t Add buffer",
-		// L"Ctrl + O           \t Open file",
-		// L"Ctrl + Q           \t Kill buffer",
-		// L"Ctrl + S           \t Save buffer",
-		// L"Ctrl + Left Arrow  \t Move to the buffer on the left",
-		// L"Ctrl + Right Arrow \t Move to the buffer on the right",
-		// L"F5                 \t Reload file",
-		// L"Alt + H            \t Display help buffer",
-		// L"Alt + C            \t Toggle comment in the current line",
-		// L"Alt + S            \t Search in the buffer",
-		// L"Alt + K            \t Cut the line from the cursor to the end",
-		// L"Alt + Up Arrow     \t Moves the current line up",
-		// L"Alt + Down Arrow   \t Moves the current line down",
-		// L"Alt + [1-9]        \t Go to buffer number [1-9]",
-		// L"Alt + Left Arrow   \t Jumps to the previous word ",
-		// L"Alt + Righ Arrow   \t Jumps to the next word ",
-		// L"Alt + Backspace    \t Deletes a word backwards ",
-		// L"Alt + Supr Key     \t Deletes a word forward ",
-		// L"",
-		L"Commands",
-		L"========",
+		L"= Commands",
 		L"!quit	Exit the editor",L"",
 		L"pwd	prints the current working directory",L"",
 		L"wq	Write the buffer and close it",L"",
@@ -305,19 +280,16 @@ void editor_help(void){
                 L"set <key> <value> Set a state.guration parameter for all new buffers",L"",
                 L"setlocal <key> <value> Set a state.guration parameter for the current buffer",L"",
 		L"help	Display the help buffer",
+                L"",
+                L"= Keybindings",
 		NULL
 	};
 
-
-        buffer_mode_t mode = buffer_mode_get_current();
-        line_put_str("Keybindings <mode = ");
-        line_put_str(buffer_mode_get_string(mode));
-        line_put_str(">\n");
-        line_put_str("=======================\n");
-        format_keybindings(buffer_mode_get_current());
-
 	for (wchar_t **line = lines; *line != NULL; line++)
 		line_append(*line, -1);
+
+        cursor_goto_end();
+        format_keybindings();
 
         buffers.curr->dirty = 0;
         cursor_goto_start();

@@ -29,6 +29,7 @@ selection_t cursor_get_selection(void);
 int cursor_move(cursor_direction_t key);
 void cursor_goto(int x, int y);
 void cursor_goto_start(void);
+void cursor_goto_end(void);
 void cursor_adjust(void);
 int cursor_jump_word(cursor_direction_t dir);
 

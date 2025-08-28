@@ -189,7 +189,12 @@ const char* editor_get_key_repr(key_ty key) {
         switch (key.k) {
                 SPECIAL(F5, "F5")
                 SPECIAL(PAGE_UP, "REPAG")
+                SPECIAL(PAGE_DOWN, "PAGE_DOWN")
+                SPECIAL(HOME_KEY, "HOME")
+                SPECIAL(END_KEY, "END_KEY")
                 SPECIAL(ARROW_LEFT, "ARROW_LEFT")
+                SPECIAL(BACKSPACE, "BACKSPACE")
+                SPECIAL(DEL_KEY, "DEL")
                 SPECIAL(ARROW_UP, "ARROW_UP")
                 SPECIAL(ARROW_DOWN, "ARROW_DOWN")
                 SPECIAL(ARROW_RIGHT, "ARROW_RIGHT")

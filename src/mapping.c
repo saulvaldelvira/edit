@@ -153,23 +153,17 @@ static int __register_cmd(command_func_t f, command_arg_t *args) {
         return id;
 }
 
-void __register_mapping(buffer_mode_t mode, key_ty *keys, size_t keys_len, int cmd_id) {
+void __register_mapping(buffer_mode_t mode, key_ty *keys, size_t keys_len, int cmd_id, char *desc) {
         trie_node_t *trie = mode == BUFFER_MODE_LEN ? &mappings_default : &mappings[mode];
-        trie_add(trie, keys, keys_len, cmd_id);
+        trie_add(trie, keys, keys_len, (mapping_t) {
+                        .cmd_id = cmd_id,
+                        .desc = desc
+        });
 }
 
-void register_mapping(buffer_mode_t mode, key_ty *keys, size_t keys_len, command_func_t f, command_arg_t *args) {
+void register_mapping(buffer_mode_t mode, key_ty *keys, size_t keys_len, command_func_t f, command_arg_t *args, char *desc) {
         int cmd_id = __register_cmd(f, args);
-        __register_mapping(mode, keys, keys_len, cmd_id);
-}
-
-void register_mapping_2(buffer_mode_t mode1, buffer_mode_t mode2, key_ty *keys, size_t keys_len, command_func_t f, command_arg_t *args) {
-        int cmd_id = __register_cmd(f, args);
-        trie_node_t *trie1 = mode1 == BUFFER_MODE_LEN ? &mappings_default : &mappings[mode1];
-        trie_add(trie1, keys, keys_len, cmd_id);
-
-        trie_node_t *trie2 = mode2 == BUFFER_MODE_LEN ? &mappings_default : &mappings[mode2];
-        trie_add(trie2, keys, keys_len, cmd_id);
+        __register_mapping(mode, keys, keys_len, cmd_id, desc);
 }
 
 void register_default_handler(buffer_mode_t mode, default_handler_t h) {
@@ -178,37 +172,43 @@ void register_default_handler(buffer_mode_t mode, default_handler_t h) {
 
 #define __cmd_args(...) (command_arg_t[]){ __VA_ARGS__  __VA_OPT__(,) args_end }
 
-#define map(mode, keys, n, f, ...) register_mapping(mode, keys, n, f, __cmd_args(__VA_ARGS__) )
+#define map(mode, keys, n, msg, f, ...) register_mapping(mode, keys, n, f, __cmd_args(__VA_ARGS__), msg)
 
-#define map1(mode, key, f, ...) map(mode, (key_ty[]) { key }, 1, f, __VA_ARGS__)
+#define map1(mode, key, msg, f, ...) map(mode, (key_ty[]) { key }, 1, msg, f, __VA_ARGS__)
 
-#define map_modif(mode, key, m, f, ...) map1(mode, ((key_ty) { .k = key, .modif = m }), f, __VA_ARGS__)
+#define map_modif(mode, key, m, msg, f, ...) map1(mode, ((key_ty) { .k = key, .modif = m }), msg, f, __VA_ARGS__)
 
-#define map_2(mode1, mode2, key, f, ...) register_mapping_2(mode1, mode2, (key_ty[]) { (key_ty) { .k = key} }, 1, f, __cmd_args(__VA_ARGS__) )
+#define map_2(mode1, mode2, key, msg, f, ...) do { \
+        register_mapping(mode1, (key_ty[]) { (key_ty) { .k = key} }, 1, f, __cmd_args(__VA_ARGS__), msg) ;\
+        register_mapping(mode2, (key_ty[]) { (key_ty) { .k = key} }, 1, f, __cmd_args(__VA_ARGS__), msg) ; } while(0)
 
-#define map_modif_2(mode1, mode2, key, m, f, ...) register_mapping_2(mode1, mode2, (key_ty[]) { (key_ty) { .k = key, .modif = m} }, 1, f, __cmd_args(__VA_ARGS__) )
+#define map_modif_2(mode1, mode2, key, m, msg, f, ...) do { \
+        register_mapping(mode1, (key_ty[]) { (key_ty) { .k = key, .modif = m} }, 1, f, __cmd_args(__VA_ARGS__), msg); \
+        register_mapping(mode2, (key_ty[]) { (key_ty) { .k = key, .modif = m} }, 1, f, __cmd_args(__VA_ARGS__), msg); } while (0)
 
 /* #define map_func_confirm(key, n, ...) map_confirm(key, n, command_func_call, __VA_ARGS__) */
 
-#define allmap(key, f, ...) map1(BUFFER_MODE_LEN, (key_ty) { .k = key }, f, __VA_ARGS__)
-#define allmap_modif(key, m, f, ...) map_modif(BUFFER_MODE_LEN, key, m, f, __VA_ARGS__)
-#define allmap_alt(key, f, ...) map_modif(BUFFER_MODE_LEN, key, KEY_MODIF_ALT, f, __VA_ARGS__)
-#define allmap_ctrl(key, f, ...) map_modif(BUFFER_MODE_LEN, key, KEY_MODIF_CTRL, f, __VA_ARGS__)
+#define allmap(key, msg, f, ...) map1(BUFFER_MODE_LEN, (key_ty) { .k = key }, msg, f, __VA_ARGS__)
+#define allmap_modif(key, m, msg, f, ...) map_modif(BUFFER_MODE_LEN, key, m, msg, f, __VA_ARGS__)
+#define allmap_alt(key, msg, f, ...) map_modif(BUFFER_MODE_LEN, key, KEY_MODIF_ALT, msg, f, __VA_ARGS__)
+#define allmap_ctrl(key, msg, f, ...) map_modif(BUFFER_MODE_LEN, key, KEY_MODIF_CTRL, msg, f, __VA_ARGS__)
 
-#define nmap(key, f, ...) map1(BUFFER_MODE_NORMAL, (key_ty) { .k = key }, f, __VA_ARGS__)
-#define nmap_modif(key, m, f, ...) map_modif(BUFFER_MODE_NORMAL, key, m, f, __VA_ARGS__)
-#define nmap_alt(key, f, ...) map_modif(BUFFER_MODE_NORMAL, key, KEY_MODIF_ALT, f, __VA_ARGS__)
-#define nmap_ctrl(key, f, ...) map_modif(BUFFER_MODE_NORMAL, key, KEY_MODIF_CTRL, f, __VA_ARGS__)
+#define nmap(key, msg, f, ...) map1(BUFFER_MODE_NORMAL, (key_ty) { .k = key }, msg, f, __VA_ARGS__)
+#define nmap_modif(key, m, msg, f, ...) map_modif(BUFFER_MODE_NORMAL, key, m, msg, f, __VA_ARGS__)
+#define nmap_alt(key, msg, f, ...) map_modif(BUFFER_MODE_NORMAL, key, KEY_MODIF_ALT, msg, f, __VA_ARGS__)
+#define nmap_ctrl(key, msg, f, ...) map_modif(BUFFER_MODE_NORMAL, key, KEY_MODIF_CTRL, msg, f, __VA_ARGS__)
 
-#define imap(key, f, ...) map1(BUFFER_MODE_INSERT, (key_ty) { .k = key }, f, __VA_ARGS__)
-#define imap_modif(key, m, f, ...) map_modif(BUFFER_MODE_INSERT, key, m, f, __VA_ARGS__)
-#define imap_alt(key, f, ...) map_modif(BUFFER_MODE_INSERT, key, KEY_MODIF_ALT, f, __VA_ARGS__)
-#define imap_ctrl(key, f, ...) map_modif(BUFFER_MODE_INSERT, key, KEY_MODIF_CTRL, f, __VA_ARGS__)
+#define imap(key, msg, f, ...) map1(BUFFER_MODE_INSERT, (key_ty) { .k = key }, msg, f, __VA_ARGS__)
+#define imap_modif(key, m, msg, f, ...) map_modif(BUFFER_MODE_INSERT, key, m, msg, f, __VA_ARGS__)
+#define imap_alt(key, msg, f, ...) map_modif(BUFFER_MODE_INSERT, key, KEY_MODIF_ALT, msg, f, __VA_ARGS__)
+#define imap_ctrl(key, msg, f, ...) map_modif(BUFFER_MODE_INSERT, key, KEY_MODIF_CTRL, msg, f, __VA_ARGS__)
 
-#define inmap(key, f, ...) map_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, f, __VA_ARGS__)
-#define inmap_modif(key, m, f, ...) map_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, m, f, __VA_ARGS__)
-#define inmap_alt(key, f, ...) map_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, KEY_MODIF_ALT, f, __VA_ARGS__)
-#define inmap_ctrl(key, f, ...) map_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, KEY_MODIF_CTRL, f, __VA_ARGS__)
+#define nvmap(key, msg, f, ...) map_2(BUFFER_MODE_NORMAL, BUFFER_MODE_VISUAL, key, msg, f, __VA_ARGS__)
+
+#define inmap(key, msg, f, ...) map_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, msg, f, __VA_ARGS__)
+#define inmap_modif(key, m, msg, f, ...) map_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, m, msg, f, __VA_ARGS__)
+#define inmap_alt(key, desc, f, ...) map_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, KEY_MODIF_ALT, desc, f, __VA_ARGS__)
+#define inmap_ctrl(key, desc, f, ...) map_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, KEY_MODIF_CTRL, desc, f, __VA_ARGS__)
 
 /* #define map_func(key, ...) map_func_confirm(key, 0, __VA_ARGS__) */
 
@@ -391,6 +391,7 @@ void __cleanup_command(void) {
                         trie_free(&mappings[i]);
                 }
                 trie_free(&mappings_default);
+                hashmap_free(commands_ids);
         )
 }
 
@@ -421,45 +422,49 @@ void init_mapping(void) {
         mappings_default = trie_new();
 
 
-#define direction_cmd(kc, dir) {\
+#define direction_cmd(kc, dir, desc) {\
         int cmd = \
         __register_cmd(map_move_cursor, \
                 __cmd_args( \
                         arg_int(CURSOR_DIRECTION_ ## dir),\
                         arg_int(1) \
                 ));\
-        __register_mapping(BUFFER_MODE_INSERT, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd);\
-        __register_mapping(BUFFER_MODE_NORMAL, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd);\
-        __register_mapping(BUFFER_MODE_VISUAL, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd);\
-        __register_mapping(BUFFER_MODE_INSERT, (key_ty[]) {(key_ty) {  .k = kc, .modif = KEY_MODIF_CTRL } }, 1, cmd);\
-        __register_mapping(BUFFER_MODE_NORMAL, (key_ty[]) {(key_ty) {  .k = towlower(kc) } }, 1, cmd);\
-        __register_mapping(BUFFER_MODE_VISUAL, (key_ty[]) {(key_ty) {  .k = towlower(kc) } }, 1, cmd);\
+        __register_mapping(BUFFER_MODE_INSERT, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd, desc);\
+        __register_mapping(BUFFER_MODE_NORMAL, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd, desc);\
+        __register_mapping(BUFFER_MODE_VISUAL, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd, desc);\
+        __register_mapping(BUFFER_MODE_INSERT, (key_ty[]) {(key_ty) {  .k = kc, .modif = KEY_MODIF_CTRL } }, 1, cmd, desc);\
+        __register_mapping(BUFFER_MODE_NORMAL, (key_ty[]) {(key_ty) {  .k = towlower(kc) } }, 1, cmd, desc);\
+        __register_mapping(BUFFER_MODE_VISUAL, (key_ty[]) {(key_ty) {  .k = towlower(kc) } }, 1, cmd, desc);\
 }
 
-        direction_cmd('L', RIGHT);
-        direction_cmd('H', LEFT);
-        direction_cmd('K', UP);
-        direction_cmd('J', DOWN);
+        direction_cmd('L', RIGHT, "Moves the cursor to the right");
+        direction_cmd('H', LEFT, "Moves the cursor to the left");
+        direction_cmd('K', UP, "Moves the cursor up");
+        direction_cmd('J', DOWN, "Moves the cursor down");
 
         inmap(HOME_KEY,
+           "Moves to the start of the line",
            map_move_cursor,
            arg_int(CURSOR_DIRECTION_START),
            arg_int(1)
         );
 
         inmap(END_KEY,
+           "Moves to the end of the line",
            map_move_cursor,
            arg_int(CURSOR_DIRECTION_END),
            arg_int(1)
         );
 
         inmap(PAGE_UP,
+           "Moves a page up",
             map_move_cursor,
             arg_int(CURSOR_DIRECTION_PAGE_UP),
             arg_int(1)
         );
 
         inmap(PAGE_DOWN,
+           "Moves a page down",
             map_move_cursor,
             arg_int(CURSOR_DIRECTION_PAGE_DOWN),
             arg_int(1)
@@ -468,12 +473,14 @@ void init_mapping(void) {
 
         inmap_ctrl(
             'X',
+            "Cuts the current line",
             map_line_cut,
             arg_bool(true)
         );
 
         nmap_ctrl(
                 'J',
+                "Moves cursor 4 lines down",
                 map_move_cursor,
                 arg_int(CURSOR_DIRECTION_DOWN),
                 arg_int(4)
@@ -481,21 +488,23 @@ void init_mapping(void) {
 
         nmap_ctrl(
                 'K',
+                "Moves cursor 4 lines up",
                 map_move_cursor,
                 arg_int(CURSOR_DIRECTION_UP),
                 arg_int(4)
         );
 
-        inmap_ctrl('N', map_buffer_insert);
+        inmap_ctrl('N', "Inserts a new buffer", map_buffer_insert);
 
         if (conf.history.enabled) {
-                imap_ctrl('Z', map_history_undo);
-                inmap_ctrl('R', map_history_redo);
-                nmap_ctrl('u', map_history_undo);
+                imap_ctrl('Z', "Undo", map_history_undo);
+                inmap_ctrl('R', "Redo", map_history_redo);
+                nmap_ctrl('u', "Undo", map_history_undo);
         }
 
         inmap_ctrl(
                 ARROW_LEFT,
+                "Switch onw buffer to the left",
                 map_buffer_switch,
                 arg_bool(true),
                 arg_int(CURSOR_DIRECTION_LEFT)
@@ -503,6 +512,7 @@ void init_mapping(void) {
 
         inmap_ctrl(
                 ARROW_RIGHT,
+                "Switch onw buffer to the right",
                 map_buffer_switch,
                 arg_bool(true),
                 arg_int(CURSOR_DIRECTION_RIGHT)
@@ -511,16 +521,18 @@ void init_mapping(void) {
         imap_modif(
                 'E',
                 KEY_MODIF_CTRL,
+                "Run a command",
                 map_cmd_run,
                 arg_ptr(NULL)
         );
 
-        nmap(':', map_cmd_run, arg_ptr(NULL));
-        nmap(',', map_cmd_run, arg_ptr(NULL));
+        nmap(':', "Open command prompt", map_cmd_run, arg_ptr(NULL));
+        nmap(',',"Open command prompt", map_cmd_run, arg_ptr(NULL));
 
         imap_modif(
                 'S',
                 KEY_MODIF_CTRL,
+                "Save file",
                 map_file_save,
                 arg_bool(false),
                 arg_bool(true)
@@ -528,24 +540,28 @@ void init_mapping(void) {
 
         imap(
                 DEL_KEY,
+                "Delete a character",
                 map_cursor_delete_char,
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
 
         nmap(
                 DEL_KEY,
+                "Move a character to the left",
                 map_move_cursor,
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
 
         imap(
                 BACKSPACE,
+                "Delete a character",
                 map_cursor_delete_char,
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
         nmap(
                 BACKSPACE,
+                "Move a character to the left",
                 map_move_cursor,
                 arg_int(CURSOR_DIRECTION_LEFT),
                 arg_int(1)
@@ -553,112 +569,130 @@ void init_mapping(void) {
 
         nmap(
                 '\r',
+                "Move to the next line",
                 map_move_cursor,
                 arg_int(CURSOR_DIRECTION_DOWN),
                 arg_int(1)
         );
 
-        nmap_alt('h', map_help);
-        inmap_alt('c', map_line_toggle_comment);
+        nmap_alt('h', "Display the help menu", map_help);
+        inmap_alt('c', "Toggle comment", map_line_toggle_comment);
         inmap_alt(
                 's',
+                "Search",
                 map_cmd_run,
                 arg_ptr(L"search")
         );
 
         nmap(
                 '/',
+                "Start search",
                 map_cmd_run,
                 arg_ptr(L"search")
         );
 
         imap_alt(
                 's',
+                "Replace",
                 map_cmd_run,
                 arg_ptr(L"replace")
        );
 
         inmap_alt(
                 'k',
+                "Cut the rest of this line",
                 map_line_cut,
                 arg_bool(false)
        );
 
         nmap(
                 'D',
+                "Delete the rest of the line",
                 map_line_cut,
                 arg_bool(false)
         );
 
         imap_alt(
                 ARROW_UP,
+                "Move up",
                 map_line_move,
                 arg_int(CURSOR_DIRECTION_UP)
         );
 
         imap_alt(
                 ARROW_DOWN,
+                "Move down",
                 map_line_move,
                 arg_int(CURSOR_DIRECTION_DOWN)
         );
 
         imap_alt(
                 ARROW_LEFT,
+                "Jump to the next word",
                 map_cursor_jump_word,
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
         imap_alt(
                 ARROW_RIGHT,
+                "Jump to the previous word",
                 map_cursor_jump_word,
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
 
         imap_alt(
                 BACKSPACE,
+                "Delete one word backwards",
                 map_cursor_delete_word,
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
         imap_alt(
                 DEL_KEY,
+                "Delete the next word",
                 map_cursor_delete_word,
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
 
         nmap(
                 'i',
+                "Switch to insert mode",
                 map_change_mode,
                 arg_int(BUFFER_MODE_INSERT)
         );
 
         nmap(
                 'v',
+                "Switch to visual mode",
                 map_change_mode,
                 arg_int(BUFFER_MODE_VISUAL)
         );
 
         nmap(
                 'w',
+                "Move to the next word",
                 map_cursor_jump_word,
                 arg_int(CURSOR_DIRECTION_RIGHT)
         );
 
         nmap(
                 'b',
+                "Move to the previous word",
                 map_cursor_jump_word,
                 arg_int(CURSOR_DIRECTION_LEFT)
         );
 
-        nmap('o', map_go_insert_on_newline);
+        nmap('o', "Insert a line bellow", map_go_insert_on_newline);
 
-        allmap('0',
+        nvmap('0',
+                "Move to the start of the line",
                 map_move_cursor,
                 arg_int(CURSOR_DIRECTION_START),
                 arg_int(1)
               );
 
-        allmap('$',
+        nvmap('$',
+                "Move to the end of the line",
                 map_move_cursor,
                 arg_int(CURSOR_DIRECTION_END),
                 arg_int(1)
@@ -666,24 +700,28 @@ void init_mapping(void) {
 
         allmap_ctrl(
                 'C',
+                "Change to normal mode",
                 map_change_mode,
                 arg_int(BUFFER_MODE_NORMAL)
         );
 
         allmap(
                 ESC,
+                "Change to normal mode",
                 map_change_mode,
                 arg_int(BUFFER_MODE_NORMAL)
         );
 
         imap_ctrl(
                 'C',
+                "Change to normal mode",
                 map_change_mode,
                 arg_int(BUFFER_MODE_NORMAL)
         );
 
         imap(
                 ESC,
+                "Change to normal mode",
                 map_change_mode,
                 arg_int(BUFFER_MODE_NORMAL)
         );
@@ -691,6 +729,7 @@ void init_mapping(void) {
 	for (int i = 1; i <= 9; i++){
                 imap_alt(
                         (i + '0'),
+                        "Swicth to the nth buffer",
                         map_buffer_switch,
                         arg_bool(false),
                         arg_int(i)
@@ -709,10 +748,11 @@ void init_mapping(void) {
                 map_line_cut,
                 __cmd_args(
                         arg_bool(true)
-                )
+                ),
+                "Cuts the current line"
         );
 
-#define wind_move(ctrl_val, move_val, dir) \
+#define wind_move(ctrl_val, move_val, dir, desc) \
         register_mapping( \
                 BUFFER_MODE_NORMAL, \
                 (key_ty[])  { \
@@ -724,7 +764,8 @@ void init_mapping(void) {
                 __cmd_args( \
                         arg_bool(true), \
                         arg_int(dir) \
-                ) \
+                ), \
+                desc\
         ); \
         register_mapping( \
                 BUFFER_MODE_NORMAL, \
@@ -737,11 +778,12 @@ void init_mapping(void) {
                 __cmd_args( \
                         arg_bool(true), \
                         arg_int(dir) \
-                ) \
+                ), \
+                desc\
         ); \
 
-        wind_move('W', 'l', CURSOR_DIRECTION_RIGHT);
-        wind_move('W', 'h', CURSOR_DIRECTION_LEFT);
+        wind_move('W', 'l', CURSOR_DIRECTION_RIGHT, "Move to the next buffer");
+        wind_move('W', 'h', CURSOR_DIRECTION_LEFT, "Move to the previous buffer");
 }
 
 int __try_execute_action(buffer_mode_t bmode, key_ty key) {
@@ -761,9 +803,9 @@ int __try_execute_action(buffer_mode_t bmode, key_ty key) {
         if (*curr == NULL)
                 return 0;
 
-        if (curr[0]->cmd_id >= 0) {
+        if (curr[0]->mapping.cmd_id >= 0) {
                 command_t cmd;
-                vector_at(commands, curr[0]->cmd_id, &cmd);
+                vector_at(commands, curr[0]->mapping.cmd_id, &cmd);
 
                 *curr = NULL;
 
@@ -787,17 +829,30 @@ int try_execute_action(key_ty key) {
         return ret;
 }
 
-static void print_keymap(const key_ty *keys, size_t len, int cmd_id) {
+static void print_keymap(const key_ty *keys, size_t len, mapping_t mapping) {
+        line_put_str("");
         for (size_t i = 0; i < len; i++) {
                 key_ty key =  keys[i];
                 line_put_str(editor_get_key_repr(key));
         }
         char tmp[1024];
-        snprintf(tmp, 1024, "\t = %d\n", cmd_id);
+        if (mapping.desc) {
+                snprintf(tmp, 1024, "\t\t %s\n", mapping.desc);
+        } else {
+                snprintf(tmp, 1024, "\t\t (cmd id = %d)\n", mapping.cmd_id);
+        }
         line_put_str(tmp);
 }
 
-void format_keybindings(buffer_mode_t bmode) {
-        trie_node_t *trie = bmode == BUFFER_MODE_LEN ? &mappings_default : &mappings[bmode];
-        trie_foreach(trie, print_keymap);
+void format_keybindings(void) {
+        for (buffer_mode_t bmode = 0; bmode <= BUFFER_MODE_LEN; bmode++) {
+                line_put_str("== ");
+                const char *name = bmode == BUFFER_MODE_LEN ? "ALL" : buffer_mode_get_string(bmode);
+                line_put_str(name);
+                line_put_char('\n');
+                trie_node_t *trie = bmode == BUFFER_MODE_LEN ? &mappings_default : &mappings[bmode];
+                trie_foreach(trie, print_keymap);
+        }
+        line_put_char('\n');
+        line_put_char('\n');
 }

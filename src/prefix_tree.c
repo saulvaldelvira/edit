@@ -1,6 +1,7 @@
 
 #include "console/io/keys.h"
 #include "hash_map.h"
+#include "mapping.h"
 #include "vector.h"
 #include <stdint.h>
 #include "prefix_tree.h"
@@ -34,12 +35,12 @@ trie_node_t trie_new() {
         hash_map_t *keys = hashmap_init(sizeof(key_ty), sizeof(trie_node_t), hash_key_t, cmp_key_t);
         hashmap_set_destructor(keys, trie_destroy);
         return (trie_node_t) {
-                .cmd_id = -1,
+                .mapping = (mapping_t) { .cmd_id = -1 },
                 .keys = keys,
         };
 }
 
-void trie_add(trie_node_t *trie, key_ty *keys, size_t keys_len, int cmd_id) {
+void trie_add(trie_node_t *trie, key_ty *keys, size_t keys_len, mapping_t mapping) {
         trie_node_t *curr = trie;
 
         for (size_t i = 0; i < keys_len; i++) {
@@ -55,10 +56,10 @@ void trie_add(trie_node_t *trie, key_ty *keys, size_t keys_len, int cmd_id) {
                 curr = next;
         }
 
-        curr->cmd_id = cmd_id;
+        curr->mapping = mapping;
 }
 
-int trie_search(trie_node_t *trie, key_ty *keys, size_t keys_len) {
+mapping_t trie_search(trie_node_t *trie, key_ty *keys, size_t keys_len) {
         trie_node_t *curr = trie;
 
         for (size_t i = 0; i < keys_len; i++) {
@@ -66,13 +67,13 @@ int trie_search(trie_node_t *trie, key_ty *keys, size_t keys_len) {
 
                 trie_node_t *next = hashmap_get_ref(curr->keys, &key);
                 if (next == NULL) {
-                        return -1;
+                        return (mapping_t) { .cmd_id = -1 };
                 }
 
                 curr = next;
         }
 
-        return curr->cmd_id;
+        return curr->mapping;
 }
 
 trie_node_t* trie_get_next(trie_node_t *trie, key_ty key) {
@@ -87,7 +88,7 @@ void trie_free(trie_node_t *trie) {
         hashmap_free(trie->keys);
 }
 
-static void __trie_foreach(const trie_node_t *trie, void (*func)(const key_ty*, size_t, int), vector_t *acc) {
+static void __trie_foreach(const trie_node_t *trie, void (*func)(const key_ty*, size_t, mapping_t), vector_t *acc) {
         if (trie_is_leaf(trie))
                 return;
 
@@ -101,8 +102,8 @@ static void __trie_foreach(const trie_node_t *trie, void (*func)(const key_ty*, 
                 hashmap_get(trie->keys, &key, &next);
 
                 vector_append(acc, &key);
-                if (next.cmd_id >= 0) {
-                        func(vector_get_buffer(acc), vector_size(acc), next.cmd_id);
+                if (next.mapping.cmd_id >= 0) {
+                        func(vector_get_buffer(acc), vector_size(acc), next.mapping);
                 }
                 __trie_foreach(&next, func, acc);
                 vector_remove_back(acc);
@@ -111,7 +112,7 @@ static void __trie_foreach(const trie_node_t *trie, void (*func)(const key_ty*, 
         vector_free(keys);
 }
 
-void trie_foreach(const trie_node_t *trie, void (*func)(const key_ty*, size_t, int)) {
+void trie_foreach(const trie_node_t *trie, void (*func)(const key_ty*, size_t, mapping_t)) {
         vector_t *acc = vector_init(sizeof(key_ty), cmp_key_t);
 
         __trie_foreach(trie, func, acc);
