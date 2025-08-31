@@ -39,6 +39,10 @@ edit: $(OFILES)
 	@ echo " LD => edit"
 	@ $(CC) -o $(EXECUTABLE) $(OFILES) $(CFLAGS)
 
+release:
+	@ make -s clean CLEAN_LIBS=true
+	@ make -s PROFILE=release
+
 .c.o:
 	@ echo " CC $@"
 	@ $(CC) -c $< -o $@ $(CFLAGS)
