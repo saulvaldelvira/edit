@@ -3,11 +3,12 @@
 #include <lib/str/wstr.h>
 #include "state.h"
 #include "buffer/highlight/mode.h"
+#include "console/io/render.h"
 
 static void default_highlight(void){
 	wstring_t *line;
 	for (int i = 0; i < state.screen_rows; i++){
-		vector_at(state.render, i, &line);
+		vector_at(render.buffer, i, &line);
 		int match = wstr_find_substring(line, L"#", 0);
 		if (match < 0)
 			continue;

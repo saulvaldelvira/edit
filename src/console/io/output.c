@@ -1,6 +1,7 @@
 #include "output.h"
 #include "buffer.h"
 #include "buffer/mode.h"
+#include "console/io/render.h"
 #include "lib/str/wstr.h"
 #include <buffer/line.h>
 #include "mapping.h"
@@ -34,7 +35,7 @@ static int check_window_size(void){
 	if (rows != state.screen_rows || cols != state.screen_cols){
 		for (int i = state.screen_rows; i < rows; i++){
 			wstring_t *wstr = wstr_empty();
-			vector_append(state.render, &wstr);
+			vector_append(render.buffer, &wstr);
 		}
 		state.screen_rows = rows;
 		state.screen_cols = cols;
@@ -153,7 +154,7 @@ void editor_draw_rows(wstring_t *buf){
         bool has_selection = cursor_has_selection();
         selection_t sel;
         if (has_selection)
-                sel = cursor_get_selection();
+                sel = render_get_selection();
 
 	for (int y = 0; y < state.screen_rows; y++){
 		int file_line = y + buffers.curr->row_offset;
@@ -170,7 +171,7 @@ void editor_draw_rows(wstring_t *buf){
                                 wstr_concat_cwstr(buf, lnr_buf, sizeof(lnr_buf));
                         }
                         wstring_t *line;
-                        vector_at(state.render, y, &line);
+                        vector_at(render.buffer, y, &line);
                         size_t len = wstr_length(line);
 			if ((size_t)buffers.curr->col_offset < len){
 				if (len >= (size_t)buffers.curr->col_offset)

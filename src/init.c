@@ -10,6 +10,7 @@ void init_fs(void);
 void init_io(void);
 void init_log(void);
 void init_mapping(void);
+void init_render(void);
 
 void init(void) {
         init_log();
@@ -20,4 +21,5 @@ void init(void) {
         init_cmd();
         init_fs();
         init_mapping();
+        init_render();
 }

@@ -2,11 +2,12 @@
 #include <state.h>
 #include "../highlight.h"
 #include "color.h"
+#include "console/io/render.h"
 
 void highlight_c(void){
 	wstring_t *line;
 	for (int i = 0; i < state.screen_rows; i++){
-		vector_at(state.render, i, &line);
+		vector_at(render.buffer, i, &line);
 		int match = wstr_find_substring(line, L"//", 0);
 		if (match >= 0){
 			wstr_insert_cwstr(line, Color_IGreen, -1, match);

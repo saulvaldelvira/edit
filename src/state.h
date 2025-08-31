@@ -4,13 +4,13 @@
 #include <definitions.h>
 #include <time.h>
 #include <wchar.h>
+#include "console/cursor.h"
 #include "console/io/keys.h"
 #include "vector.h"
 
 extern struct state {
 	int screen_rows;
 	int screen_cols;
-	vector_t *render;
 	wchar_t status_msg[512];
 	time_t status_msg_time;
 } state;

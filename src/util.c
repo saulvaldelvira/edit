@@ -1,6 +1,8 @@
+#include "console/cursor.h"
 #include "prelude.h"
 #include "fs.h"
 #include "state.h"
+#include <stddef.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <wchar.h>
@@ -58,43 +60,6 @@ char* editor_cwd(void){
 	if (getcwd(cwd, PATH_MAX) == NULL)
 		die("Could not get CWD, on editor_cwd");
 	return cwd;
-}
-
-static void update_line(int cy){
-	int i = cy - buffers.curr->row_offset;
-	wstring_t *render;
-	vector_at(state.render, i, &render);
-	wstr_clear(render);
-	wstring_t *row;
-	vector_at(buffers.curr->lines, cy, &row);
-	int rx = 0;
-	for (size_t j = 0; j < wstr_length(row); j++){
-		wchar_t c = wstr_get_at(row, j);
-		if (c == L'\t'){
-			for (int i = 0; i < get_character_width(L'\t', rx); i++)
-				wstr_push_char(render, ' ');
-		}else{
-			wstr_push_char(render, c);
-		}
-		rx += get_character_width(c, rx);
-	}
-}
-
-void editor_update_render(void){
-	int i;
-	for (i = 0; i < state.screen_rows; i++){
-		int cy = buffers.curr->row_offset + i;
-		if (cy >= buffers.curr->num_lines)
-			break;
-		update_line(cy);
-	}
-	for (; i < state.screen_rows; i++){
-		wstring_t *render;
-		vector_at(state.render, i, &render);
-		wstr_clear(render);
-	}
-	if (buffers.curr->conf.syntax_highlighting)
-		editor_highlight();
 }
 
 int get_character_width(wchar_t c, int accumulated_rx){
