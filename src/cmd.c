@@ -1,13 +1,18 @@
 #include "cmd.h"
 #include "buffer.h"
 #include "cmd/prelude.h"
+#include "console/io/output.h"
 #include "definitions.h"
 #include "init.h"
 #include "lib/str/wstr.h"
 #include "log.h"
+#include "plugins.h"
 #include "prelude.h"
 #include "util.h"
+#include <stddef.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <wchar.h>
 
 static vector_t *history;
 
@@ -143,6 +148,18 @@ void editor_cmd(const wchar_t *command){
         }
         else if (wcscmp(cmd, L"redo") == 0){
                 history_undo();
+        }
+        else if (wcscmp(cmd, L"load") == 0) {
+                size_t need = wcstombs(NULL, args[1], 0) + 1;
+                char *name = malloc(need * sizeof(char));
+                wcstombs(name, args[1], need);
+                editor_log(LOG_INFO, "Load %s", name);
+                if (add_plugin(name) != SUCCESS)
+                        editor_set_status_message(L"Failed to load");
+                free(name);
+        }
+        else if (wcscmp(cmd, L"reload") == 0) {
+                reload_plugins();
         }
 
 #define cmp(str) else if (wcscmp(cmd, str) == 0)
