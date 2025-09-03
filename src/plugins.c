@@ -7,6 +7,8 @@
 #include "vector.h"
 
 #include <dlfcn.h>
+#include <errno.h>
+#include <string.h>
 
 static vector_t *plugins;
 
@@ -26,10 +28,12 @@ static int call_plugin(void *plugin, const char *func_name) {
 
 int add_plugin(const char *path) {
 
-        void *lib = dlopen(path, RTLD_NOW|RTLD_GLOBAL);
+        void *lib = dlopen(path, RTLD_LAZY);
 
-        if (!lib)
+        if (!lib) {
+                editor_log(LOG_ERROR, "Failed to load \"%s\": %s", path, strerror(errno));
                 return FAILURE;
+        }
 
         vector_append(plugins, &lib);
 

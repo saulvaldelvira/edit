@@ -18,7 +18,8 @@ JSON_HOME=src/lib/json
 INCLUDE_DIRS = -I./src -I./src/lib/GDS/include
 CFLAGS += -Wall -Wextra -pedantic -Wstrict-prototypes -ggdb \
 		  $(INCLUDE_DIRS) $(FLAGS) \
-		  -L$(GDS_HOME)/bin -lGDS-static -L$(JSON_HOME)/bin -ljson-static
+		  -L$(GDS_HOME)/bin -lGDS-static -L$(JSON_HOME)/bin -ljson-static \
+		  -fPIC
 
 PROFILE := debug
 
@@ -27,7 +28,7 @@ ifeq ($(PROFILE),release)
 endif
 
 LIBFILES= ./src/lib/str/wstr.c
-CFILES=  $(shell find src -name '*.c' -not -path "src/lib/*" -not -path "src/platform/*") \
+CFILES=  $(shell find src -name '*.c' -not -path "src/main.c" -not -path "src/lib/*" -not -path "src/platform/*") \
 		 $(LIBFILES) \
 		 $(shell find src/platform/$(TARGET_PLATFORM) -name '*.c')
 
@@ -37,7 +38,8 @@ edit: $(OFILES)
 	@ make -C $(GDS_HOME)
 	@ make -C $(JSON_HOME)
 	@ echo " LD => edit"
-	@ $(CC) -o $(EXECUTABLE) $(OFILES) $(CFLAGS)
+	@ $(CC) -shared -o lib$(EXECUTABLE).so $(OFILES) $(CFLAGS)
+	@ $(CC) -Wl,-rpath='.' -ledit -L./ src/main.c -o $(EXECUTABLE) $(CFLAGS)
 
 release:
 	@ make -s clean CLEAN_LIBS=true

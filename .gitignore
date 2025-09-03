@@ -3,3 +3,4 @@
 edit
 .clangd
 *.exe
+*.so
