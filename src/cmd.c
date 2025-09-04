@@ -157,6 +157,9 @@ void editor_cmd(const wchar_t *command){
                 free(name);
                 editor_log(LOG_INFO, "Que fue %d", ret);
         }
+        else if (wcscmp(cmd, L"reload") == 0) {
+                reload_plugins();
+        }
 
 #define cmp(str) else if (wcscmp(cmd, str) == 0)
 

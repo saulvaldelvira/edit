@@ -8,6 +8,7 @@
 
 #include <dlfcn.h>
 #include <errno.h>
+#include <stddef.h>
 #include <string.h>
 
 static vector_t *plugins;
@@ -24,6 +25,13 @@ static int call_plugin(void *plugin, const char *func_name) {
         if (!func)
                 die("No func");
         return func();
+}
+
+void reload_plugins(void) {
+        for (size_t i = 0; i < vector_size(plugins); i++) {
+                void **plugin = vector_at_ref(plugins, i);
+                call_plugin(*plugin, "plugin_reload");
+        }
 }
 
 int add_plugin(const char *path) {

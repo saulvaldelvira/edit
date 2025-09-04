@@ -18,8 +18,11 @@ JSON_HOME=src/lib/json
 INCLUDE_DIRS = -I./src -I./src/lib/GDS/include
 CFLAGS += -Wall -Wextra -pedantic -Wstrict-prototypes -ggdb \
 		  $(INCLUDE_DIRS) $(FLAGS) \
-		  -L$(GDS_HOME)/bin -lGDS-static -L$(JSON_HOME)/bin -ljson-static \
-		  -fPIC
+		  -L$(GDS_HOME)/bin -lGDS-static -L$(JSON_HOME)/bin -ljson-static
+
+ifdef PLUGIN_SUPPORT
+	CFLAGS += -fPIC
+endif
 
 PROFILE := debug
 
@@ -32,14 +35,22 @@ CFILES=  $(shell find src -name '*.c' -not -path "src/main.c" -not -path "src/li
 		 $(LIBFILES) \
 		 $(shell find src/platform/$(TARGET_PLATFORM) -name '*.c')
 
+ifndef PLUGIN_SUPPORT
+	CFILES += src/main.c
+endif
+
 OFILES= $(patsubst %.c,%.o,$(CFILES))
 
 edit: $(OFILES)
 	@ make -C $(GDS_HOME)
 	@ make -C $(JSON_HOME)
 	@ echo " LD => edit"
+ifdef PLUGIN_SUPPORT
 	@ $(CC) -shared -o lib$(EXECUTABLE).so $(OFILES) $(CFLAGS)
-	@ $(CC) -Wl,-rpath='.' -ledit -L./ src/main.c -o $(EXECUTABLE) $(CFLAGS)
+	@ $(CC) -Wl,-rpath='$(PREFIX)/lib' -ledit -L./ src/main.c -o $(EXECUTABLE) $(CFLAGS)
+else
+	@ $(CC) -o $(EXECUTABLE) $(OFILES) $(CFLAGS)
+endif
 
 release:
 	@ make -s clean CLEAN_LIBS=true
@@ -56,6 +67,9 @@ install: edit
 	@ echo "edit.1 => $(PREFIX)/share/man/man1"
 	@ install -d $(PREFIX)/bin
 	@ install -m  755 ./edit $(PREFIX)/bin
+ifdef PLUGIN_SUPPORT
+	@ install -m  755 ./libedit.so $(PREFIX)/lib
+endif
 	@ install -d $(PREFIX)/share/man/man1
 	@ install -m  644 edit.1 $(PREFIX)/share/man/man1
 
@@ -63,6 +77,7 @@ uninstall:
 	@ echo " RM $(PREFIX)/bin/edit"
 	@ echo " RM $(PREFIX)/share/man/man1/edit.1"
 	@ rm -f $(PREFIX)/bin/edit \
+			$(PREFIX)/lib/libedit.so \
 			$(PREFIX)/share/man/man1/edit.1
 
 init:
@@ -80,4 +95,4 @@ clean:
 		 make -s -C $(GDS_HOME) clean ; \
 		 make -s -C $(JSON_HOME) clean ; \
 	  fi
-	@ rm -f $(EXECUTABLE) $(OFILES)
+	@ rm -f $(EXECUTABLE) $(OFILES) lib$(EXECUTABLE).so
