@@ -17,8 +17,9 @@ JSON_HOME=src/lib/json
 
 INCLUDE_DIRS = -I./src -I./src/lib/GDS/include
 CFLAGS += -Wall -Wextra -pedantic -Wstrict-prototypes -ggdb \
-		  $(INCLUDE_DIRS) $(FLAGS) \
-		  -L$(GDS_HOME)/bin -lGDS-static -L$(JSON_HOME)/bin -ljson-static
+		  $(INCLUDE_DIRS) $(FLAGS)
+
+LDFLAGS=-L$(GDS_HOME)/bin -lGDS-static -L$(JSON_HOME)/bin -ljson-static
 
 ifdef PLUGIN_SUPPORT
 	CFLAGS += -fPIC
@@ -46,10 +47,10 @@ edit: $(OFILES)
 	@ make -C $(JSON_HOME)
 	@ echo " LD => edit"
 ifdef PLUGIN_SUPPORT
-	@ $(CC) -shared -o lib$(EXECUTABLE).so $(OFILES) $(CFLAGS)
-	@ $(CC) -Wl,-rpath='$(PREFIX)/lib' -ledit -L./ src/main.c -o $(EXECUTABLE) $(CFLAGS)
+	@ $(CC) -shared -o lib$(EXECUTABLE).so $(OFILES) $(CFLAGS) $(LDFLAGS)
+	@ $(CC) -Wl,-rpath='$(PREFIX)/lib' -ledit -L./ src/main.c -o $(EXECUTABLE) $(CFLAGS) $(LDFLAGS)
 else
-	@ $(CC) -o $(EXECUTABLE) $(OFILES) $(CFLAGS)
+	@ $(CC) -o $(EXECUTABLE) $(OFILES) $(CFLAGS) $(LDFLAGS)
 endif
 
 release:

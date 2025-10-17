@@ -8,7 +8,7 @@
 #include <signal.h>
 #include <sys/ioctl.h>
 
-static volatile int ctrl_c_pressed = 0;
+volatile int ctrl_c_pressed = 0;
 
 INLINE bool is_ctrl_c_pressed(void) { return ctrl_c_pressed; }
 
