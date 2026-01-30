@@ -2,16 +2,13 @@
 
 #include "input.h"
 #include "init.h"
-#include "linked_list.h"
 #include "lib/str/wstr.h"
 #include "output.h"
-#include "fs.h"
 #include "util.h"
 #include "state.h"
-#include "buffer.h"
-#include "cmd.h"
 #include <console.h>
 #include <buffer/line.h>
+#include <stdint.h>
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -19,17 +16,23 @@
 #include <stdio.h>
 #include <wctype.h>
 #include "keys.h"
+#include "poll.h"
 
-static wstring_t *response = NULL;
+#define RESPONSE_BUFS_SIZE 3
+
+static wstring_t *responses[RESPONSE_BUFS_SIZE] = {0};
+static uint8_t current_response = 0;
 
 static void __cleanup_input(void) {
         CLEANUP_FUNC;
-        wstr_free(response);
+        for (size_t i = 0; i < RESPONSE_BUFS_SIZE; i++)
+                wstr_free(responses[i]);
 }
 
 void init_input(void) {
         INIT_FUNC;
-        response = wstr_empty();
+        for (size_t i = 0; i < RESPONSE_BUFS_SIZE; i++)
+                responses[i] = wstr_empty();
         atexit(__cleanup_input);
 }
 
@@ -41,6 +44,12 @@ static inline int __replace_with(wstring_t *wstr, wchar_t *new) {
 }
 
 const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_response, vector_t *history){
+        size_t curr = current_response;
+        current_response = (current_response + 1) % RESPONSE_BUFS_SIZE;
+        return editor_prompt_ex(responses[curr], prompt, default_response, history);
+}
+
+const wchar_t* editor_prompt_ex(wstring_t *response, const wchar_t *prompt, const wchar_t *default_response, vector_t *history) {
         wstr_clear(response);
 
         vector_iterator_t it = {0};

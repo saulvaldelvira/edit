@@ -28,7 +28,6 @@ static INLINE void __cmd_end(void) {
         }
         args = NULL;
         if (cmdstr) {
-                editor_log(LOG_INFO, "CMD: %ls", wstr_get_buffer(cmdstr));
                 wstr_free(cmdstr);
                 cmdstr = NULL;
         }
@@ -208,4 +207,5 @@ void editor_cmd(const wchar_t *command){
                 editor_set_status_message(L"Invalid command [%ls]", cmd);
         }
         __cmd_end();
+        editor_log(LOG_INFO, "CMD: %ls", command);
 }

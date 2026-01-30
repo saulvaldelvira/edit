@@ -1,5 +1,4 @@
 #include "prelude.h"
-#include "util.h"
 
 void cmd_replace(wchar_t **args){
 	const wchar_t *text = NULL,*replacement = NULL;
