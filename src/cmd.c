@@ -1,6 +1,7 @@
 #include "cmd.h"
 #include "buffer.h"
 #include "cmd/prelude.h"
+#include "console/io/input.h"
 #include "console/io/output.h"
 #include "definitions.h"
 #include "init.h"
@@ -76,7 +77,7 @@ void editor_cmd(const wchar_t *command){
         args = wstr_split(cmdstr, L" ");
         wchar_t *cmd = args[0];
         if (wcscmp(cmd, L"!quit") == 0){
-                if (editor_ask_confirmation()) {
+                if (editor_ask_confirmation(NULL)) {
                         __cmd_end();
                         editor_shutdown();
                 }
@@ -200,6 +201,9 @@ void editor_cmd(const wchar_t *command){
         cmp(L"q!")
                 buffer_drop(true);
 
+        cmp(L"open") {
+                file_open(args[1]);
+        }
         else {
                 editor_set_status_message(L"Invalid command [%ls]", cmd);
         }

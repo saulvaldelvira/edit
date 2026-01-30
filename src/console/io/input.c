@@ -153,8 +153,10 @@ const wchar_t* editor_prompt(const wchar_t *prompt, const wchar_t *default_respo
         return wstr_get_buffer(response);
 }
 
-bool editor_ask_confirmation(void){
-	const wchar_t*response = editor_prompt(L"Are you sure? Y/n: ", L"Y", NULL);
+bool editor_ask_confirmation(const wchar_t *custom_prompt) {
+        wchar_t msg[2000];
+        swprintf(msg, 2000, L"%ls Y/n: ", custom_prompt ? custom_prompt : L"Are you sure?");
+	const wchar_t*response = editor_prompt(msg, L"Y", NULL);
 	bool result =
 		response != NULL
 		&& wstrlen(response) == 1

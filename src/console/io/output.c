@@ -278,6 +278,7 @@ void editor_help(void){
 		L"replace <text> <replacement>  Replaces all instances of <text> with <replacement>",L"",
 		L"goto [line|buffer] <number>   Jumps to a certain line/buffer",L"",
 		L"format [line|buffer]	The same as Ctrl + F.",L"",
+                L"open  <filename>      Open a file",
                 L"set <key> <value> Set a state.guration parameter for all new buffers",L"",
                 L"setlocal <key> <value> Set a state.guration parameter for the current buffer",L"",
 		L"help	Display the help buffer",

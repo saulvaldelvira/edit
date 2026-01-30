@@ -1,4 +1,5 @@
 #include <prelude.h>
+#include "console/io/input.h"
 #include "console/io/output.h"
 #include "limits.h"
 #include "platform.h"
@@ -166,6 +167,12 @@ char* get_tmp_filename(const wchar_t *fname){
 	return tmp_filename;
 }
 
+#define on_open_check \
+        if (buffers.curr->dirty) { \
+                if (!editor_ask_confirmation(L"Buffer has unsaved state, proceed?")) \
+                        return FAILURE; \
+        }
+
 // TODO: if .tmp version exists (i.e. failed save in a previous session), restore it.
 int _file_open(const wchar_t *filename) {
 	if (!buffers.curr->filename || !filename || buffers.curr->filename != filename){
@@ -236,6 +243,8 @@ int file_open(const wchar_t *filename) {
                 log_and_display(LOG_ERROR, "Attemp to open directory: %s", mbfilename);
                 return -1;
         }
+
+        on_open_check
 
         editor_set_status_message(L"Opening \"%ls\"", filename);
         if (filename && wstrlen(filename) > 0){
@@ -391,14 +400,15 @@ cleanup:
 	return status;
 }
 
-void file_reload(void){
+int file_reload(void){
+        on_open_check
 	int cx = buffers.curr->cx;
 	int cy = buffers.curr->cy;
 	int row_offset = buffers.curr->row_offset;
 	int col_offset = buffers.curr->col_offset;
 	buffer_clear();
         if (!buffers.curr->filename)
-                return;
+                return SUCCESS;
 	file_open(buffers.curr->filename);
 	if (cy + row_offset <= buffers.curr->num_lines){
 		buffers.curr->cy = cy;
@@ -411,6 +421,7 @@ void file_reload(void){
 			buffers.curr->col_offset = col_offset;
 		}
 	}
+        return SUCCESS;
 }
 
 void file_auto_save(void){
