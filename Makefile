@@ -17,7 +17,7 @@ JSON_HOME=src/lib/json
 
 INCLUDE_DIRS = -I./src -I./src/lib/GDS/include
 CFLAGS += -Wall -Wextra -pedantic -Wstrict-prototypes -ggdb \
-		  $(INCLUDE_DIRS) $(FLAGS)
+		  $(INCLUDE_DIRS) $(FLAGS) -std=c23
 
 LDFLAGS=-L$(GDS_HOME)/bin -lGDS-static -L$(JSON_HOME)/bin -ljson-static
 
