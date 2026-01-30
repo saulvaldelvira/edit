@@ -228,6 +228,8 @@ int _file_open(const wchar_t *filename) {
 int file_open(const wchar_t *filename) {
         if (!filename)
                 filename = editor_prompt(L"Open file: ", buffers.curr->filename, history);
+        if (!filename)
+                return FAILURE;
 
         char *mbfilename = mb_filename(filename, NULL, false);
         if (is_dir(mbfilename)) {
