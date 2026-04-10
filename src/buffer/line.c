@@ -238,16 +238,14 @@ int line_delete_word(cursor_direction_t dir) {
 }
 
 void line_cut(bool whole){
-	if (buffers.curr->cy >= buffers.curr->num_lines)
+	if (buffers.curr->cy >= buffers.curr->num_lines){
 		return;
-	if (whole){
-		vector_remove_at(buffers.curr->lines, buffers.curr->cy);
-		buffers.curr->num_lines--;
-		cursor_adjust();
-	}else {
-		wstring_t *line = current_line();
-		wstr_remove_range(line, buffers.curr->cx, -1);
-	}
+        } else if (whole) {
+                line_remove(buffers.curr->cy);
+                return;
+        }
+        wstring_t *line = current_line();
+        wstr_remove_range(line, buffers.curr->cx, -1);
 	buffers.curr->dirty++;
 }
 
@@ -255,7 +253,8 @@ void line_remove(size_t idx){
         if (idx < vector_size(buffers.curr->lines)) {
                 vector_remove_at(buffers.curr->lines, idx);
 		buffers.curr->num_lines--;
-                cursor_adjust();
+                if ((size_t)buffers.curr->cy >= idx)
+                        cursor_move(CURSOR_DIRECTION_UP);
         }
 	buffers.curr->dirty++;
 }

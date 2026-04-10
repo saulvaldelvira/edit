@@ -5,6 +5,7 @@ typedef enum buffer_mode {
         BUFFER_MODE_NORMAL = 0,
         BUFFER_MODE_INSERT,
         BUFFER_MODE_VISUAL,
+        BUFFER_MODE_VISUAL_LINE,
 
         BUFFER_MODE_LEN
 } buffer_mode_t;

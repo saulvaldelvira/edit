@@ -1,6 +1,7 @@
 #include <prelude.h>
 #include "buffer.h"
 #include "buffer/line.h"
+#include "buffer/mode.h"
 #include "clipboard.h"
 #include "conf.h"
 #include "console/cursor.h"
@@ -104,20 +105,30 @@ int buffer_copy_selection(void) {
         selection_t sel = cursor_get_selection();
 
         clipboard_clear();
-        bool first_line = true;
-        for (int i = sel.start.y; i <= sel.end.y; i++) {
-                if (!first_line)
-                        clipboard_push(L"\n", 1);
-                first_line = false;
-                wstring_t *line = line_at(i);
-                size_t begin = 0, end = wstr_length(line);
-                if (i == sel.start.y)
-                        begin = sel.start.x;
-                if (i == sel.end.y)
-                        end = sel.end.x;
+        set_yank_kind(buffer_mode_get_current() == BUFFER_MODE_VISUAL_LINE ? YANK_LINE : YANK_NORMAL);
 
-                const wchar_t *buf = wstr_get_buffer_raw(line);
-                clipboard_push(&buf[begin], end - begin);
+        if (buffer_mode_get_current() == BUFFER_MODE_VISUAL_LINE) {
+                for (int i = sel.start.y; i <= sel.end.y; i++) {
+                        wstring_t *line = line_at(i);
+                        clipboard_push(wstr_get_buffer_raw(line), wstr_length(line));
+                        clipboard_push(L"\n", 1);
+                }
+        } else {
+                bool first_line = true;
+                for (int i = sel.start.y; i <= sel.end.y; i++) {
+                        if (!first_line)
+                                clipboard_push(L"\n", 1);
+                        first_line = false;
+                        wstring_t *line = line_at(i);
+                        size_t begin = 0, end = wstr_length(line);
+                        if (i == sel.start.y)
+                                begin = sel.start.x;
+                        if (i == sel.end.y)
+                                end = sel.end.x;
+
+                        const wchar_t *buf = wstr_get_buffer_raw(line);
+                        clipboard_push(&buf[begin], end - begin);
+                }
         }
 
         return SUCCESS;
@@ -125,6 +136,9 @@ int buffer_copy_selection(void) {
 
 int buffer_paste_selection(void) {
         const wchar_t *sel = clipboard_get();
+        if (get_yank_kind() == YANK_LINE) {
+                line_insert_newline_bellow();
+        }
         line_put_wstr(sel);
         return SUCCESS;
 }
@@ -132,21 +146,28 @@ int buffer_paste_selection(void) {
 int buffer_delete_selection(void) {
         buffer_copy_selection();
         selection_t sel = cursor_get_selection();
-        if (sel.start.y == sel.end.y) {
-                wstring_t *line = line_at(sel.start.y);
-                size_t start = sel.start.x, end = sel.end.x + 1;
-                wstr_remove_range(line, start, end);
-        } else {
-                wstring_t *l = line_at(sel.start.y);
-                wstr_remove_range(l, sel.start.x, wstr_length(l));
-                wstring_t *endl = line_at(sel.end.y);
-                const wchar_t *buf = wstr_get_buffer_raw(endl);
-                wstr_concat_cwstr(l, &buf[sel.end.x], wstr_length(endl) - sel.end.x);
-                for (int i = sel.start.y + 1; i <= sel.end.y; i++) {
-                        line_remove(sel.start.y + 1);
+        if (buffer_mode_get_current() == BUFFER_MODE_VISUAL_LINE) {
+                for (int i = sel.start.y; i <= sel.end.y; i++) {
+                        line_remove(sel.start.y);
                 }
-        }
+        } else {
+                if (sel.start.y == sel.end.y) {
+                        wstring_t *line = line_at(sel.start.y);
+                        size_t start = sel.start.x, end = sel.end.x + 1;
+                        wstr_remove_range(line, start, end);
+                        cursor_adjust();
+                } else {
+                        wstring_t *l = line_at(sel.start.y);
+                        wstr_remove_range(l, sel.start.x, wstr_length(l));
+                        wstring_t *endl = line_at(sel.end.y);
+                        const wchar_t *buf = wstr_get_buffer_raw(endl);
+                        wstr_concat_cwstr(l, &buf[sel.end.x], wstr_length(endl) - sel.end.x);
+                        for (int i = sel.start.y + 1; i <= sel.end.y; i++) {
+                                line_remove(sel.start.y + 1);
+                        }
+                }
 
+        }
         buffers.curr->dirty++;
         return SUCCESS;
 }

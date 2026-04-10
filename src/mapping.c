@@ -182,9 +182,19 @@ void register_default_handler(buffer_mode_t mode, default_handler_t h) {
         register_mapping(mode1, (key_ty[]) { (key_ty) { .k = key} }, 1, f, __cmd_args(__VA_ARGS__), msg) ;\
         register_mapping(mode2, (key_ty[]) { (key_ty) { .k = key} }, 1, f, __cmd_args(__VA_ARGS__), msg) ; } while(0)
 
+#define map_3(mode1, mode2, mode3, key, msg, f, ...) do { \
+        register_mapping(mode1, (key_ty[]) { (key_ty) { .k = key} }, 1, f, __cmd_args(__VA_ARGS__), msg) ;\
+        register_mapping(mode2, (key_ty[]) { (key_ty) { .k = key} }, 1, f, __cmd_args(__VA_ARGS__), msg) ;\
+        register_mapping(mode3, (key_ty[]) { (key_ty) { .k = key} }, 1, f, __cmd_args(__VA_ARGS__), msg) ; } while(0)
+
 #define map_modif_2(mode1, mode2, key, m, msg, f, ...) do { \
         register_mapping(mode1, (key_ty[]) { (key_ty) { .k = key, .modif = m} }, 1, f, __cmd_args(__VA_ARGS__), msg); \
         register_mapping(mode2, (key_ty[]) { (key_ty) { .k = key, .modif = m} }, 1, f, __cmd_args(__VA_ARGS__), msg); } while (0)
+
+#define map_modif_3(mode1, mode2, mode3, key, m, msg, f, ...) do { \
+        register_mapping(mode1, (key_ty[]) { (key_ty) { .k = key, .modif = m} }, 1, f, __cmd_args(__VA_ARGS__), msg); \
+        register_mapping(mode2, (key_ty[]) { (key_ty) { .k = key, .modif = m} }, 1, f, __cmd_args(__VA_ARGS__), msg); \
+        register_mapping(mode3, (key_ty[]) { (key_ty) { .k = key, .modif = m} }, 1, f, __cmd_args(__VA_ARGS__), msg); } while (0)
 
 /* #define map_func_confirm(key, n, ...) map_confirm(key, n, command_func_call, __VA_ARGS__) */
 
@@ -198,14 +208,16 @@ void register_default_handler(buffer_mode_t mode, default_handler_t h) {
 #define nmap_alt(key, msg, f, ...) map_modif(BUFFER_MODE_NORMAL, key, KEY_MODIF_ALT, msg, f, __VA_ARGS__)
 #define nmap_ctrl(key, msg, f, ...) map_modif(BUFFER_MODE_NORMAL, key, KEY_MODIF_CTRL, msg, f, __VA_ARGS__)
 
+#define nvmap_ctrl(key, msg, f, ...) map_modif_3(BUFFER_MODE_NORMAL, BUFFER_MODE_VISUAL, BUFFER_MODE_VISUAL_LINE, key, KEY_MODIF_CTRL, msg, f, __VA_ARGS__)
+
 #define imap(key, msg, f, ...) map1(BUFFER_MODE_INSERT, (key_ty) { .k = key }, msg, f, __VA_ARGS__)
 #define imap_modif(key, m, msg, f, ...) map_modif(BUFFER_MODE_INSERT, key, m, msg, f, __VA_ARGS__)
 #define imap_alt(key, msg, f, ...) map_modif(BUFFER_MODE_INSERT, key, KEY_MODIF_ALT, msg, f, __VA_ARGS__)
 #define imap_ctrl(key, msg, f, ...) map_modif(BUFFER_MODE_INSERT, key, KEY_MODIF_CTRL, msg, f, __VA_ARGS__)
 
-#define nvmap(key, msg, f, ...) map_2(BUFFER_MODE_NORMAL, BUFFER_MODE_VISUAL, key, msg, f, __VA_ARGS__)
+#define nvmap(key, msg, f, ...) map_3(BUFFER_MODE_NORMAL, BUFFER_MODE_VISUAL, BUFFER_MODE_VISUAL_LINE, key, msg, f, __VA_ARGS__)
 
-#define vmap(key, msg, f, ...) map1(BUFFER_MODE_VISUAL, (key_ty) { .k = key }, msg, f __VA_OPT__(,) __VA_ARGS__)
+#define vmap(key, msg, f, ...) map_2(BUFFER_MODE_VISUAL, BUFFER_MODE_VISUAL_LINE, key, msg, f __VA_OPT__(,) __VA_ARGS__)
 
 #define inmap(key, msg, f, ...) map_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, msg, f, __VA_ARGS__)
 #define inmap_modif(key, m, msg, f, ...) map_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, m, msg, f, __VA_ARGS__)
@@ -445,9 +457,11 @@ void init_mapping(void) {
         __register_mapping(BUFFER_MODE_INSERT, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd, desc);\
         __register_mapping(BUFFER_MODE_NORMAL, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd, desc);\
         __register_mapping(BUFFER_MODE_VISUAL, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd, desc);\
+        __register_mapping(BUFFER_MODE_VISUAL_LINE, (key_ty[]){ (key_ty) { .k = ARROW_ ## dir } }, 1, cmd, desc);\
         __register_mapping(BUFFER_MODE_INSERT, (key_ty[]) {(key_ty) {  .k = kc, .modif = KEY_MODIF_CTRL } }, 1, cmd, desc);\
         __register_mapping(BUFFER_MODE_NORMAL, (key_ty[]) {(key_ty) {  .k = towlower(kc) } }, 1, cmd, desc);\
         __register_mapping(BUFFER_MODE_VISUAL, (key_ty[]) {(key_ty) {  .k = towlower(kc) } }, 1, cmd, desc);\
+        __register_mapping(BUFFER_MODE_VISUAL_LINE, (key_ty[]) {(key_ty) {  .k = towlower(kc) } }, 1, cmd, desc);\
 }
 
         direction_cmd('L', RIGHT, "Moves the cursor to the right");
@@ -491,7 +505,7 @@ void init_mapping(void) {
             arg_bool(true)
         );
 
-        nmap_ctrl(
+        nvmap_ctrl(
                 'J',
                 "Moves cursor 4 lines down",
                 map_move_cursor,
@@ -499,7 +513,7 @@ void init_mapping(void) {
                 arg_int(4)
         );
 
-        nmap_ctrl(
+        nvmap_ctrl(
                 'K',
                 "Moves cursor 4 lines up",
                 map_move_cursor,
@@ -580,7 +594,7 @@ void init_mapping(void) {
                 arg_int(1)
         );
 
-        nmap(
+        nvmap(
                 '\r',
                 "Move to the next line",
                 map_move_cursor,
@@ -679,6 +693,13 @@ void init_mapping(void) {
                 "Switch to visual mode",
                 map_change_mode,
                 arg_int(BUFFER_MODE_VISUAL)
+        );
+
+        nmap(
+                'V',
+                "Switch to visual line mode",
+                map_change_mode,
+                arg_int(BUFFER_MODE_VISUAL_LINE)
         );
 
         nmap(
