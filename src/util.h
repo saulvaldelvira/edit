@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #include <log.h>
+#include <wchar.h>
 
 void* xmalloc(size_t nbytes);
 void editor_scroll(void);

@@ -31,6 +31,9 @@ void buffer_clear(void);
 int  buffer_drop(bool force);
 void buffer_switch(int index);
 int  buffer_current_index(void);
+int  buffer_copy_selection(void);
+int  buffer_paste_selection(void);
+int  buffer_delete_selection(void);
 struct buffer* buffer_at(int index);
 
 #define foreach_buffer(op) do { \

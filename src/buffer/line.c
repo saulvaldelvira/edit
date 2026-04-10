@@ -1,5 +1,6 @@
 #include "line.h"
 #include <console/io.h>
+#include "buffer.h"
 #include "prelude.h"
 #include "util.h"
 #include <console/cursor.h>
@@ -136,6 +137,13 @@ void line_put_char(int c){
 	buffers.curr->dirty += n;
 }
 
+void line_put_wstr(const wchar_t *str) {
+        while (*str) {
+                line_put_char(*str);
+                str++;
+        }
+}
+
 void line_put_str(const char *str) {
         while (*str) {
                 line_put_char(*str);
@@ -240,6 +248,15 @@ void line_cut(bool whole){
 		wstring_t *line = current_line();
 		wstr_remove_range(line, buffers.curr->cx, -1);
 	}
+	buffers.curr->dirty++;
+}
+
+void line_remove(size_t idx){
+        if (idx < vector_size(buffers.curr->lines)) {
+                vector_remove_at(buffers.curr->lines, idx);
+		buffers.curr->num_lines--;
+                cursor_adjust();
+        }
 	buffers.curr->dirty++;
 }
 

@@ -1,6 +1,10 @@
 #include <prelude.h>
 #include "buffer.h"
+#include "buffer/line.h"
+#include "clipboard.h"
 #include "conf.h"
+#include "console/cursor.h"
+#include "definitions.h"
 #include "fs.h"
 #include "init.h"
 #include "lib/str/wstr.h"
@@ -94,4 +98,55 @@ void buffer_switch(int index){
 INLINE
 int buffer_current_index(void) {
         return buffers.curr_index;
+}
+
+int buffer_copy_selection(void) {
+        selection_t sel = cursor_get_selection();
+
+        clipboard_clear();
+        bool first_line = true;
+        for (int i = sel.start.y; i <= sel.end.y; i++) {
+                if (!first_line)
+                        clipboard_push(L"\n", 1);
+                first_line = false;
+                wstring_t *line = line_at(i);
+                size_t begin = 0, end = wstr_length(line);
+                if (i == sel.start.y)
+                        begin = sel.start.x;
+                if (i == sel.end.y)
+                        end = sel.end.x;
+
+                const wchar_t *buf = wstr_get_buffer_raw(line);
+                clipboard_push(&buf[begin], end - begin);
+        }
+
+        return SUCCESS;
+}
+
+int buffer_paste_selection(void) {
+        const wchar_t *sel = clipboard_get();
+        line_put_wstr(sel);
+        return SUCCESS;
+}
+
+int buffer_delete_selection(void) {
+        buffer_copy_selection();
+        selection_t sel = cursor_get_selection();
+        if (sel.start.y == sel.end.y) {
+                wstring_t *line = line_at(sel.start.y);
+                size_t start = sel.start.x, end = sel.end.x + 1;
+                wstr_remove_range(line, start, end);
+        } else {
+                wstring_t *l = line_at(sel.start.y);
+                wstr_remove_range(l, sel.start.x, wstr_length(l));
+                wstring_t *endl = line_at(sel.end.y);
+                const wchar_t *buf = wstr_get_buffer_raw(endl);
+                wstr_concat_cwstr(l, &buf[sel.end.x], wstr_length(endl) - sel.end.x);
+                for (int i = sel.start.y + 1; i <= sel.end.y; i++) {
+                        line_remove(sel.start.y + 1);
+                }
+        }
+
+        buffers.curr->dirty++;
+        return SUCCESS;
 }

@@ -205,6 +205,8 @@ void register_default_handler(buffer_mode_t mode, default_handler_t h) {
 
 #define nvmap(key, msg, f, ...) map_2(BUFFER_MODE_NORMAL, BUFFER_MODE_VISUAL, key, msg, f, __VA_ARGS__)
 
+#define vmap(key, msg, f, ...) map1(BUFFER_MODE_VISUAL, (key_ty) { .k = key }, msg, f __VA_OPT__(,) __VA_ARGS__)
+
 #define inmap(key, msg, f, ...) map_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, msg, f, __VA_ARGS__)
 #define inmap_modif(key, m, msg, f, ...) map_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, m, msg, f, __VA_ARGS__)
 #define inmap_alt(key, desc, f, ...) map_modif_2(BUFFER_MODE_NORMAL, BUFFER_MODE_INSERT, key, KEY_MODIF_ALT, desc, f, __VA_ARGS__)
@@ -333,6 +335,17 @@ __mapping_func_call(map_history_undo, history_undo)
 __mapping_func_call(map_history_redo, history_redo)
 __mapping_func_call(map_cursor_selection_start, cursor_start_selection)
 __mapping_func_call(map_cursor_selection_stop, cursor_stop_selection)
+
+__mapping_func_void(map_yank, {
+        buffer_copy_selection();
+        buffer_mode_set(BUFFER_MODE_NORMAL);
+})
+
+__mapping_func_void(map_delete_selection, {
+        buffer_delete_selection();
+        buffer_mode_set(BUFFER_MODE_NORMAL);
+})
+__mapping_func_call(map_paste, buffer_paste_selection)
 
 __mapping_func_void(map_go_insert_on_newline, {
         line_insert_newline_bellow();
@@ -724,6 +737,24 @@ void init_mapping(void) {
                 "Change to normal mode",
                 map_change_mode,
                 arg_int(BUFFER_MODE_NORMAL)
+        );
+
+        vmap(
+                'y',
+                "Yank text",
+                map_yank
+        );
+
+        vmap(
+                'd',
+                "Delete selection",
+                map_delete_selection
+        );
+
+        nmap(
+                'p',
+                "Paste selection",
+                map_paste
         );
 
 	for (int i = 1; i <= 9; i++){
