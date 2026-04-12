@@ -5,6 +5,7 @@
 #include "util.h"
 #include <console/cursor.h>
 #include "buffer/highlight/mode.h"
+#include "vector.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <wchar.h>
@@ -12,7 +13,7 @@
 
 wstring_t* line_at(int at){
 	wstring_t *line = NULL;
-	if (at < buffers.curr->num_lines)
+	if (at < curr_buf_nlines())
 		vector_at(buffers.curr->lines, at, &line);
 	return line;
 }
@@ -41,13 +42,11 @@ wchar_t line_curr_char(void){
 void line_insert(int at, const wchar_t *str, size_t len){
 	wstring_t *line = wstr_from_cwstr(str, len);
 	vector_insert_at(buffers.curr->lines, at, &line);
-	buffers.curr->num_lines++;
 }
 
 void line_append(const wchar_t *str, size_t len){
 	wstring_t *line = wstr_from_cwstr(str, len);
 	vector_append(buffers.curr->lines, &line);
-	buffers.curr->num_lines++;
 }
 
 int line_cx_to_rx(wstring_t *line, int cx){
@@ -67,7 +66,7 @@ static void line_move_up(void){
 }
 
 static void line_move_down(void){
-	if (buffers.curr->cy == buffers.curr->num_lines - 1) return;
+	if (buffers.curr->cy == curr_buf_nlines() - 1) return;
 	vector_swap(buffers.curr->lines, buffers.curr->cy, buffers.curr->cy + 1);
 	buffers.curr->cy++;
 	buffers.curr->dirty++;
@@ -113,7 +112,12 @@ void line_insert_newline(int at) {
 
 INLINE
 void line_insert_newline_bellow(void) {
-        line_insert_newline(buffers.curr->cy + 1);
+        if (curr_buf_nlines() == 0) {
+                line_insert(0, L"", 0);
+                buffers.curr->dirty++;
+        }
+        else
+                line_insert_newline(buffers.curr->cy + 1);
 }
 
 void line_put_char(int c){
@@ -121,10 +125,11 @@ void line_put_char(int c){
                 __line_insert_newline();
                 return;
         }
-	if (buffers.curr->cy == buffers.curr->num_lines)
-		line_insert(buffers.curr->num_lines, L"", 0);
-	wstring_t *line;
-	vector_at(buffers.curr->lines, buffers.curr->cy, &line);
+        long nlines = curr_buf_nlines();
+        assert(buffers.curr->cy <= nlines);
+	if (buffers.curr->cy == nlines)
+		line_insert(nlines, L"", 0);
+	wstring_t *line = line_at(buffers.curr->cy);
 	int n = 1;
 	if (c == L'\t' && buffers.curr->conf.substitute_tab_with_space){
 		n = get_character_width(L'\t', buffers.curr->cx);
@@ -152,7 +157,7 @@ void line_put_str(const char *str) {
 }
 
 static void line_delete_char_backwards(void){
-	if (buffers.curr->cy == buffers.curr->num_lines){
+	if (buffers.curr->cy == curr_buf_nlines()) {
 		cursor_move(CURSOR_DIRECTION_LEFT);
 		return;
 	}
@@ -166,7 +171,6 @@ static void line_delete_char_backwards(void){
 		size_t new_x = wstr_length(up);
 		wstr_concat_wstr(up, line);
 		vector_remove_at(buffers.curr->lines, buffers.curr->cy);
-		buffers.curr->num_lines--;
 		cursor_move(CURSOR_DIRECTION_LEFT);
 		buffers.curr->cx = new_x;
 	}
@@ -178,11 +182,10 @@ static void line_delete_char_backwards(void){
 }
 
 static void line_delete_char_forward(void){
-	if (buffers.curr->cy == buffers.curr->num_lines)
+	if (buffers.curr->cy == curr_buf_nlines())
 		return;
 	if (buffers.curr->cx == 0 && current_line_length() == 0){
 		vector_remove_at(buffers.curr->lines, buffers.curr->cy);
-		buffers.curr->num_lines--;
 	}else{
 		cursor_move(CURSOR_DIRECTION_RIGHT);
 		line_delete_char_backwards();
@@ -238,7 +241,7 @@ int line_delete_word(cursor_direction_t dir) {
 }
 
 void line_cut(bool whole){
-	if (buffers.curr->cy >= buffers.curr->num_lines){
+	if (buffers.curr->cy >= curr_buf_nlines()){
 		return;
         } else if (whole) {
                 line_remove(buffers.curr->cy);
@@ -250,12 +253,10 @@ void line_cut(bool whole){
 }
 
 void line_remove(size_t idx){
-        if (idx < vector_size(buffers.curr->lines)) {
-                vector_remove_at(buffers.curr->lines, idx);
-		buffers.curr->num_lines--;
-                if ((size_t)buffers.curr->cy >= idx)
-                        cursor_move(CURSOR_DIRECTION_UP);
-        }
+        assert(idx < vector_size(buffers.curr->lines));
+        vector_remove_at(buffers.curr->lines, idx);
+        if ((size_t)buffers.curr->cy >= idx)
+                cursor_move(CURSOR_DIRECTION_UP);
 	buffers.curr->dirty++;
 }
 
@@ -284,7 +285,7 @@ void line_toggle_comment(void){
 }
 
 void line_strip_trailing_spaces(int cy){
-	if (cy >= buffers.curr->num_lines)
+	if (cy >= curr_buf_nlines())
 		return;
 	assert(cy >= 0);
 	wstring_t *line;

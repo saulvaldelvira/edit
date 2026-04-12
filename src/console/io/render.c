@@ -6,6 +6,7 @@
 #include "lib/str/wstr.h"
 #include "state.h"
 #include "util.h"
+#include <assert.h>
 #include <stdlib.h>
 #include "render.h"
 
@@ -47,8 +48,9 @@ static void update_line(int cy){
 	wstring_t *line;
 	vector_at(render.buffer, i, &line);
 	wstr_clear(line);
-	wstring_t *row;
+	wstring_t *row = NULL;
 	vector_at(buffers.curr->lines, cy, &row);
+        assert(row);
 	int rx = 0;
 
 	for (size_t j = 0; j < wstr_length(row); j++){
@@ -69,7 +71,7 @@ void editor_update_render(void){
 	int i;
 	for (i = 0; i < state.screen_rows; i++){
 		int cy = buffers.curr->row_offset + i;
-		if (cy >= buffers.curr->num_lines)
+		if (cy >= curr_buf_nlines())
 			break;
 		update_line(cy);
 	}

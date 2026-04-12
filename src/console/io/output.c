@@ -56,7 +56,7 @@ static int num_width(int n){
 
 static void move_cursor(int x, int y, bool respect_linenr){
         if (buffers.curr->conf.line_number && respect_linenr)
-                x += num_width(buffers.curr->num_lines) + 1;
+                x += num_width(curr_buf_nlines()) + 1;
         wchar_t move_cursor_buf[32];
         swprintf(move_cursor_buf,
                  ARRAY_SIZE(move_cursor_buf),
@@ -140,7 +140,7 @@ static void print_welcome_msg(wstring_t *buf){
 void editor_draw_rows(wstring_t *buf){
         static bool welcome = true;
         if (welcome
-            && buffers.curr->num_lines == 0
+            && curr_buf_nlines() == 0
             && buffers.curr->filename == NULL
             && buffers.curr->dirty == 0
             && buffers.amount == 1
@@ -158,14 +158,14 @@ void editor_draw_rows(wstring_t *buf){
 
 	for (int y = 0; y < state.screen_rows; y++){
 		int file_line = y + buffers.curr->row_offset;
-		if (file_line >= buffers.curr->num_lines){
+		if (file_line >= curr_buf_nlines()){
 			wstr_concat_cwstr(buf, L"~", 1);
 		}else{
                         size_t screen_cols = state.screen_cols;
                         if (buffers.curr->conf.line_number) {
-                                screen_cols -= num_width(buffers.curr->num_lines) + 1;
+                                screen_cols -= num_width(curr_buf_nlines()) + 1;
                                 wchar_t lnr_buf[128];
-                                int padding = num_width(buffers.curr->num_lines) - num_width(file_line + 1) + 1;
+                                int padding = num_width(curr_buf_nlines()) - num_width(file_line + 1) + 1;
                                 swprintf(lnr_buf, sizeof(lnr_buf) / sizeof(lnr_buf[0]),
                                          L"%d%*s", file_line + 1, padding, "");
                                 wstr_concat_cwstr(buf, lnr_buf, sizeof(lnr_buf));
@@ -228,7 +228,7 @@ void editor_draw_status_bar(wstring_t *buf){
 			   L" <%s> %ls - %d lines %ls",
                            buffer_mode_get_string(buffer_mode_get_current()),
 			   buffers.curr->filename ? buffers.curr->filename : L"[Unnamed]",
-			   buffers.curr->num_lines,
+			   curr_buf_nlines(),
 		       	   buffers.curr->dirty ? L"(modified)" : L"");
 	int rlen = swprintf(rstatus, ARRAY_SIZE(rstatus),
 			    L"Buffer:%d/%d | Row:%d | Col:%d ",

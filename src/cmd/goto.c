@@ -1,3 +1,4 @@
+#include "buffer.h"
 #include "prelude.h"
 
 void cmd_goto(wchar_t **args){
@@ -25,7 +26,7 @@ void cmd_goto(wchar_t **args){
         y = wcstol(arg, NULL, 10);
 	y--;
 	if (!buffer){
-		if (y < 0 || y >= buffers.curr->num_lines)
+		if (y < 0 || y >= curr_buf_nlines())
 			editor_set_status_message(L"Invalid line number %ld", y + 1);
 		else
 			cursor_goto(buffers.curr->cx, y);

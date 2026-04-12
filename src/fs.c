@@ -351,7 +351,7 @@ int file_save(bool only_tmp, bool ask_filename){
 
 
 	if (only_tmp) {
-                __print_filesave(len, tmp_filename, buffers.curr->num_lines, true);
+                __print_filesave(len, tmp_filename, curr_buf_nlines(), true);
                 goto cleanup;
         }
 
@@ -392,7 +392,7 @@ int file_save(bool only_tmp, bool ask_filename){
                 goto cleanup;
 	}
 
-        __print_filesave(len, filename, buffers.curr->num_lines, false);
+        __print_filesave(len, filename, curr_buf_nlines(), false);
 	buffers.curr->dirty = 0;
 
 cleanup:
@@ -410,7 +410,7 @@ int file_reload(void){
         if (!buffers.curr->filename)
                 return SUCCESS;
 	file_open(buffers.curr->filename);
-	if (cy + row_offset <= buffers.curr->num_lines){
+	if (cy + row_offset <= curr_buf_nlines()){
 		buffers.curr->cy = cy;
 		buffers.curr->row_offset = row_offset;
 		wstring_t *line;

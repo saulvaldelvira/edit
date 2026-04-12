@@ -1,3 +1,4 @@
+#include "buffer.h"
 #include "prelude.h"
 #include "util.h"
 
@@ -13,7 +14,7 @@ void cmd_search(bool forward, wchar_t **args){
 
 	bool found = false;
 	if (forward){
-		for (int i = buffers.curr->cy; i < buffers.curr->num_lines; i++){
+		for (int i = buffers.curr->cy; i < curr_buf_nlines(); i++){
 			wstring_t *line;
 			vector_at(buffers.curr->lines, i, &line);
 			int x = i == buffers.curr->cy ? buffers.curr->cx + 1 : 0;

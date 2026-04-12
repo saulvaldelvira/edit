@@ -65,7 +65,6 @@ void buffer_clear(void){
 	buffers.curr->rx = 0;
 	buffers.curr->col_offset = 0;
 	buffers.curr->row_offset = 0;
-	buffers.curr->num_lines = 0;
 	buffers.curr->dirty = 0;
 }
 
@@ -111,7 +110,8 @@ int buffer_copy_selection(void) {
                 for (int i = sel.start.y; i <= sel.end.y; i++) {
                         wstring_t *line = line_at(i);
                         clipboard_push(wstr_get_buffer_raw(line), wstr_length(line));
-                        clipboard_push(L"\n", 1);
+                        if (i < sel.end.y)
+                                clipboard_push(L"\n", 1);
                 }
         } else {
                 bool first_line = true;

@@ -16,7 +16,7 @@ void cursor_adjust(void){
         if ((size_t)buffers.curr->cx > line_len)
                 buffers.curr->cx = line_len;
         buffers.curr->rx = 0;
-        if (buffers.curr->cy < buffers.curr->num_lines){
+        if (buffers.curr->cy < curr_buf_nlines()){
                 wstring_t *line;
                 vector_at(buffers.curr->lines, buffers.curr->cy, &line);
                 buffers.curr->rx = line_cx_to_rx(line, buffers.curr->cx);
@@ -48,7 +48,7 @@ int cursor_move(cursor_direction_t direction){
 		if (row && (size_t)buffers.curr->cx < wstr_length(row)){
 			buffers.curr->cx++;
 		}else if (row && (size_t)buffers.curr->cx == wstr_length(row)){
-			if (buffers.curr->cy >= buffers.curr->num_lines - 1)
+			if (buffers.curr->cy >= curr_buf_nlines() - 1)
 				return -1;
 			buffers.curr->cy++;
 			buffers.curr->cx = 0;
@@ -59,7 +59,7 @@ int cursor_move(cursor_direction_t direction){
 			buffers.curr->cy--;
 		break;
 	case CURSOR_DIRECTION_DOWN:
-		if (buffers.curr->cy < buffers.curr->num_lines - 1)
+		if (buffers.curr->cy < curr_buf_nlines() - 1)
 			buffers.curr->cy++;
 		break;
 	case CURSOR_DIRECTION_START:
@@ -133,15 +133,15 @@ static void __cursor_page_up(void) {
 static void __cursor_page_down(void) {
         if (buffers.curr->cy < buffers.curr->row_offset + state.screen_rows - 1){
                 buffers.curr->cy = buffers.curr->row_offset + state.screen_rows - 1;
-                if (buffers.curr->cy >= buffers.curr->num_lines)
-                        buffers.curr->cy = buffers.curr->num_lines - 1;
+                if (buffers.curr->cy >= curr_buf_nlines())
+                        buffers.curr->cy = curr_buf_nlines() - 1;
         }else{
                 buffers.curr->cy += state.screen_rows;
                 buffers.curr->row_offset += state.screen_rows;
-                if (buffers.curr->cy >= buffers.curr->num_lines)
-                        buffers.curr->cy = buffers.curr->num_lines - 1;
-                if (buffers.curr->row_offset >= buffers.curr->num_lines)
-                        buffers.curr->row_offset = buffers.curr->num_lines - 1;
+                if (buffers.curr->cy >= curr_buf_nlines())
+                        buffers.curr->cy = curr_buf_nlines() - 1;
+                if (buffers.curr->row_offset >= curr_buf_nlines())
+                        buffers.curr->row_offset = curr_buf_nlines() - 1;
         }
 }
 
@@ -165,7 +165,7 @@ void cursor_goto_start(void) {
 }
 
 void cursor_goto_end(void) {
-        size_t last_line = buffers.curr->num_lines;
+        size_t last_line = curr_buf_nlines();
         cursor_goto(0,last_line);
 }
 

@@ -86,7 +86,7 @@ void editor_cmd(const wchar_t *command){
         }
         else if (wcscmp(cmd, L"fwq") == 0){
                 bool ask_filename = buffers.curr->filename == NULL;
-                for (int i = 0; i < buffers.curr->num_lines; i++)
+                for (int i = 0; i < curr_buf_nlines(); i++)
                         line_format(i);
                 int ret = file_save(false, ask_filename);
                 if (ret > 0){
@@ -98,7 +98,7 @@ void editor_cmd(const wchar_t *command){
                         line_strip_trailing_spaces(buffers.curr->cy);
                 }
                 else if (args[1] && wcscmp(args[1], L"buffer") == 0){
-                        for (int i = 0; i < buffers.curr->num_lines; i++)
+                        for (int i = 0; i < curr_buf_nlines(); i++)
                                 line_strip_trailing_spaces(i);
                 }else{
                         // TODO: help menu
@@ -124,7 +124,7 @@ void editor_cmd(const wchar_t *command){
                         line_format(buffers.curr->cy);
                 }
                 else if (args[1] && wcscmp(args[1], L"buffer") == 0){
-                        for (int i = 0; i < buffers.curr->num_lines; i++)
+                        for (int i = 0; i < curr_buf_nlines(); i++)
                                 line_format(i);
                 }else{
                         // TODO: help menu

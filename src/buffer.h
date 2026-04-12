@@ -11,7 +11,6 @@ struct buffer {
 	int cx, cy;
 	int rx;
 	int row_offset, col_offset;
-	int num_lines;
 	wchar_t  *filename;
 	vector_t *lines;
         history_t history;
@@ -25,6 +24,9 @@ extern struct buffers_data {
         int amount;
         int curr_index;
 } buffers;
+
+#define buf_num_lines(buf) (vector_size((buf)->lines))
+#define curr_buf_nlines() ((long)buf_num_lines(buffers.curr))
 
 void buffer_insert(void);
 void buffer_clear(void);
