@@ -36,7 +36,7 @@ int  buffer_current_index(void);
 int  buffer_copy_selection(void);
 int  buffer_paste_selection(void);
 int  buffer_delete_selection(void);
-struct buffer* buffer_at(int index);
+struct buffer* buffer_at(size_t index);
 
 #define foreach_buffer(op) do { \
         int __index = buffers.curr_index; \

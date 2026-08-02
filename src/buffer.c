@@ -171,3 +171,9 @@ int buffer_delete_selection(void) {
         buffers.curr->dirty++;
         return SUCCESS;
 }
+
+struct buffer* buffer_at(size_t idx) {
+        struct buffer *buf;
+        vector_at(buffers_vec, idx, &buf);
+        return buf;
+}
