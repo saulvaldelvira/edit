@@ -255,7 +255,7 @@ void line_cut(bool whole){
 void line_remove(size_t idx){
         assert(idx < vector_size(buffers.curr->lines));
         vector_remove_at(buffers.curr->lines, idx);
-        if ((size_t)buffers.curr->cy >= idx)
+        if ((size_t)buffers.curr->cy > idx)
                 cursor_move(CURSOR_DIRECTION_UP);
 	buffers.curr->dirty++;
 }
